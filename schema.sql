@@ -318,6 +318,45 @@ ALTER SEQUENCE eth.header_cids_id_seq OWNED BY eth.header_cids.id;
 
 
 --
+-- Name: log_cids; Type: TABLE; Schema: eth; Owner: -
+--
+
+CREATE TABLE eth.log_cids (
+    id integer NOT NULL,
+    leaf_cid text NOT NULL,
+    leaf_mh_key text NOT NULL,
+    receipt_id integer NOT NULL,
+    address character varying(66),
+    log_data bytea,
+    index integer NOT NULL,
+    topic0 character varying(66),
+    topic1 character varying(66),
+    topic2 character varying(66),
+    topic3 character varying(66)
+);
+
+
+--
+-- Name: log_cids_id_seq; Type: SEQUENCE; Schema: eth; Owner: -
+--
+
+CREATE SEQUENCE eth.log_cids_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: log_cids_id_seq; Type: SEQUENCE OWNED BY; Schema: eth; Owner: -
+--
+
+ALTER SEQUENCE eth.log_cids_id_seq OWNED BY eth.log_cids.id;
+
+
+--
 -- Name: receipt_cids; Type: TABLE; Schema: eth; Owner: -
 --
 
@@ -328,13 +367,9 @@ CREATE TABLE eth.receipt_cids (
     mh_key text NOT NULL,
     contract character varying(66),
     contract_hash character varying(66),
-    topic0s character varying(66)[],
-    topic1s character varying(66)[],
-    topic2s character varying(66)[],
-    topic3s character varying(66)[],
-    log_contracts character varying(66)[],
     post_state character varying(66),
-    post_status integer
+    post_status integer,
+    log_root character varying(66)
 );
 
 
@@ -647,6 +682,13 @@ ALTER TABLE ONLY eth.header_cids ALTER COLUMN id SET DEFAULT nextval('eth.header
 
 
 --
+-- Name: log_cids id; Type: DEFAULT; Schema: eth; Owner: -
+--
+
+ALTER TABLE ONLY eth.log_cids ALTER COLUMN id SET DEFAULT nextval('eth.log_cids_id_seq'::regclass);
+
+
+--
 -- Name: receipt_cids id; Type: DEFAULT; Schema: eth; Owner: -
 --
 
@@ -732,6 +774,22 @@ ALTER TABLE ONLY eth.header_cids
 
 ALTER TABLE ONLY eth.header_cids
     ADD CONSTRAINT header_cids_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: log_cids log_cids_pkey; Type: CONSTRAINT; Schema: eth; Owner: -
+--
+
+ALTER TABLE ONLY eth.log_cids
+    ADD CONSTRAINT log_cids_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: log_cids log_cids_receipt_id_index_key; Type: CONSTRAINT; Schema: eth; Owner: -
+--
+
+ALTER TABLE ONLY eth.log_cids
+    ADD CONSTRAINT log_cids_receipt_id_index_key UNIQUE (receipt_id, index);
 
 
 --
@@ -905,6 +963,55 @@ CREATE INDEX header_mh_index ON eth.header_cids USING btree (mh_key);
 
 
 --
+-- Name: log_cid_index; Type: INDEX; Schema: eth; Owner: -
+--
+
+CREATE INDEX log_cid_index ON eth.log_cids USING btree (leaf_cid);
+
+
+--
+-- Name: log_mh_index; Type: INDEX; Schema: eth; Owner: -
+--
+
+CREATE INDEX log_mh_index ON eth.log_cids USING btree (leaf_mh_key);
+
+
+--
+-- Name: log_rct_id_index; Type: INDEX; Schema: eth; Owner: -
+--
+
+CREATE INDEX log_rct_id_index ON eth.log_cids USING btree (receipt_id);
+
+
+--
+-- Name: log_topic0_index; Type: INDEX; Schema: eth; Owner: -
+--
+
+CREATE INDEX log_topic0_index ON eth.log_cids USING btree (topic0);
+
+
+--
+-- Name: log_topic1_index; Type: INDEX; Schema: eth; Owner: -
+--
+
+CREATE INDEX log_topic1_index ON eth.log_cids USING btree (topic1);
+
+
+--
+-- Name: log_topic2_index; Type: INDEX; Schema: eth; Owner: -
+--
+
+CREATE INDEX log_topic2_index ON eth.log_cids USING btree (topic2);
+
+
+--
+-- Name: log_topic3_index; Type: INDEX; Schema: eth; Owner: -
+--
+
+CREATE INDEX log_topic3_index ON eth.log_cids USING btree (topic3);
+
+
+--
 -- Name: rct_cid_index; Type: INDEX; Schema: eth; Owner: -
 --
 
@@ -926,45 +1033,10 @@ CREATE INDEX rct_contract_index ON eth.receipt_cids USING btree (contract);
 
 
 --
--- Name: rct_log_contract_index; Type: INDEX; Schema: eth; Owner: -
---
-
-CREATE INDEX rct_log_contract_index ON eth.receipt_cids USING gin (log_contracts);
-
-
---
 -- Name: rct_mh_index; Type: INDEX; Schema: eth; Owner: -
 --
 
 CREATE INDEX rct_mh_index ON eth.receipt_cids USING btree (mh_key);
-
-
---
--- Name: rct_topic0_index; Type: INDEX; Schema: eth; Owner: -
---
-
-CREATE INDEX rct_topic0_index ON eth.receipt_cids USING gin (topic0s);
-
-
---
--- Name: rct_topic1_index; Type: INDEX; Schema: eth; Owner: -
---
-
-CREATE INDEX rct_topic1_index ON eth.receipt_cids USING gin (topic1s);
-
-
---
--- Name: rct_topic2_index; Type: INDEX; Schema: eth; Owner: -
---
-
-CREATE INDEX rct_topic2_index ON eth.receipt_cids USING gin (topic2s);
-
-
---
--- Name: rct_topic3_index; Type: INDEX; Schema: eth; Owner: -
---
-
-CREATE INDEX rct_topic3_index ON eth.receipt_cids USING gin (topic3s);
 
 
 --
@@ -1192,6 +1264,22 @@ ALTER TABLE ONLY eth.header_cids
 
 ALTER TABLE ONLY eth.header_cids
     ADD CONSTRAINT header_cids_node_id_fkey FOREIGN KEY (node_id) REFERENCES public.nodes(id) ON DELETE CASCADE;
+
+
+--
+-- Name: log_cids log_cids_leaf_mh_key_fkey; Type: FK CONSTRAINT; Schema: eth; Owner: -
+--
+
+ALTER TABLE ONLY eth.log_cids
+    ADD CONSTRAINT log_cids_leaf_mh_key_fkey FOREIGN KEY (leaf_mh_key) REFERENCES public.blocks(key) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: log_cids log_cids_receipt_id_fkey; Type: FK CONSTRAINT; Schema: eth; Owner: -
+--
+
+ALTER TABLE ONLY eth.log_cids
+    ADD CONSTRAINT log_cids_receipt_id_fkey FOREIGN KEY (receipt_id) REFERENCES eth.receipt_cids(id) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
 
 
 --
