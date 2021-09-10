@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 12.4
--- Dumped by pg_dump version 12.4
+-- Dumped from database version 14beta3
+-- Dumped by pg_dump version 14beta3
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -47,7 +47,8 @@ CREATE TABLE eth.header_cids (
     uncle_root character varying(66) NOT NULL,
     bloom bytea NOT NULL,
     "timestamp" numeric NOT NULL,
-    times_validated integer DEFAULT 1 NOT NULL
+    times_validated integer DEFAULT 1 NOT NULL,
+    base_fee bigint
 );
 
 
@@ -101,33 +102,6 @@ begin
     return new;
 end;
 $_$;
-
-
---
--- Name: canonical_header(bigint); Type: FUNCTION; Schema: public; Owner: -
---
-
-CREATE FUNCTION public.canonical_header(height bigint) RETURNS integer
-    LANGUAGE plpgsql
-    AS $$
-DECLARE
-  current_weight INT;
-  heaviest_weight INT DEFAULT 0;
-  heaviest_id INT;
-  r eth.header_cids%ROWTYPE;
-BEGIN
-  FOR r IN SELECT * FROM eth.header_cids
-  WHERE block_number = height
-  LOOP
-    SELECT INTO current_weight * FROM header_weight(r.block_hash);
-    IF current_weight > heaviest_weight THEN
-        heaviest_weight := current_weight;
-        heaviest_id := r.id;
-    END IF;
-  END LOOP;
-  RETURN heaviest_id;
-END
-$$;
 
 
 --
@@ -217,17 +191,6 @@ $$;
 
 
 --
--- Name: ethHeaderCidByBlockNumber(bigint); Type: FUNCTION; Schema: public; Owner: -
---
-
-CREATE FUNCTION public."ethHeaderCidByBlockNumber"(n bigint) RETURNS SETOF eth.header_cids
-    LANGUAGE sql STABLE
-    AS $_$
-SELECT * FROM eth.header_cids WHERE block_number=$1 ORDER BY id
-$_$;
-
-
---
 -- Name: has_child(character varying, bigint); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -255,30 +218,8 @@ BEGIN
       new_child_result.children = array_append(new_child_result.children, temp_child);
     END LOOP;
   END IF;
-  RETURN new_child_result;
+RETURN new_child_result;
 END
-$$;
-
-
---
--- Name: header_weight(character varying); Type: FUNCTION; Schema: public; Owner: -
---
-
-CREATE FUNCTION public.header_weight(hash character varying) RETURNS bigint
-    LANGUAGE sql
-    AS $$
-  WITH RECURSIVE validator AS (
-          SELECT block_hash, parent_hash, block_number
-          FROM eth.header_cids
-          WHERE block_hash = hash
-      UNION
-          SELECT eth.header_cids.block_hash, eth.header_cids.parent_hash, eth.header_cids.block_number
-          FROM eth.header_cids
-          INNER JOIN validator
-            ON eth.header_cids.parent_hash = validator.block_hash
-            AND eth.header_cids.block_number = validator.block_number + 1
-  )
-  SELECT COUNT(*) FROM validator;
 $$;
 
 
@@ -1062,6 +1003,13 @@ CREATE INDEX state_mh_index ON eth.state_cids USING btree (mh_key);
 
 
 --
+-- Name: state_node_type_index; Type: INDEX; Schema: eth; Owner: -
+--
+
+CREATE INDEX state_node_type_index ON eth.state_cids USING btree (node_type);
+
+
+--
 -- Name: state_path_index; Type: INDEX; Schema: eth; Owner: -
 --
 
@@ -1094,6 +1042,13 @@ CREATE INDEX storage_leaf_key_index ON eth.storage_cids USING btree (storage_lea
 --
 
 CREATE INDEX storage_mh_index ON eth.storage_cids USING btree (mh_key);
+
+
+--
+-- Name: storage_node_type_index; Type: INDEX; Schema: eth; Owner: -
+--
+
+CREATE INDEX storage_node_type_index ON eth.storage_cids USING btree (node_type);
 
 
 --
