@@ -17,7 +17,7 @@ jobs:
           sleep 10
           docker run --rm --network host -e DATABASE_USER=vdbm -e DATABASE_PASSWORD=password \
           -e DATABASE_HOSTNAME=127.0.0.1 -e DATABASE_PORT=8066 -e DATABASE_NAME=vulcanize_testing \
-          vulcanize/docker-concise-migration-build
+          vulcanize/concise-migration-build
       - name: Verify schema is latest
         run: |
           PGPASSWORD="password" pg_dump -h localhost -p 8066 -U vdbm vulcanize_testing --no-owner --schema-only > ./db/migration_schema.sql
