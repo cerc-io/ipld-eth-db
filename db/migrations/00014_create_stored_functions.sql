@@ -78,7 +78,7 @@ BEGIN
   -- if none of the headers had children, none is more canonical than the other
   IF has_children_count = 0 THEN
     -- return the first one selected
-  SELECT * INTO canonical_header FROM unnest(headers) LIMIT 1;
+    SELECT * INTO canonical_header FROM unnest(headers) LIMIT 1;
   -- if only one header had children, it can be considered the heaviest/canonical header of the set
   ELSIF has_children_count = 1 THEN
     -- return the only header with a child
