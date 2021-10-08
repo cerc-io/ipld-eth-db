@@ -77,3 +77,14 @@ version_migrations:
 import:
 	test -n "$(NAME)" # $$NAME
 	psql $(NAME) < schema.sql
+
+
+## Build docker image with schema
+.PHONY: docker-build
+docker-build:
+	docker-compose build
+
+## Build docker image for migration
+.PHONY: docker-concise-migration-build
+docker-concise-migration-build:
+	docker build -t vulcanize/concise-migration-build -f ./db/Dockerfile .
