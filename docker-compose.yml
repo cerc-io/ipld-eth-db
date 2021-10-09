@@ -10,7 +10,5 @@ services:
       POSTGRES_DB: "vulcanize_public"
       POSTGRES_PASSWORD: "password"
       hostname: db
-    volumes:
-      - ./schema.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - "127.0.0.1:8077:5432"
