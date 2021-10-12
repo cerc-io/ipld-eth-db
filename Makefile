@@ -41,36 +41,36 @@ checkmigname:
 ## Rollback the last migration
 .PHONY: rollback
 rollback: $(GOOSE) checkdbvars
-	$(GOOSE) -dir migrations postgres "$(CONNECT_STRING)" down
+	$(GOOSE) -dir db/migrations postgres "$(CONNECT_STRING)" down
 	pg_dump -O -s $(CONNECT_STRING) > schema.sql
 
 
 ## Rollback to a select migration (id/timestamp)
 .PHONY: rollback_to
 rollback_to: $(GOOSE) checkmigration checkdbvars
-	$(GOOSE) -dir migrations postgres "$(CONNECT_STRING)" down-to "$(MIGRATION)"
+	$(GOOSE) -dir db/migrations postgres "$(CONNECT_STRING)" down-to "$(MIGRATION)"
 
 ## Apply all migrations not already run
 .PHONY: migrate
 migrate: $(GOOSE) checkdbvars
-	$(GOOSE) -dir migrations postgres "$(CONNECT_STRING)" up
+	$(GOOSE) -dir db/migrations postgres "$(CONNECT_STRING)" up
 	pg_dump -O -s $(CONNECT_STRING) > schema.sql
 
 ## Create a new migration file
 .PHONY: new_migration
 new_migration: $(GOOSE) checkmigname
-	$(GOOSE) -dir migrations create $(NAME) sql
+	$(GOOSE) -dir db/migrations create $(NAME) sql
 
 ## Check which migrations are applied at the moment
 .PHONY: migration_status
 migration_status: $(GOOSE) checkdbvars
-	$(GOOSE) -dir migrations postgres "$(CONNECT_STRING)" status
+	$(GOOSE) -dir db/migrations postgres "$(CONNECT_STRING)" status
 
 # Convert timestamped migrations to versioned (to be run in CI);
 # merge timestamped files to prevent conflict
 .PHONY: version_migrations
 version_migrations:
-	$(GOOSE) -dir migrations fix
+	$(GOOSE) -dir db/migrations fix
 
 # Import a psql schema to the database
 .PHONY: import
