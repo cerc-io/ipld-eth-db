@@ -88,3 +88,7 @@ docker-build:
 .PHONY: docker-concise-migration-build
 docker-concise-migration-build:
 	docker build -t vulcanize/concise-migration-build -f ./db/Dockerfile .
+
+.PHONY: test-migrations
+test-migrations: $(GOOSE)
+	./scripts/test_migration.sh
