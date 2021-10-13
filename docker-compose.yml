@@ -7,7 +7,7 @@ services:
     build: .
     environment:
       POSTGRES_USER: "vdbm"
-      POSTGRES_DB: "vulcanize_public"
+      POSTGRES_DB: "vulcanize_testing"
       POSTGRES_PASSWORD: "password"
       hostname: db
     ports:
