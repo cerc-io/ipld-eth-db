@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 10.12
--- Dumped by pg_dump version 14.0 (Ubuntu 14.0-1.pgdg20.04+1)
+-- Dumped from database version 14beta3
+-- Dumped by pg_dump version 14beta3
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -25,14 +25,15 @@ CREATE SCHEMA eth;
 
 SET default_tablespace = '';
 
+SET default_table_access_method = heap;
+
 --
 -- Name: header_cids; Type: TABLE; Schema: eth; Owner: -
 --
 
 CREATE TABLE eth.header_cids (
-    id integer NOT NULL,
-    block_number bigint NOT NULL,
     block_hash character varying(66) NOT NULL,
+    block_number bigint NOT NULL,
     parent_hash character varying(66) NOT NULL,
     cid text NOT NULL,
     mh_key text NOT NULL,
@@ -230,7 +231,7 @@ CREATE FUNCTION public.was_state_leaf_removed(key character varying, hash charac
     AS $$
     SELECT state_cids.node_type = 3
     FROM eth.state_cids
-             INNER JOIN eth.header_cids ON (state_cids.header_id = header_cids.id)
+             INNER JOIN eth.header_cids ON (state_cids.header_id = header_cids.block_hash)
     WHERE state_leaf_key = key
       AND block_number <= (SELECT block_number
                            FROM eth.header_cids
@@ -244,8 +245,7 @@ $$;
 --
 
 CREATE TABLE eth.access_list_element (
-    id integer NOT NULL,
-    tx_id integer NOT NULL,
+    tx_id character varying(66) NOT NULL,
     index integer NOT NULL,
     address character varying(66),
     storage_keys character varying(66)[]
@@ -253,54 +253,13 @@ CREATE TABLE eth.access_list_element (
 
 
 --
--- Name: access_list_element_id_seq; Type: SEQUENCE; Schema: eth; Owner: -
---
-
-CREATE SEQUENCE eth.access_list_element_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: access_list_element_id_seq; Type: SEQUENCE OWNED BY; Schema: eth; Owner: -
---
-
-ALTER SEQUENCE eth.access_list_element_id_seq OWNED BY eth.access_list_element.id;
-
-
---
--- Name: header_cids_id_seq; Type: SEQUENCE; Schema: eth; Owner: -
---
-
-CREATE SEQUENCE eth.header_cids_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: header_cids_id_seq; Type: SEQUENCE OWNED BY; Schema: eth; Owner: -
---
-
-ALTER SEQUENCE eth.header_cids_id_seq OWNED BY eth.header_cids.id;
-
-
---
 -- Name: log_cids; Type: TABLE; Schema: eth; Owner: -
 --
 
 CREATE TABLE eth.log_cids (
-    id integer NOT NULL,
+    rct_id character varying(66) NOT NULL,
     leaf_cid text NOT NULL,
     leaf_mh_key text NOT NULL,
-    receipt_id integer NOT NULL,
     address character varying(66) NOT NULL,
     log_data bytea,
     index integer NOT NULL,
@@ -312,32 +271,11 @@ CREATE TABLE eth.log_cids (
 
 
 --
--- Name: log_cids_id_seq; Type: SEQUENCE; Schema: eth; Owner: -
---
-
-CREATE SEQUENCE eth.log_cids_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: log_cids_id_seq; Type: SEQUENCE OWNED BY; Schema: eth; Owner: -
---
-
-ALTER SEQUENCE eth.log_cids_id_seq OWNED BY eth.log_cids.id;
-
-
---
 -- Name: receipt_cids; Type: TABLE; Schema: eth; Owner: -
 --
 
 CREATE TABLE eth.receipt_cids (
-    id integer NOT NULL,
-    tx_id integer NOT NULL,
+    tx_id character varying(66) NOT NULL,
     leaf_cid text NOT NULL,
     leaf_mh_key text NOT NULL,
     contract character varying(66),
@@ -349,32 +287,12 @@ CREATE TABLE eth.receipt_cids (
 
 
 --
--- Name: receipt_cids_id_seq; Type: SEQUENCE; Schema: eth; Owner: -
---
-
-CREATE SEQUENCE eth.receipt_cids_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: receipt_cids_id_seq; Type: SEQUENCE OWNED BY; Schema: eth; Owner: -
---
-
-ALTER SEQUENCE eth.receipt_cids_id_seq OWNED BY eth.receipt_cids.id;
-
-
---
 -- Name: state_accounts; Type: TABLE; Schema: eth; Owner: -
 --
 
 CREATE TABLE eth.state_accounts (
-    id integer NOT NULL,
-    state_id bigint NOT NULL,
+    header_id character varying(66) NOT NULL,
+    state_path bytea NOT NULL,
     balance numeric NOT NULL,
     nonce integer NOT NULL,
     code_hash bytea NOT NULL,
@@ -383,58 +301,18 @@ CREATE TABLE eth.state_accounts (
 
 
 --
--- Name: state_accounts_id_seq; Type: SEQUENCE; Schema: eth; Owner: -
---
-
-CREATE SEQUENCE eth.state_accounts_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: state_accounts_id_seq; Type: SEQUENCE OWNED BY; Schema: eth; Owner: -
---
-
-ALTER SEQUENCE eth.state_accounts_id_seq OWNED BY eth.state_accounts.id;
-
-
---
 -- Name: state_cids; Type: TABLE; Schema: eth; Owner: -
 --
 
 CREATE TABLE eth.state_cids (
-    id bigint NOT NULL,
-    header_id integer NOT NULL,
+    header_id character varying(66) NOT NULL,
     state_leaf_key character varying(66),
     cid text NOT NULL,
     mh_key text NOT NULL,
-    state_path bytea,
+    state_path bytea NOT NULL,
     node_type integer NOT NULL,
     diff boolean DEFAULT false NOT NULL
 );
-
-
---
--- Name: state_cids_id_seq; Type: SEQUENCE; Schema: eth; Owner: -
---
-
-CREATE SEQUENCE eth.state_cids_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: state_cids_id_seq; Type: SEQUENCE OWNED BY; Schema: eth; Owner: -
---
-
-ALTER SEQUENCE eth.state_cids_id_seq OWNED BY eth.state_cids.id;
 
 
 --
@@ -442,34 +320,15 @@ ALTER SEQUENCE eth.state_cids_id_seq OWNED BY eth.state_cids.id;
 --
 
 CREATE TABLE eth.storage_cids (
-    id bigint NOT NULL,
-    state_id bigint NOT NULL,
+    header_id character varying(66) NOT NULL,
+    state_path bytea NOT NULL,
     storage_leaf_key character varying(66),
     cid text NOT NULL,
     mh_key text NOT NULL,
-    storage_path bytea,
+    storage_path bytea NOT NULL,
     node_type integer NOT NULL,
     diff boolean DEFAULT false NOT NULL
 );
-
-
---
--- Name: storage_cids_id_seq; Type: SEQUENCE; Schema: eth; Owner: -
---
-
-CREATE SEQUENCE eth.storage_cids_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: storage_cids_id_seq; Type: SEQUENCE OWNED BY; Schema: eth; Owner: -
---
-
-ALTER SEQUENCE eth.storage_cids_id_seq OWNED BY eth.storage_cids.id;
 
 
 --
@@ -477,16 +336,15 @@ ALTER SEQUENCE eth.storage_cids_id_seq OWNED BY eth.storage_cids.id;
 --
 
 CREATE TABLE eth.transaction_cids (
-    id integer NOT NULL,
-    header_id integer NOT NULL,
     tx_hash character varying(66) NOT NULL,
+    header_id character varying(66) NOT NULL,
     index integer NOT NULL,
     cid text NOT NULL,
     mh_key text NOT NULL,
     dst character varying(66) NOT NULL,
     src character varying(66) NOT NULL,
     tx_data bytea,
-    tx_type bytea
+    tx_type integer
 );
 
 
@@ -498,58 +356,17 @@ COMMENT ON TABLE eth.transaction_cids IS '@name EthTransactionCids';
 
 
 --
--- Name: transaction_cids_id_seq; Type: SEQUENCE; Schema: eth; Owner: -
---
-
-CREATE SEQUENCE eth.transaction_cids_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: transaction_cids_id_seq; Type: SEQUENCE OWNED BY; Schema: eth; Owner: -
---
-
-ALTER SEQUENCE eth.transaction_cids_id_seq OWNED BY eth.transaction_cids.id;
-
-
---
 -- Name: uncle_cids; Type: TABLE; Schema: eth; Owner: -
 --
 
 CREATE TABLE eth.uncle_cids (
-    id integer NOT NULL,
-    header_id integer NOT NULL,
     block_hash character varying(66) NOT NULL,
+    header_id character varying(66) NOT NULL,
     parent_hash character varying(66) NOT NULL,
     cid text NOT NULL,
     mh_key text NOT NULL,
     reward numeric NOT NULL
 );
-
-
---
--- Name: uncle_cids_id_seq; Type: SEQUENCE; Schema: eth; Owner: -
---
-
-CREATE SEQUENCE eth.uncle_cids_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: uncle_cids_id_seq; Type: SEQUENCE OWNED BY; Schema: eth; Owner: -
---
-
-ALTER SEQUENCE eth.uncle_cids_id_seq OWNED BY eth.uncle_cids.id;
 
 
 --
@@ -643,69 +460,6 @@ ALTER SEQUENCE public.nodes_id_seq OWNED BY public.nodes.id;
 
 
 --
--- Name: access_list_element id; Type: DEFAULT; Schema: eth; Owner: -
---
-
-ALTER TABLE ONLY eth.access_list_element ALTER COLUMN id SET DEFAULT nextval('eth.access_list_element_id_seq'::regclass);
-
-
---
--- Name: header_cids id; Type: DEFAULT; Schema: eth; Owner: -
---
-
-ALTER TABLE ONLY eth.header_cids ALTER COLUMN id SET DEFAULT nextval('eth.header_cids_id_seq'::regclass);
-
-
---
--- Name: log_cids id; Type: DEFAULT; Schema: eth; Owner: -
---
-
-ALTER TABLE ONLY eth.log_cids ALTER COLUMN id SET DEFAULT nextval('eth.log_cids_id_seq'::regclass);
-
-
---
--- Name: receipt_cids id; Type: DEFAULT; Schema: eth; Owner: -
---
-
-ALTER TABLE ONLY eth.receipt_cids ALTER COLUMN id SET DEFAULT nextval('eth.receipt_cids_id_seq'::regclass);
-
-
---
--- Name: state_accounts id; Type: DEFAULT; Schema: eth; Owner: -
---
-
-ALTER TABLE ONLY eth.state_accounts ALTER COLUMN id SET DEFAULT nextval('eth.state_accounts_id_seq'::regclass);
-
-
---
--- Name: state_cids id; Type: DEFAULT; Schema: eth; Owner: -
---
-
-ALTER TABLE ONLY eth.state_cids ALTER COLUMN id SET DEFAULT nextval('eth.state_cids_id_seq'::regclass);
-
-
---
--- Name: storage_cids id; Type: DEFAULT; Schema: eth; Owner: -
---
-
-ALTER TABLE ONLY eth.storage_cids ALTER COLUMN id SET DEFAULT nextval('eth.storage_cids_id_seq'::regclass);
-
-
---
--- Name: transaction_cids id; Type: DEFAULT; Schema: eth; Owner: -
---
-
-ALTER TABLE ONLY eth.transaction_cids ALTER COLUMN id SET DEFAULT nextval('eth.transaction_cids_id_seq'::regclass);
-
-
---
--- Name: uncle_cids id; Type: DEFAULT; Schema: eth; Owner: -
---
-
-ALTER TABLE ONLY eth.uncle_cids ALTER COLUMN id SET DEFAULT nextval('eth.uncle_cids_id_seq'::regclass);
-
-
---
 -- Name: goose_db_version id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -724,23 +478,7 @@ ALTER TABLE ONLY public.nodes ALTER COLUMN id SET DEFAULT nextval('public.nodes_
 --
 
 ALTER TABLE ONLY eth.access_list_element
-    ADD CONSTRAINT access_list_element_pkey PRIMARY KEY (id);
-
-
---
--- Name: access_list_element access_list_element_tx_id_index_key; Type: CONSTRAINT; Schema: eth; Owner: -
---
-
-ALTER TABLE ONLY eth.access_list_element
-    ADD CONSTRAINT access_list_element_tx_id_index_key UNIQUE (tx_id, index);
-
-
---
--- Name: header_cids header_cids_block_number_block_hash_key; Type: CONSTRAINT; Schema: eth; Owner: -
---
-
-ALTER TABLE ONLY eth.header_cids
-    ADD CONSTRAINT header_cids_block_number_block_hash_key UNIQUE (block_number, block_hash);
+    ADD CONSTRAINT access_list_element_pkey PRIMARY KEY (tx_id, index);
 
 
 --
@@ -748,7 +486,7 @@ ALTER TABLE ONLY eth.header_cids
 --
 
 ALTER TABLE ONLY eth.header_cids
-    ADD CONSTRAINT header_cids_pkey PRIMARY KEY (id);
+    ADD CONSTRAINT header_cids_pkey PRIMARY KEY (block_hash);
 
 
 --
@@ -756,15 +494,7 @@ ALTER TABLE ONLY eth.header_cids
 --
 
 ALTER TABLE ONLY eth.log_cids
-    ADD CONSTRAINT log_cids_pkey PRIMARY KEY (id);
-
-
---
--- Name: log_cids log_cids_receipt_id_index_key; Type: CONSTRAINT; Schema: eth; Owner: -
---
-
-ALTER TABLE ONLY eth.log_cids
-    ADD CONSTRAINT log_cids_receipt_id_index_key UNIQUE (receipt_id, index);
+    ADD CONSTRAINT log_cids_pkey PRIMARY KEY (rct_id, index);
 
 
 --
@@ -772,15 +502,7 @@ ALTER TABLE ONLY eth.log_cids
 --
 
 ALTER TABLE ONLY eth.receipt_cids
-    ADD CONSTRAINT receipt_cids_pkey PRIMARY KEY (id);
-
-
---
--- Name: receipt_cids receipt_cids_tx_id_key; Type: CONSTRAINT; Schema: eth; Owner: -
---
-
-ALTER TABLE ONLY eth.receipt_cids
-    ADD CONSTRAINT receipt_cids_tx_id_key UNIQUE (tx_id);
+    ADD CONSTRAINT receipt_cids_pkey PRIMARY KEY (tx_id);
 
 
 --
@@ -788,23 +510,7 @@ ALTER TABLE ONLY eth.receipt_cids
 --
 
 ALTER TABLE ONLY eth.state_accounts
-    ADD CONSTRAINT state_accounts_pkey PRIMARY KEY (id);
-
-
---
--- Name: state_accounts state_accounts_state_id_key; Type: CONSTRAINT; Schema: eth; Owner: -
---
-
-ALTER TABLE ONLY eth.state_accounts
-    ADD CONSTRAINT state_accounts_state_id_key UNIQUE (state_id);
-
-
---
--- Name: state_cids state_cids_header_id_state_path_key; Type: CONSTRAINT; Schema: eth; Owner: -
---
-
-ALTER TABLE ONLY eth.state_cids
-    ADD CONSTRAINT state_cids_header_id_state_path_key UNIQUE (header_id, state_path);
+    ADD CONSTRAINT state_accounts_pkey PRIMARY KEY (header_id, state_path);
 
 
 --
@@ -812,7 +518,7 @@ ALTER TABLE ONLY eth.state_cids
 --
 
 ALTER TABLE ONLY eth.state_cids
-    ADD CONSTRAINT state_cids_pkey PRIMARY KEY (id);
+    ADD CONSTRAINT state_cids_pkey PRIMARY KEY (header_id, state_path);
 
 
 --
@@ -820,23 +526,7 @@ ALTER TABLE ONLY eth.state_cids
 --
 
 ALTER TABLE ONLY eth.storage_cids
-    ADD CONSTRAINT storage_cids_pkey PRIMARY KEY (id);
-
-
---
--- Name: storage_cids storage_cids_state_id_storage_path_key; Type: CONSTRAINT; Schema: eth; Owner: -
---
-
-ALTER TABLE ONLY eth.storage_cids
-    ADD CONSTRAINT storage_cids_state_id_storage_path_key UNIQUE (state_id, storage_path);
-
-
---
--- Name: transaction_cids transaction_cids_header_id_tx_hash_key; Type: CONSTRAINT; Schema: eth; Owner: -
---
-
-ALTER TABLE ONLY eth.transaction_cids
-    ADD CONSTRAINT transaction_cids_header_id_tx_hash_key UNIQUE (header_id, tx_hash);
+    ADD CONSTRAINT storage_cids_pkey PRIMARY KEY (header_id, state_path, storage_path);
 
 
 --
@@ -844,15 +534,7 @@ ALTER TABLE ONLY eth.transaction_cids
 --
 
 ALTER TABLE ONLY eth.transaction_cids
-    ADD CONSTRAINT transaction_cids_pkey PRIMARY KEY (id);
-
-
---
--- Name: uncle_cids uncle_cids_header_id_block_hash_key; Type: CONSTRAINT; Schema: eth; Owner: -
---
-
-ALTER TABLE ONLY eth.uncle_cids
-    ADD CONSTRAINT uncle_cids_header_id_block_hash_key UNIQUE (header_id, block_hash);
+    ADD CONSTRAINT transaction_cids_pkey PRIMARY KEY (tx_hash);
 
 
 --
@@ -860,15 +542,15 @@ ALTER TABLE ONLY eth.uncle_cids
 --
 
 ALTER TABLE ONLY eth.uncle_cids
-    ADD CONSTRAINT uncle_cids_pkey PRIMARY KEY (id);
+    ADD CONSTRAINT uncle_cids_pkey PRIMARY KEY (block_hash);
 
 
 --
--- Name: blocks blocks_key_key; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: blocks blocks_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.blocks
-    ADD CONSTRAINT blocks_key_key UNIQUE (key);
+    ADD CONSTRAINT blocks_pkey PRIMARY KEY (key);
 
 
 --
@@ -896,24 +578,24 @@ ALTER TABLE ONLY public.nodes
 
 
 --
--- Name: accesss_list_element_address_index; Type: INDEX; Schema: eth; Owner: -
+-- Name: access_list_element_address_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE INDEX accesss_list_element_address_index ON eth.access_list_element USING btree (address);
-
-
---
--- Name: account_state_id_index; Type: INDEX; Schema: eth; Owner: -
---
-
-CREATE INDEX account_state_id_index ON eth.state_accounts USING btree (state_id);
+CREATE INDEX access_list_element_address_index ON eth.access_list_element USING btree (address);
 
 
 --
--- Name: block_hash_index; Type: INDEX; Schema: eth; Owner: -
+-- Name: access_list_storage_keys_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE INDEX block_hash_index ON eth.header_cids USING btree (block_hash);
+CREATE INDEX access_list_storage_keys_index ON eth.access_list_element USING gin (storage_keys);
+
+
+--
+-- Name: account_state_path_index; Type: INDEX; Schema: eth; Owner: -
+--
+
+CREATE INDEX account_state_path_index ON eth.state_accounts USING btree (state_path);
 
 
 --
@@ -938,6 +620,13 @@ CREATE INDEX header_mh_index ON eth.header_cids USING btree (mh_key);
 
 
 --
+-- Name: log_address_index; Type: INDEX; Schema: eth; Owner: -
+--
+
+CREATE INDEX log_address_index ON eth.log_cids USING btree (address);
+
+
+--
 -- Name: log_cid_index; Type: INDEX; Schema: eth; Owner: -
 --
 
@@ -949,13 +638,6 @@ CREATE INDEX log_cid_index ON eth.log_cids USING btree (leaf_cid);
 --
 
 CREATE INDEX log_mh_index ON eth.log_cids USING btree (leaf_mh_key);
-
-
---
--- Name: log_rct_id_index; Type: INDEX; Schema: eth; Owner: -
---
-
-CREATE INDEX log_rct_id_index ON eth.log_cids USING btree (receipt_id);
 
 
 --
@@ -1015,24 +697,10 @@ CREATE INDEX rct_leaf_mh_index ON eth.receipt_cids USING btree (leaf_mh_key);
 
 
 --
--- Name: rct_tx_id_index; Type: INDEX; Schema: eth; Owner: -
---
-
-CREATE INDEX rct_tx_id_index ON eth.receipt_cids USING btree (tx_id);
-
-
---
 -- Name: state_cid_index; Type: INDEX; Schema: eth; Owner: -
 --
 
 CREATE INDEX state_cid_index ON eth.state_cids USING btree (cid);
-
-
---
--- Name: state_header_id_index; Type: INDEX; Schema: eth; Owner: -
---
-
-CREATE INDEX state_header_id_index ON eth.state_cids USING btree (header_id);
 
 
 --
@@ -1113,10 +781,10 @@ CREATE INDEX storage_root_index ON eth.state_accounts USING btree (storage_root)
 
 
 --
--- Name: storage_state_id_index; Type: INDEX; Schema: eth; Owner: -
+-- Name: storage_state_path_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE INDEX storage_state_id_index ON eth.storage_cids USING btree (state_id);
+CREATE INDEX storage_state_path_index ON eth.storage_cids USING btree (state_path);
 
 
 --
@@ -1141,13 +809,6 @@ CREATE INDEX tx_dst_index ON eth.transaction_cids USING btree (dst);
 
 
 --
--- Name: tx_hash_index; Type: INDEX; Schema: eth; Owner: -
---
-
-CREATE INDEX tx_hash_index ON eth.transaction_cids USING btree (tx_hash);
-
-
---
 -- Name: tx_header_id_index; Type: INDEX; Schema: eth; Owner: -
 --
 
@@ -1169,52 +830,59 @@ CREATE INDEX tx_src_index ON eth.transaction_cids USING btree (src);
 
 
 --
+-- Name: uncle_header_id_index; Type: INDEX; Schema: eth; Owner: -
+--
+
+CREATE INDEX uncle_header_id_index ON eth.uncle_cids USING btree (header_id);
+
+
+--
 -- Name: header_cids header_cids_ai; Type: TRIGGER; Schema: eth; Owner: -
 --
 
-CREATE TRIGGER header_cids_ai AFTER INSERT ON eth.header_cids FOR EACH ROW EXECUTE PROCEDURE eth.graphql_subscription('header_cids', 'id');
+CREATE TRIGGER header_cids_ai AFTER INSERT ON eth.header_cids FOR EACH ROW EXECUTE FUNCTION eth.graphql_subscription('header_cids', 'id');
 
 
 --
 -- Name: receipt_cids receipt_cids_ai; Type: TRIGGER; Schema: eth; Owner: -
 --
 
-CREATE TRIGGER receipt_cids_ai AFTER INSERT ON eth.receipt_cids FOR EACH ROW EXECUTE PROCEDURE eth.graphql_subscription('receipt_cids', 'id');
+CREATE TRIGGER receipt_cids_ai AFTER INSERT ON eth.receipt_cids FOR EACH ROW EXECUTE FUNCTION eth.graphql_subscription('receipt_cids', 'id');
 
 
 --
 -- Name: state_accounts state_accounts_ai; Type: TRIGGER; Schema: eth; Owner: -
 --
 
-CREATE TRIGGER state_accounts_ai AFTER INSERT ON eth.state_accounts FOR EACH ROW EXECUTE PROCEDURE eth.graphql_subscription('state_accounts', 'id');
+CREATE TRIGGER state_accounts_ai AFTER INSERT ON eth.state_accounts FOR EACH ROW EXECUTE FUNCTION eth.graphql_subscription('state_accounts', 'id');
 
 
 --
 -- Name: state_cids state_cids_ai; Type: TRIGGER; Schema: eth; Owner: -
 --
 
-CREATE TRIGGER state_cids_ai AFTER INSERT ON eth.state_cids FOR EACH ROW EXECUTE PROCEDURE eth.graphql_subscription('state_cids', 'id');
+CREATE TRIGGER state_cids_ai AFTER INSERT ON eth.state_cids FOR EACH ROW EXECUTE FUNCTION eth.graphql_subscription('state_cids', 'id');
 
 
 --
 -- Name: storage_cids storage_cids_ai; Type: TRIGGER; Schema: eth; Owner: -
 --
 
-CREATE TRIGGER storage_cids_ai AFTER INSERT ON eth.storage_cids FOR EACH ROW EXECUTE PROCEDURE eth.graphql_subscription('storage_cids', 'id');
+CREATE TRIGGER storage_cids_ai AFTER INSERT ON eth.storage_cids FOR EACH ROW EXECUTE FUNCTION eth.graphql_subscription('storage_cids', 'id');
 
 
 --
 -- Name: transaction_cids transaction_cids_ai; Type: TRIGGER; Schema: eth; Owner: -
 --
 
-CREATE TRIGGER transaction_cids_ai AFTER INSERT ON eth.transaction_cids FOR EACH ROW EXECUTE PROCEDURE eth.graphql_subscription('transaction_cids', 'id');
+CREATE TRIGGER transaction_cids_ai AFTER INSERT ON eth.transaction_cids FOR EACH ROW EXECUTE FUNCTION eth.graphql_subscription('transaction_cids', 'id');
 
 
 --
 -- Name: uncle_cids uncle_cids_ai; Type: TRIGGER; Schema: eth; Owner: -
 --
 
-CREATE TRIGGER uncle_cids_ai AFTER INSERT ON eth.uncle_cids FOR EACH ROW EXECUTE PROCEDURE eth.graphql_subscription('uncle_cids', 'id');
+CREATE TRIGGER uncle_cids_ai AFTER INSERT ON eth.uncle_cids FOR EACH ROW EXECUTE FUNCTION eth.graphql_subscription('uncle_cids', 'id');
 
 
 --
@@ -1222,7 +890,7 @@ CREATE TRIGGER uncle_cids_ai AFTER INSERT ON eth.uncle_cids FOR EACH ROW EXECUTE
 --
 
 ALTER TABLE ONLY eth.access_list_element
-    ADD CONSTRAINT access_list_element_tx_id_fkey FOREIGN KEY (tx_id) REFERENCES eth.transaction_cids(id) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT access_list_element_tx_id_fkey FOREIGN KEY (tx_id) REFERENCES eth.transaction_cids(tx_hash) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -1250,11 +918,11 @@ ALTER TABLE ONLY eth.log_cids
 
 
 --
--- Name: log_cids log_cids_receipt_id_fkey; Type: FK CONSTRAINT; Schema: eth; Owner: -
+-- Name: log_cids log_cids_rct_id_fkey; Type: FK CONSTRAINT; Schema: eth; Owner: -
 --
 
 ALTER TABLE ONLY eth.log_cids
-    ADD CONSTRAINT log_cids_receipt_id_fkey FOREIGN KEY (receipt_id) REFERENCES eth.receipt_cids(id) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT log_cids_rct_id_fkey FOREIGN KEY (rct_id) REFERENCES eth.receipt_cids(tx_id) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -1270,15 +938,15 @@ ALTER TABLE ONLY eth.receipt_cids
 --
 
 ALTER TABLE ONLY eth.receipt_cids
-    ADD CONSTRAINT receipt_cids_tx_id_fkey FOREIGN KEY (tx_id) REFERENCES eth.transaction_cids(id) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT receipt_cids_tx_id_fkey FOREIGN KEY (tx_id) REFERENCES eth.transaction_cids(tx_hash) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
 
 
 --
--- Name: state_accounts state_accounts_state_id_fkey; Type: FK CONSTRAINT; Schema: eth; Owner: -
+-- Name: state_accounts state_accounts_header_id_state_path_fkey; Type: FK CONSTRAINT; Schema: eth; Owner: -
 --
 
 ALTER TABLE ONLY eth.state_accounts
-    ADD CONSTRAINT state_accounts_state_id_fkey FOREIGN KEY (state_id) REFERENCES eth.state_cids(id) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT state_accounts_header_id_state_path_fkey FOREIGN KEY (header_id, state_path) REFERENCES eth.state_cids(header_id, state_path) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -1286,7 +954,7 @@ ALTER TABLE ONLY eth.state_accounts
 --
 
 ALTER TABLE ONLY eth.state_cids
-    ADD CONSTRAINT state_cids_header_id_fkey FOREIGN KEY (header_id) REFERENCES eth.header_cids(id) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT state_cids_header_id_fkey FOREIGN KEY (header_id) REFERENCES eth.header_cids(block_hash) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -1298,6 +966,14 @@ ALTER TABLE ONLY eth.state_cids
 
 
 --
+-- Name: storage_cids storage_cids_header_id_state_path_fkey; Type: FK CONSTRAINT; Schema: eth; Owner: -
+--
+
+ALTER TABLE ONLY eth.storage_cids
+    ADD CONSTRAINT storage_cids_header_id_state_path_fkey FOREIGN KEY (header_id, state_path) REFERENCES eth.state_cids(header_id, state_path) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: storage_cids storage_cids_mh_key_fkey; Type: FK CONSTRAINT; Schema: eth; Owner: -
 --
 
@@ -1306,19 +982,11 @@ ALTER TABLE ONLY eth.storage_cids
 
 
 --
--- Name: storage_cids storage_cids_state_id_fkey; Type: FK CONSTRAINT; Schema: eth; Owner: -
---
-
-ALTER TABLE ONLY eth.storage_cids
-    ADD CONSTRAINT storage_cids_state_id_fkey FOREIGN KEY (state_id) REFERENCES eth.state_cids(id) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
-
-
---
 -- Name: transaction_cids transaction_cids_header_id_fkey; Type: FK CONSTRAINT; Schema: eth; Owner: -
 --
 
 ALTER TABLE ONLY eth.transaction_cids
-    ADD CONSTRAINT transaction_cids_header_id_fkey FOREIGN KEY (header_id) REFERENCES eth.header_cids(id) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT transaction_cids_header_id_fkey FOREIGN KEY (header_id) REFERENCES eth.header_cids(block_hash) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -1334,7 +1002,7 @@ ALTER TABLE ONLY eth.transaction_cids
 --
 
 ALTER TABLE ONLY eth.uncle_cids
-    ADD CONSTRAINT uncle_cids_header_id_fkey FOREIGN KEY (header_id) REFERENCES eth.header_cids(id) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT uncle_cids_header_id_fkey FOREIGN KEY (header_id) REFERENCES eth.header_cids(block_hash) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
 
 
 --
