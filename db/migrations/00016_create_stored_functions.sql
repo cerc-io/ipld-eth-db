@@ -5,7 +5,7 @@ CREATE OR REPLACE FUNCTION was_state_leaf_removed(key character varying, hash ch
     RETURNS boolean AS $$
     SELECT state_cids.node_type = 3
     FROM eth.state_cids
-             INNER JOIN eth.header_cids ON (state_cids.header_id = header_cids.id)
+             INNER JOIN eth.header_cids ON (state_cids.header_id = header_cids.block_hash)
     WHERE state_leaf_key = key
       AND block_number <= (SELECT block_number
                            FROM eth.header_cids
