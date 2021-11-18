@@ -6,7 +6,7 @@ CREATE TABLE eth.header_cids (
     cid                   TEXT NOT NULL,
     mh_key                TEXT NOT NULL REFERENCES public.blocks (key) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED,
     td                    NUMERIC NOT NULL,
-    node_id               INTEGER NOT NULL REFERENCES nodes (id) ON DELETE CASCADE,
+    node_id               VARCHAR(128) NOT NULL REFERENCES nodes (node_id) ON DELETE CASCADE,
     reward                NUMERIC NOT NULL,
     state_root            VARCHAR(66) NOT NULL,
     tx_root               VARCHAR(66) NOT NULL,

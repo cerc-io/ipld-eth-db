@@ -38,7 +38,7 @@ CREATE TABLE eth.header_cids (
     cid text NOT NULL,
     mh_key text NOT NULL,
     td numeric NOT NULL,
-    node_id integer NOT NULL,
+    node_id character varying(128) NOT NULL,
     reward numeric NOT NULL,
     state_root character varying(66) NOT NULL,
     tx_root character varying(66) NOT NULL,
@@ -73,34 +73,6 @@ CREATE TYPE public.child_result AS (
 	has_child boolean,
 	children eth.header_cids[]
 );
-
-
---
--- Name: graphql_subscription(); Type: FUNCTION; Schema: eth; Owner: -
---
-
-CREATE FUNCTION eth.graphql_subscription() RETURNS trigger
-    LANGUAGE plpgsql
-    AS $_$
-declare
-    table_name text = TG_ARGV[0];
-    attribute text = TG_ARGV[1];
-    id text;
-begin
-    execute 'select $1.' || quote_ident(attribute)
-        using new
-        into id;
-    perform pg_notify('postgraphile:' || table_name,
-                      json_build_object(
-                              '__node__', json_build_array(
-                              table_name,
-                              id
-                          )
-                          )::text
-        );
-    return new;
-end;
-$_$;
 
 
 --
@@ -416,11 +388,10 @@ ALTER SEQUENCE public.goose_db_version_id_seq OWNED BY public.goose_db_version.i
 --
 
 CREATE TABLE public.nodes (
-    id integer NOT NULL,
     client_name character varying,
     genesis_block character varying(66),
     network_id character varying,
-    node_id character varying(128),
+    node_id character varying(128) NOT NULL,
     chain_id integer DEFAULT 1
 );
 
@@ -440,37 +411,10 @@ COMMENT ON COLUMN public.nodes.node_id IS '@name ChainNodeID';
 
 
 --
--- Name: nodes_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE public.nodes_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: nodes_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
-
-ALTER SEQUENCE public.nodes_id_seq OWNED BY public.nodes.id;
-
-
---
 -- Name: goose_db_version id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.goose_db_version ALTER COLUMN id SET DEFAULT nextval('public.goose_db_version_id_seq'::regclass);
-
-
---
--- Name: nodes id; Type: DEFAULT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.nodes ALTER COLUMN id SET DEFAULT nextval('public.nodes_id_seq'::regclass);
 
 
 --
@@ -574,7 +518,7 @@ ALTER TABLE ONLY public.nodes
 --
 
 ALTER TABLE ONLY public.nodes
-    ADD CONSTRAINT nodes_pkey PRIMARY KEY (id);
+    ADD CONSTRAINT nodes_pkey PRIMARY KEY (node_id);
 
 
 --
@@ -837,55 +781,6 @@ CREATE INDEX uncle_header_id_index ON eth.uncle_cids USING btree (header_id);
 
 
 --
--- Name: header_cids header_cids_ai; Type: TRIGGER; Schema: eth; Owner: -
---
-
-CREATE TRIGGER header_cids_ai AFTER INSERT ON eth.header_cids FOR EACH ROW EXECUTE FUNCTION eth.graphql_subscription('header_cids', 'id');
-
-
---
--- Name: receipt_cids receipt_cids_ai; Type: TRIGGER; Schema: eth; Owner: -
---
-
-CREATE TRIGGER receipt_cids_ai AFTER INSERT ON eth.receipt_cids FOR EACH ROW EXECUTE FUNCTION eth.graphql_subscription('receipt_cids', 'id');
-
-
---
--- Name: state_accounts state_accounts_ai; Type: TRIGGER; Schema: eth; Owner: -
---
-
-CREATE TRIGGER state_accounts_ai AFTER INSERT ON eth.state_accounts FOR EACH ROW EXECUTE FUNCTION eth.graphql_subscription('state_accounts', 'id');
-
-
---
--- Name: state_cids state_cids_ai; Type: TRIGGER; Schema: eth; Owner: -
---
-
-CREATE TRIGGER state_cids_ai AFTER INSERT ON eth.state_cids FOR EACH ROW EXECUTE FUNCTION eth.graphql_subscription('state_cids', 'id');
-
-
---
--- Name: storage_cids storage_cids_ai; Type: TRIGGER; Schema: eth; Owner: -
---
-
-CREATE TRIGGER storage_cids_ai AFTER INSERT ON eth.storage_cids FOR EACH ROW EXECUTE FUNCTION eth.graphql_subscription('storage_cids', 'id');
-
-
---
--- Name: transaction_cids transaction_cids_ai; Type: TRIGGER; Schema: eth; Owner: -
---
-
-CREATE TRIGGER transaction_cids_ai AFTER INSERT ON eth.transaction_cids FOR EACH ROW EXECUTE FUNCTION eth.graphql_subscription('transaction_cids', 'id');
-
-
---
--- Name: uncle_cids uncle_cids_ai; Type: TRIGGER; Schema: eth; Owner: -
---
-
-CREATE TRIGGER uncle_cids_ai AFTER INSERT ON eth.uncle_cids FOR EACH ROW EXECUTE FUNCTION eth.graphql_subscription('uncle_cids', 'id');
-
-
---
 -- Name: access_list_element access_list_element_tx_id_fkey; Type: FK CONSTRAINT; Schema: eth; Owner: -
 --
 
@@ -906,7 +801,7 @@ ALTER TABLE ONLY eth.header_cids
 --
 
 ALTER TABLE ONLY eth.header_cids
-    ADD CONSTRAINT header_cids_node_id_fkey FOREIGN KEY (node_id) REFERENCES public.nodes(id) ON DELETE CASCADE;
+    ADD CONSTRAINT header_cids_node_id_fkey FOREIGN KEY (node_id) REFERENCES public.nodes(node_id) ON DELETE CASCADE;
 
 
 --
