@@ -7,7 +7,8 @@ CREATE TABLE eth.storage_cids (
     mh_key                TEXT NOT NULL,
     storage_path          BYTEA NOT NULL,
     node_type             INTEGER NOT NULL,
-    diff                  BOOLEAN NOT NULL DEFAULT FALSE
+    diff                  BOOLEAN NOT NULL DEFAULT FALSE,
+    PRIMARY KEY (header_id, state_path, storage_path)
 );
 
 -- +goose Down

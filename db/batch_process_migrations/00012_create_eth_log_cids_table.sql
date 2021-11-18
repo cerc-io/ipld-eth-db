@@ -9,7 +9,8 @@ CREATE TABLE eth.log_cids (
     topic0              VARCHAR(66),
     topic1              VARCHAR(66),
     topic2              VARCHAR(66),
-    topic3              VARCHAR(66)
+    topic3              VARCHAR(66),
+    PRIMARY KEY (rct_id, index)
 );
 
 -- +goose Down

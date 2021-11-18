@@ -1,6 +1,6 @@
 -- +goose Up
 CREATE TABLE eth.header_cids (
-    block_hash            VARCHAR(66) NOT NULL,
+    block_hash            VARCHAR(66) PRIMARY KEY,
     block_number          BIGINT NOT NULL,
     parent_hash           VARCHAR(66) NOT NULL,
     cid                   TEXT NOT NULL,
