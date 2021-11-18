@@ -42,8 +42,8 @@ CREATE INDEX account_state_path_index ON eth.state_accounts USING btree (state_p
 CREATE INDEX storage_root_index ON eth.state_accounts USING btree (storage_root);
 
 -- access list indexes
-CREATE INDEX access_list_element_address_index ON eth.access_list_element USING btree (address);
-CREATE INDEX access_list_storage_keys_index ON eth.access_list_element USING gin (storage_keys);
+CREATE INDEX access_list_element_address_index ON eth.access_list_elements USING btree (address);
+CREATE INDEX access_list_storage_keys_index ON eth.access_list_elements USING gin (storage_keys);
 
 -- log indexes
 CREATE INDEX log_mh_index ON eth.log_cids USING btree (leaf_mh_key);

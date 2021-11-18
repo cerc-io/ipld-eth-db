@@ -6,8 +6,7 @@ CREATE TABLE eth.state_cids (
     mh_key                TEXT NOT NULL,
     state_path            BYTEA NOT NULL,
     node_type             INTEGER NOT NULL,
-    diff                  BOOLEAN NOT NULL DEFAULT FALSE,
-    PRIMARY KEY (header_id, state_path)
+    diff                  BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 -- +goose Down
