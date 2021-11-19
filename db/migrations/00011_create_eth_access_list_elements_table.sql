@@ -1,5 +1,5 @@
 -- +goose Up
-CREATE TABLE eth.access_list_element (
+CREATE TABLE eth.access_list_elements (
     tx_id                 VARCHAR(66) NOT NULL REFERENCES eth.transaction_cids (tx_hash) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED,
     index                 INTEGER NOT NULL,
     address               VARCHAR(66),
@@ -8,4 +8,4 @@ CREATE TABLE eth.access_list_element (
 );
 
 -- +goose Down
-DROP TABLE eth.access_list_element;
+DROP TABLE eth.access_list_elements;

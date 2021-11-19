@@ -1,11 +1,10 @@
 -- +goose Up
-CREATE TABLE eth.access_list_element (
+CREATE TABLE eth.access_list_elements (
     tx_id                 VARCHAR(66) NOT NULL,
     index                 INTEGER NOT NULL,
     address               VARCHAR(66),
-    storage_keys          VARCHAR(66)[],
-    PRIMARY KEY (tx_id, index)
+    storage_keys          VARCHAR(66)[]
 );
 
 -- +goose Down
-DROP TABLE eth.access_list_element;
+DROP TABLE eth.access_list_elements;

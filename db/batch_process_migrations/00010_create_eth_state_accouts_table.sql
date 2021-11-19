@@ -5,8 +5,7 @@ CREATE TABLE eth.state_accounts (
     balance               NUMERIC NOT NULL,
     nonce                 INTEGER NOT NULL,
     code_hash             BYTEA NOT NULL,
-    storage_root          VARCHAR(66) NOT NULL,
-    PRIMARY KEY (header_id, state_path)
+    storage_root          VARCHAR(66) NOT NULL
 );
 
 -- +goose Down

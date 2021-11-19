@@ -213,10 +213,10 @@ $$;
 
 
 --
--- Name: access_list_element; Type: TABLE; Schema: eth; Owner: -
+-- Name: access_list_elements; Type: TABLE; Schema: eth; Owner: -
 --
 
-CREATE TABLE eth.access_list_element (
+CREATE TABLE eth.access_list_elements (
     tx_id character varying(66) NOT NULL,
     index integer NOT NULL,
     address character varying(66),
@@ -418,11 +418,11 @@ ALTER TABLE ONLY public.goose_db_version ALTER COLUMN id SET DEFAULT nextval('pu
 
 
 --
--- Name: access_list_element access_list_element_pkey; Type: CONSTRAINT; Schema: eth; Owner: -
+-- Name: access_list_elements access_list_elements_pkey; Type: CONSTRAINT; Schema: eth; Owner: -
 --
 
-ALTER TABLE ONLY eth.access_list_element
-    ADD CONSTRAINT access_list_element_pkey PRIMARY KEY (tx_id, index);
+ALTER TABLE ONLY eth.access_list_elements
+    ADD CONSTRAINT access_list_elements_pkey PRIMARY KEY (tx_id, index);
 
 
 --
@@ -506,14 +506,6 @@ ALTER TABLE ONLY public.goose_db_version
 
 
 --
--- Name: nodes node_uc; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.nodes
-    ADD CONSTRAINT node_uc UNIQUE (genesis_block, network_id, node_id, chain_id);
-
-
---
 -- Name: nodes nodes_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -525,14 +517,14 @@ ALTER TABLE ONLY public.nodes
 -- Name: access_list_element_address_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE INDEX access_list_element_address_index ON eth.access_list_element USING btree (address);
+CREATE INDEX access_list_element_address_index ON eth.access_list_elements USING btree (address);
 
 
 --
 -- Name: access_list_storage_keys_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE INDEX access_list_storage_keys_index ON eth.access_list_element USING gin (storage_keys);
+CREATE INDEX access_list_storage_keys_index ON eth.access_list_elements USING gin (storage_keys);
 
 
 --
@@ -781,11 +773,11 @@ CREATE INDEX uncle_header_id_index ON eth.uncle_cids USING btree (header_id);
 
 
 --
--- Name: access_list_element access_list_element_tx_id_fkey; Type: FK CONSTRAINT; Schema: eth; Owner: -
+-- Name: access_list_elements access_list_elements_tx_id_fkey; Type: FK CONSTRAINT; Schema: eth; Owner: -
 --
 
-ALTER TABLE ONLY eth.access_list_element
-    ADD CONSTRAINT access_list_element_tx_id_fkey FOREIGN KEY (tx_id) REFERENCES eth.transaction_cids(tx_hash) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
+ALTER TABLE ONLY eth.access_list_elements
+    ADD CONSTRAINT access_list_elements_tx_id_fkey FOREIGN KEY (tx_id) REFERENCES eth.transaction_cids(tx_hash) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
 
 
 --
