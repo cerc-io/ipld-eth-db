@@ -37,15 +37,15 @@ CREATE TABLE eth.header_cids (
     parent_hash character varying(66) NOT NULL,
     cid text NOT NULL,
     mh_key text NOT NULL,
-    td numeric NOT NULL,
+    td bigint NOT NULL,
     node_id character varying(128) NOT NULL,
-    reward numeric NOT NULL,
+    reward bigint NOT NULL,
     state_root character varying(66) NOT NULL,
     tx_root character varying(66) NOT NULL,
     receipt_root character varying(66) NOT NULL,
     uncle_root character varying(66) NOT NULL,
     bloom bytea NOT NULL,
-    "timestamp" numeric NOT NULL,
+    "timestamp" bigint NOT NULL,
     times_validated integer DEFAULT 1 NOT NULL,
     base_fee bigint
 );
@@ -265,7 +265,7 @@ CREATE TABLE eth.receipt_cids (
 CREATE TABLE eth.state_accounts (
     header_id character varying(66) NOT NULL,
     state_path bytea NOT NULL,
-    balance numeric NOT NULL,
+    balance bigint NOT NULL,
     nonce integer NOT NULL,
     code_hash bytea NOT NULL,
     storage_root character varying(66) NOT NULL
