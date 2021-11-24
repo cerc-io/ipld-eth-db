@@ -5,9 +5,9 @@ CREATE TABLE eth.header_cids (
     parent_hash           VARCHAR(66) NOT NULL,
     cid                   TEXT NOT NULL,
     mh_key                TEXT NOT NULL,
-    td                    BIGINT NOT NULL,
+    td                    NUMERIC NOT NULL,
     node_id               VARCHAR(128) NOT NULL,
-    reward                BIGINT NOT NULL,
+    reward                NUMERIC NOT NULL,
     state_root            VARCHAR(66) NOT NULL,
     tx_root               VARCHAR(66) NOT NULL,
     receipt_root          VARCHAR(66) NOT NULL,
@@ -15,7 +15,7 @@ CREATE TABLE eth.header_cids (
     bloom                 BYTEA NOT NULL,
     timestamp             BIGINT NOT NULL,
     times_validated       INTEGER NOT NULL DEFAULT 1,
-    base_fee              BIGINT
+    base_fee              NUMERIC
 );
 
 -- +goose Down

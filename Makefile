@@ -60,13 +60,11 @@ migrate: $(GOOSE) checkdbvars
 .PHONY: migrate_pre_batch_set
 migrate_pre_batch_set: $(GOOSE) checkdbvars
 	$(GOOSE) -dir db/pre_batch_processing_migrations postgres "$(CONNECT_STRING)" up
-	pg_dump -O -s $(CONNECT_STRING) > schema.sql
 
 ## Apply migrations to be ran after a batch processing
 .PHONY: migrate_post_batch_set
 migrate_post_batch_set: $(GOOSE) checkdbvars
 	$(GOOSE) -dir db/post_batch_processing_migrations postgres "$(CONNECT_STRING)" up
-	pg_dump -O -s $(CONNECT_STRING) > schema.sql
 
 ## Create a new migration file
 .PHONY: new_migration
