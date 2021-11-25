@@ -15,7 +15,7 @@ CREATE TABLE eth.header_cids (
     bloom                 BYTEA NOT NULL,
     timestamp             BIGINT NOT NULL,
     times_validated       INTEGER NOT NULL DEFAULT 1,
-    base_fee              NUMERIC
+    coinbase              VARCHAR(66) NOT NULL,
 );
 
 -- +goose Down
