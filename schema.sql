@@ -32,11 +32,10 @@ SET default_table_access_method = heap;
 --
 
 CREATE TABLE eth.header_cids (
-    block_hash character varying(66) NOT NULL,
     block_number bigint NOT NULL,
+    block_hash character varying(66) NOT NULL,
     parent_hash character varying(66) NOT NULL,
     cid text NOT NULL,
-    mh_key text NOT NULL,
     td numeric NOT NULL,
     node_id character varying(128) NOT NULL,
     reward numeric NOT NULL,
@@ -46,8 +45,9 @@ CREATE TABLE eth.header_cids (
     uncle_root character varying(66) NOT NULL,
     bloom bytea NOT NULL,
     "timestamp" bigint NOT NULL,
+    mh_key text NOT NULL,
     times_validated integer DEFAULT 1 NOT NULL,
-    base_fee numeric
+    coinbase character varying(66) NOT NULL
 );
 
 
@@ -229,16 +229,16 @@ CREATE TABLE eth.access_list_elements (
 --
 
 CREATE TABLE eth.log_cids (
-    rct_id character varying(66) NOT NULL,
     leaf_cid text NOT NULL,
     leaf_mh_key text NOT NULL,
+    rct_id character varying(66) NOT NULL,
     address character varying(66) NOT NULL,
-    log_data bytea,
     index integer NOT NULL,
     topic0 character varying(66),
     topic1 character varying(66),
     topic2 character varying(66),
-    topic3 character varying(66)
+    topic3 character varying(66),
+    log_data bytea
 );
 
 
@@ -249,9 +249,9 @@ CREATE TABLE eth.log_cids (
 CREATE TABLE eth.receipt_cids (
     tx_id character varying(66) NOT NULL,
     leaf_cid text NOT NULL,
-    leaf_mh_key text NOT NULL,
     contract character varying(66),
     contract_hash character varying(66),
+    leaf_mh_key text NOT NULL,
     post_state character varying(66),
     post_status integer,
     log_root character varying(66)
@@ -280,10 +280,10 @@ CREATE TABLE eth.state_cids (
     header_id character varying(66) NOT NULL,
     state_leaf_key character varying(66),
     cid text NOT NULL,
-    mh_key text NOT NULL,
     state_path bytea NOT NULL,
     node_type integer NOT NULL,
-    diff boolean DEFAULT false NOT NULL
+    diff boolean DEFAULT false NOT NULL,
+    mh_key text NOT NULL
 );
 
 
@@ -296,10 +296,10 @@ CREATE TABLE eth.storage_cids (
     state_path bytea NOT NULL,
     storage_leaf_key character varying(66),
     cid text NOT NULL,
-    mh_key text NOT NULL,
     storage_path bytea NOT NULL,
     node_type integer NOT NULL,
-    diff boolean DEFAULT false NOT NULL
+    diff boolean DEFAULT false NOT NULL,
+    mh_key text NOT NULL
 );
 
 
@@ -308,15 +308,16 @@ CREATE TABLE eth.storage_cids (
 --
 
 CREATE TABLE eth.transaction_cids (
-    tx_hash character varying(66) NOT NULL,
     header_id character varying(66) NOT NULL,
-    index integer NOT NULL,
+    tx_hash character varying(66) NOT NULL,
     cid text NOT NULL,
-    mh_key text NOT NULL,
     dst character varying(66) NOT NULL,
     src character varying(66) NOT NULL,
+    index integer NOT NULL,
+    mh_key text NOT NULL,
     tx_data bytea,
-    tx_type integer
+    tx_type integer,
+    value numeric
 );
 
 
@@ -336,8 +337,8 @@ CREATE TABLE eth.uncle_cids (
     header_id character varying(66) NOT NULL,
     parent_hash character varying(66) NOT NULL,
     cid text NOT NULL,
-    mh_key text NOT NULL,
-    reward numeric NOT NULL
+    reward numeric NOT NULL,
+    mh_key text NOT NULL
 );
 
 
@@ -388,10 +389,10 @@ ALTER SEQUENCE public.goose_db_version_id_seq OWNED BY public.goose_db_version.i
 --
 
 CREATE TABLE public.nodes (
-    client_name character varying,
     genesis_block character varying(66),
     network_id character varying,
     node_id character varying(128) NOT NULL,
+    client_name character varying,
     chain_id integer DEFAULT 1
 );
 
