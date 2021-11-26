@@ -4,8 +4,8 @@ CREATE TABLE eth.uncle_cids (
     header_id             VARCHAR(66) NOT NULL REFERENCES eth.header_cids (block_hash) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED,
     parent_hash           VARCHAR(66) NOT NULL,
     cid                   TEXT NOT NULL,
-    mh_key                TEXT NOT NULL REFERENCES public.blocks (key) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED,
-    reward                NUMERIC NOT NULL
+    reward                NUMERIC NOT NULL,
+    mh_key                TEXT NOT NULL REFERENCES public.blocks (key) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED
 );
 
 -- +goose Down
