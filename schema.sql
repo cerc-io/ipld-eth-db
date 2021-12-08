@@ -900,8 +900,87 @@ ALTER TABLE ONLY eth.uncle_cids
 ALTER TABLE ONLY eth.uncle_cids
     ADD CONSTRAINT uncle_cids_mh_key_fkey FOREIGN KEY (mh_key) REFERENCES public.blocks(key) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
 
+--
+-- Name: graphql_subscription(); Type: FUNCTION; Schema: eth; Owner: -
+--
+
+CREATE FUNCTION eth.graphql_subscription() RETURNS TRIGGER AS $$
+DECLARE
+    hash text;
+    obj jsonb;
+BEGIN
+    EXECUTE 'select $1.' || quote_ident(TG_ARGV[0])
+        USING NEW
+        INTO hash;
+    IF (TG_RELNAME = 'state_cids' ) THEN
+         obj := json_build_array(
+                    TG_RELNAME,
+                    hash,
+                    NEW.state_path
+                );
+    ELSIF (TG_RELNAME = 'storage_cids') THEN
+         obj := json_build_array(
+                    TG_RELNAME,
+                    hash,
+                    NEW.state_path,
+                    NEW.storage_path
+                );
+    ELSIF (TG_RELNAME = 'log_cids') THEN
+         obj := json_build_array(
+                    TG_RELNAME,
+                    hash,
+                    NEW.index
+                );
+    ELSE
+         obj := json_build_array(
+                    TG_RELNAME,
+                    hash
+                );
+    END IF;
+
+    perform pg_notify('postgraphile:' || TG_RELNAME , json_build_object(
+            '__node__', obj
+            )::text
+        );
+    RETURN NEW;
+END;
+$$ language plpgsql;
+
+CREATE TRIGGER eth_header_cids
+    AFTER INSERT ON eth.header_cids
+    FOR EACH ROW
+    EXECUTE PROCEDURE eth.graphql_subscription('block_hash');
+
+CREATE TRIGGER eth_uncle_cids
+    AFTER INSERT ON eth.uncle_cids
+    FOR EACH ROW
+    EXECUTE PROCEDURE eth.graphql_subscription('block_hash');
+
+CREATE TRIGGER eth_transaction_cids
+    AFTER INSERT ON eth.transaction_cids
+    FOR EACH ROW
+    EXECUTE PROCEDURE eth.graphql_subscription('tx_hash');
+
+CREATE TRIGGER eth_receipt_cids
+    AFTER INSERT ON eth.receipt_cids
+    FOR EACH ROW
+    EXECUTE PROCEDURE eth.graphql_subscription('tx_id');
+
+CREATE TRIGGER eth_state_cids
+    AFTER INSERT ON eth.state_cids
+    FOR EACH ROW
+    EXECUTE PROCEDURE eth.graphql_subscription('header_id','state_path');
+
+CREATE TRIGGER eth_log_cids
+    AFTER INSERT ON eth.log_cids
+    FOR EACH ROW
+    EXECUTE PROCEDURE eth.graphql_subscription('rct_id', 'index');
+
+CREATE TRIGGER eth_storage_cids
+    AFTER INSERT ON eth.storage_cids
+    FOR EACH ROW
+    EXECUTE PROCEDURE eth.graphql_subscription('header_id','state_path', 'storage_path');
 
 --
 -- PostgreSQL database dump complete
 --
-
