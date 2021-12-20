@@ -1,150 +1,147 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Diagram>
   <ID>DATABASE</ID>
-  <OriginalElement>763cb2dc-728a-4fbd-a163-94dd564429aa</OriginalElement>
+  <OriginalElement>407978cb-39e6-453c-b9b7-c4183a4e26ef</OriginalElement>
   <nodes>
-    <node x="508.5625" y="998.0">763cb2dc-728a-4fbd-a163-94dd564429aa.TABLE:vulcanize_testing.eth.receipt_cids</node>
-    <node x="227.705078125" y="1282.0">763cb2dc-728a-4fbd-a163-94dd564429aa.TABLE:vulcanize_testing.eth.log_cids</node>
-    <node x="256.5" y="1031.0">763cb2dc-728a-4fbd-a163-94dd564429aa.TABLE:vulcanize_testing.eth.state_accounts</node>
-    <node x="156.705078125" y="712.0">763cb2dc-728a-4fbd-a163-94dd564429aa.TABLE:vulcanize_testing.eth.state_cids</node>
-    <node x="193.330078125" y="44.5">763cb2dc-728a-4fbd-a163-94dd564429aa.TABLE:vulcanize_testing.public.blocks</node>
-    <node x="10.5" y="1009.0">763cb2dc-728a-4fbd-a163-94dd564429aa.TABLE:vulcanize_testing.eth.storage_cids</node>
-    <node x="547.375" y="723.0">763cb2dc-728a-4fbd-a163-94dd564429aa.TABLE:vulcanize_testing.eth.uncle_cids</node>
-    <node x="1146.375" y="0.0">763cb2dc-728a-4fbd-a163-94dd564429aa.TABLE:vulcanize_testing.public.goose_db_version</node>
-    <node x="499.455078125" y="0.0">763cb2dc-728a-4fbd-a163-94dd564429aa.TABLE:vulcanize_testing.public.nodes</node>
-    <node x="824.375" y="1042.0">763cb2dc-728a-4fbd-a163-94dd564429aa.TABLE:vulcanize_testing.eth.access_list_element</node>
-    <node x="614.5" y="228.0">763cb2dc-728a-4fbd-a163-94dd564429aa.TABLE:vulcanize_testing.eth.header_cids</node>
-    <node x="761.375" y="690.0">763cb2dc-728a-4fbd-a163-94dd564429aa.TABLE:vulcanize_testing.eth.transaction_cids</node>
+    <node x="623.125" y="196.0">407978cb-39e6-453c-b9b7-c4183a4e26ef.TABLE:vulcanize_test.eth.header_cids</node>
+    <node x="245.5" y="944.0">407978cb-39e6-453c-b9b7-c4183a4e26ef.TABLE:vulcanize_test.eth.receipt_cids</node>
+    <node x="922.837890625" y="0.0">407978cb-39e6-453c-b9b7-c4183a4e26ef.TABLE:vulcanize_test.public.nodes</node>
+    <node x="689.794921875" y="966.0">407978cb-39e6-453c-b9b7-c4183a4e26ef.TABLE:vulcanize_test.eth.state_accounts</node>
+    <node x="586.353515625" y="680.0">407978cb-39e6-453c-b9b7-c4183a4e26ef.TABLE:vulcanize_test.eth.uncle_cids</node>
+    <node x="351.294921875" y="33.0">407978cb-39e6-453c-b9b7-c4183a4e26ef.TABLE:vulcanize_test.public.blocks</node>
+    <node x="226.353515625" y="636.0">407978cb-39e6-453c-b9b7-c4183a4e26ef.TABLE:vulcanize_test.eth.transaction_cids</node>
+    <node x="10.5" y="988.0">407978cb-39e6-453c-b9b7-c4183a4e26ef.TABLE:vulcanize_test.eth.access_list_elements</node>
+    <node x="800.353515625" y="669.0">407978cb-39e6-453c-b9b7-c4183a4e26ef.TABLE:vulcanize_test.eth.state_cids</node>
+    <node x="152.435546875" y="1206.0">407978cb-39e6-453c-b9b7-c4183a4e26ef.TABLE:vulcanize_test.eth.log_cids</node>
+    <node x="1273.837890625" y="0.0">407978cb-39e6-453c-b9b7-c4183a4e26ef.TABLE:vulcanize_test.public.goose_db_version</node>
+    <node x="906.794921875" y="944.0">407978cb-39e6-453c-b9b7-c4183a4e26ef.TABLE:vulcanize_test.eth.storage_cids</node>
   </nodes>
   <notes />
   <edges>
-    <edge source="763cb2dc-728a-4fbd-a163-94dd564429aa.TABLE:vulcanize_testing.public.nodes" target="763cb2dc-728a-4fbd-a163-94dd564429aa.TABLE:vulcanize_testing.public.nodes" relationship="REFERENCES">
-      <point x="-76.5" y="83.0" />
-      <point x="575.955078125" y="151.63819095477388" />
-      <point x="532.3193997330402" y="151.63819095477388" />
-      <point x="532.3193997330402" y="83.0" />
-      <point x="-153.0" y="0.0" />
+    <edge source="407978cb-39e6-453c-b9b7-c4183a4e26ef.TABLE:vulcanize_test.eth.access_list_elements" target="407978cb-39e6-453c-b9b7-c4183a4e26ef.TABLE:vulcanize_test.eth.transaction_cids" relationship="REFERENCES">
+      <point x="0.0" y="-61.0" />
+      <point x="118.0" y="922.0" />
+      <point x="396.353515625" y="922.0" />
+      <point x="0.0" y="127.0" />
     </edge>
-    <edge source="763cb2dc-728a-4fbd-a163-94dd564429aa.TABLE:vulcanize_testing.eth.uncle_cids" target="763cb2dc-728a-4fbd-a163-94dd564429aa.TABLE:vulcanize_testing.eth.header_cids" relationship="REFERENCES">
-      <point x="48.5" y="-94.0" />
-      <point x="692.875" y="668.0" />
-      <point x="756.0" y="668.0" />
-      <point x="0.0" y="204.0" />
+    <edge source="407978cb-39e6-453c-b9b7-c4183a4e26ef.TABLE:vulcanize_test.eth.state_cids" target="407978cb-39e6-453c-b9b7-c4183a4e26ef.TABLE:vulcanize_test.eth.header_cids" relationship="REFERENCES">
+      <point x="-52.25" y="-94.0" />
+      <point x="852.603515625" y="614.0" />
+      <point x="770.125" y="614.0" />
+      <point x="0.0" y="193.0" />
     </edge>
-    <edge source="763cb2dc-728a-4fbd-a163-94dd564429aa.TABLE:vulcanize_testing.eth.storage_cids" target="763cb2dc-728a-4fbd-a163-94dd564429aa.TABLE:vulcanize_testing.public.blocks" relationship="REFERENCES">
-      <point x="-56.5" y="-105.0" />
-      <point x="67.0" y="971.0" />
-      <point x="111.205078125" y="971.0" />
-      <point x="111.205078125" y="207.0" />
-      <point x="502.875" y="207.0" />
-      <point x="502.875" y="197.0" />
-      <point x="269.080078125" y="197.0" />
-      <point x="25.25" y="38.5" />
+    <edge source="407978cb-39e6-453c-b9b7-c4183a4e26ef.TABLE:vulcanize_test.eth.receipt_cids" target="407978cb-39e6-453c-b9b7-c4183a4e26ef.TABLE:vulcanize_test.public.blocks" relationship="REFERENCES">
+      <point x="-51.75" y="-105.0" />
+      <point x="297.25" y="912.0" />
+      <point x="129.669921875" y="912.0" />
+      <point x="129.669921875" y="175.0" />
+      <point x="108.0" y="175.0" />
+      <point x="108.0" y="165.0" />
+      <point x="376.544921875" y="165.0" />
+      <point x="-25.25" y="39.0" />
     </edge>
-    <edge source="763cb2dc-728a-4fbd-a163-94dd564429aa.TABLE:vulcanize_testing.eth.state_accounts" target="763cb2dc-728a-4fbd-a163-94dd564429aa.TABLE:vulcanize_testing.eth.state_cids" relationship="REFERENCES">
+    <edge source="407978cb-39e6-453c-b9b7-c4183a4e26ef.TABLE:vulcanize_test.eth.state_accounts" target="407978cb-39e6-453c-b9b7-c4183a4e26ef.TABLE:vulcanize_test.eth.state_cids" relationship="REFERENCES">
       <point x="0.0" y="-83.0" />
-      <point x="355.0" y="971.0" />
-      <point x="261.205078125" y="971.0" />
-      <point x="0.0" y="105.0" />
+      <point x="788.294921875" y="922.0" />
+      <point x="904.853515625" y="922.0" />
+      <point x="0.0" y="94.0" />
     </edge>
-    <edge source="763cb2dc-728a-4fbd-a163-94dd564429aa.TABLE:vulcanize_testing.eth.uncle_cids" target="763cb2dc-728a-4fbd-a163-94dd564429aa.TABLE:vulcanize_testing.public.blocks" relationship="REFERENCES">
-      <point x="-48.5" y="-94.0" />
-      <point x="595.875" y="658.0" />
-      <point x="589.25" y="658.0" />
-      <point x="589.25" y="207.0" />
-      <point x="502.875" y="207.0" />
-      <point x="502.875" y="197.0" />
-      <point x="269.080078125" y="197.0" />
-      <point x="25.25" y="38.5" />
+    <edge source="407978cb-39e6-453c-b9b7-c4183a4e26ef.TABLE:vulcanize_test.eth.log_cids" target="407978cb-39e6-453c-b9b7-c4183a4e26ef.TABLE:vulcanize_test.public.blocks" relationship="REFERENCES">
+      <point x="-41.0" y="-127.0" />
+      <point x="193.435546875" y="1180.0" />
+      <point x="0.0" y="1180.0" />
+      <point x="0.0" y="175.0" />
+      <point x="108.0" y="175.0" />
+      <point x="108.0" y="165.0" />
+      <point x="376.544921875" y="165.0" />
+      <point x="-25.25" y="39.0" />
     </edge>
-    <edge source="763cb2dc-728a-4fbd-a163-94dd564429aa.TABLE:vulcanize_testing.eth.storage_cids" target="763cb2dc-728a-4fbd-a163-94dd564429aa.TABLE:vulcanize_testing.eth.state_cids" relationship="REFERENCES">
+    <edge source="407978cb-39e6-453c-b9b7-c4183a4e26ef.TABLE:vulcanize_test.eth.storage_cids" target="407978cb-39e6-453c-b9b7-c4183a4e26ef.TABLE:vulcanize_test.public.blocks" relationship="REFERENCES">
       <point x="56.5" y="-105.0" />
-      <point x="180.0" y="971.0" />
-      <point x="261.205078125" y="971.0" />
+      <point x="1076.294921875" y="922.0" />
+      <point x="1024.794921875" y="922.0" />
+      <point x="1024.794921875" y="175.0" />
+      <point x="699.087890625" y="175.0" />
+      <point x="699.087890625" y="165.0" />
+      <point x="427.044921875" y="165.0" />
+      <point x="25.25" y="39.0" />
+    </edge>
+    <edge source="407978cb-39e6-453c-b9b7-c4183a4e26ef.TABLE:vulcanize_test.eth.receipt_cids" target="407978cb-39e6-453c-b9b7-c4183a4e26ef.TABLE:vulcanize_test.eth.transaction_cids" relationship="REFERENCES">
+      <point x="51.75" y="-105.0" />
+      <point x="400.75" y="922.0" />
+      <point x="396.353515625" y="922.0" />
+      <point x="0.0" y="127.0" />
+    </edge>
+    <edge source="407978cb-39e6-453c-b9b7-c4183a4e26ef.TABLE:vulcanize_test.eth.transaction_cids" target="407978cb-39e6-453c-b9b7-c4183a4e26ef.TABLE:vulcanize_test.eth.header_cids" relationship="REFERENCES">
+      <point x="85.0" y="-127.0" />
+      <point x="481.353515625" y="614.0" />
+      <point x="770.125" y="614.0" />
+      <point x="0.0" y="193.0" />
+    </edge>
+    <edge source="407978cb-39e6-453c-b9b7-c4183a4e26ef.TABLE:vulcanize_test.eth.storage_cids" target="407978cb-39e6-453c-b9b7-c4183a4e26ef.TABLE:vulcanize_test.eth.state_cids" relationship="REFERENCES">
+      <point x="-56.5" y="-105.0" />
+      <point x="963.294921875" y="922.0" />
+      <point x="904.853515625" y="922.0" />
+      <point x="0.0" y="94.0" />
+    </edge>
+    <edge source="407978cb-39e6-453c-b9b7-c4183a4e26ef.TABLE:vulcanize_test.eth.state_cids" target="407978cb-39e6-453c-b9b7-c4183a4e26ef.TABLE:vulcanize_test.public.blocks" relationship="REFERENCES">
+      <point x="52.25" y="-94.0" />
+      <point x="957.103515625" y="614.0" />
+      <point x="953.478515625" y="614.0" />
+      <point x="953.478515625" y="175.0" />
+      <point x="699.087890625" y="175.0" />
+      <point x="699.087890625" y="165.0" />
+      <point x="427.044921875" y="165.0" />
+      <point x="25.25" y="39.0" />
+    </edge>
+    <edge source="407978cb-39e6-453c-b9b7-c4183a4e26ef.TABLE:vulcanize_test.eth.log_cids" target="407978cb-39e6-453c-b9b7-c4183a4e26ef.TABLE:vulcanize_test.eth.receipt_cids" relationship="REFERENCES">
+      <point x="41.0" y="-127.0" />
+      <point x="275.435546875" y="1180.0" />
+      <point x="349.0" y="1180.0" />
       <point x="0.0" y="105.0" />
     </edge>
-    <edge source="763cb2dc-728a-4fbd-a163-94dd564429aa.TABLE:vulcanize_testing.eth.log_cids" target="763cb2dc-728a-4fbd-a163-94dd564429aa.TABLE:vulcanize_testing.eth.receipt_cids" relationship="REFERENCES">
-      <point x="41.0" y="-138.0" />
-      <point x="350.705078125" y="1256.0" />
-      <point x="612.0625" y="1256.0" />
-      <point x="0.0" y="116.0" />
+    <edge source="407978cb-39e6-453c-b9b7-c4183a4e26ef.TABLE:vulcanize_test.eth.header_cids" target="407978cb-39e6-453c-b9b7-c4183a4e26ef.TABLE:vulcanize_test.public.nodes" relationship="REFERENCES">
+      <point x="73.5" y="-193.0" />
+      <point x="843.625" y="165.0" />
+      <point x="1075.837890625" y="165.0" />
+      <point x="0.0" y="72.0" />
     </edge>
-    <edge source="763cb2dc-728a-4fbd-a163-94dd564429aa.TABLE:vulcanize_testing.eth.header_cids" target="763cb2dc-728a-4fbd-a163-94dd564429aa.TABLE:vulcanize_testing.public.blocks" relationship="REFERENCES">
-      <point x="-70.75" y="-204.0" />
-      <point x="685.25" y="207.0" />
-      <point x="502.875" y="207.0" />
-      <point x="502.875" y="197.0" />
-      <point x="269.080078125" y="197.0" />
-      <point x="25.25" y="38.5" />
+    <edge source="407978cb-39e6-453c-b9b7-c4183a4e26ef.TABLE:vulcanize_test.eth.uncle_cids" target="407978cb-39e6-453c-b9b7-c4183a4e26ef.TABLE:vulcanize_test.eth.header_cids" relationship="REFERENCES">
+      <point x="48.5" y="-83.0" />
+      <point x="731.853515625" y="614.0" />
+      <point x="770.125" y="614.0" />
+      <point x="0.0" y="193.0" />
     </edge>
-    <edge source="763cb2dc-728a-4fbd-a163-94dd564429aa.TABLE:vulcanize_testing.eth.state_cids" target="763cb2dc-728a-4fbd-a163-94dd564429aa.TABLE:vulcanize_testing.eth.header_cids" relationship="REFERENCES">
-      <point x="52.25" y="-105.0" />
-      <point x="313.455078125" y="668.0" />
-      <point x="756.0" y="668.0" />
-      <point x="0.0" y="204.0" />
+    <edge source="407978cb-39e6-453c-b9b7-c4183a4e26ef.TABLE:vulcanize_test.eth.header_cids" target="407978cb-39e6-453c-b9b7-c4183a4e26ef.TABLE:vulcanize_test.public.blocks" relationship="REFERENCES">
+      <point x="-73.5" y="-193.0" />
+      <point x="696.625" y="175.0" />
+      <point x="699.087890625" y="175.0" />
+      <point x="699.087890625" y="165.0" />
+      <point x="427.044921875" y="165.0" />
+      <point x="25.25" y="39.0" />
     </edge>
-    <edge source="763cb2dc-728a-4fbd-a163-94dd564429aa.TABLE:vulcanize_testing.eth.receipt_cids" target="763cb2dc-728a-4fbd-a163-94dd564429aa.TABLE:vulcanize_testing.eth.transaction_cids" relationship="REFERENCES">
-      <point x="51.75" y="-116.0" />
-      <point x="663.8125" y="971.0" />
-      <point x="931.375" y="971.0" />
-      <point x="0.0" y="127.0" />
+    <edge source="407978cb-39e6-453c-b9b7-c4183a4e26ef.TABLE:vulcanize_test.eth.uncle_cids" target="407978cb-39e6-453c-b9b7-c4183a4e26ef.TABLE:vulcanize_test.public.blocks" relationship="REFERENCES">
+      <point x="-48.5" y="-83.0" />
+      <point x="634.853515625" y="604.0" />
+      <point x="523.044921875" y="604.0" />
+      <point x="523.044921875" y="175.0" />
+      <point x="699.087890625" y="175.0" />
+      <point x="699.087890625" y="165.0" />
+      <point x="427.044921875" y="165.0" />
+      <point x="25.25" y="39.0" />
     </edge>
-    <edge source="763cb2dc-728a-4fbd-a163-94dd564429aa.TABLE:vulcanize_testing.eth.transaction_cids" target="763cb2dc-728a-4fbd-a163-94dd564429aa.TABLE:vulcanize_testing.public.blocks" relationship="REFERENCES">
-      <point x="85.0" y="-127.0" />
-      <point x="1016.375" y="668.0" />
-      <point x="923.3125" y="668.0" />
-      <point x="923.3125" y="207.0" />
-      <point x="502.875" y="207.0" />
-      <point x="502.875" y="197.0" />
-      <point x="269.080078125" y="197.0" />
-      <point x="25.25" y="38.5" />
-    </edge>
-    <edge source="763cb2dc-728a-4fbd-a163-94dd564429aa.TABLE:vulcanize_testing.eth.receipt_cids" target="763cb2dc-728a-4fbd-a163-94dd564429aa.TABLE:vulcanize_testing.public.blocks" relationship="REFERENCES">
-      <point x="-51.75" y="-116.0" />
-      <point x="560.3125" y="971.0" />
-      <point x="497.625" y="971.0" />
-      <point x="497.625" y="207.0" />
-      <point x="502.875" y="207.0" />
-      <point x="502.875" y="197.0" />
-      <point x="269.080078125" y="197.0" />
-      <point x="25.25" y="38.5" />
-    </edge>
-    <edge source="763cb2dc-728a-4fbd-a163-94dd564429aa.TABLE:vulcanize_testing.eth.log_cids" target="763cb2dc-728a-4fbd-a163-94dd564429aa.TABLE:vulcanize_testing.public.blocks" relationship="REFERENCES">
-      <point x="-41.0" y="-138.0" />
-      <point x="268.705078125" y="1256.0" />
-      <point x="0.0" y="1256.0" />
-      <point x="0.0" y="197.0" />
-      <point x="218.580078125" y="197.0" />
-      <point x="-25.25" y="38.5" />
-    </edge>
-    <edge source="763cb2dc-728a-4fbd-a163-94dd564429aa.TABLE:vulcanize_testing.eth.transaction_cids" target="763cb2dc-728a-4fbd-a163-94dd564429aa.TABLE:vulcanize_testing.eth.header_cids" relationship="REFERENCES">
+    <edge source="407978cb-39e6-453c-b9b7-c4183a4e26ef.TABLE:vulcanize_test.eth.transaction_cids" target="407978cb-39e6-453c-b9b7-c4183a4e26ef.TABLE:vulcanize_test.public.blocks" relationship="REFERENCES">
       <point x="-85.0" y="-127.0" />
-      <point x="846.375" y="668.0" />
-      <point x="756.0" y="668.0" />
-      <point x="0.0" y="204.0" />
-    </edge>
-    <edge source="763cb2dc-728a-4fbd-a163-94dd564429aa.TABLE:vulcanize_testing.eth.state_cids" target="763cb2dc-728a-4fbd-a163-94dd564429aa.TABLE:vulcanize_testing.public.blocks" relationship="REFERENCES">
-      <point x="-52.25" y="-105.0" />
-      <point x="208.955078125" y="668.0" />
-      <point x="256.205078125" y="668.0" />
-      <point x="256.205078125" y="207.0" />
-      <point x="502.875" y="207.0" />
-      <point x="502.875" y="197.0" />
-      <point x="269.080078125" y="197.0" />
-      <point x="25.25" y="38.5" />
-    </edge>
-    <edge source="763cb2dc-728a-4fbd-a163-94dd564429aa.TABLE:vulcanize_testing.eth.access_list_element" target="763cb2dc-728a-4fbd-a163-94dd564429aa.TABLE:vulcanize_testing.eth.transaction_cids" relationship="REFERENCES">
-      <point x="0.0" y="-72.0" />
-      <point x="0.0" y="127.0" />
-    </edge>
-    <edge source="763cb2dc-728a-4fbd-a163-94dd564429aa.TABLE:vulcanize_testing.eth.header_cids" target="763cb2dc-728a-4fbd-a163-94dd564429aa.TABLE:vulcanize_testing.public.nodes" relationship="REFERENCES">
-      <point x="70.75" y="-204.0" />
-      <point x="826.75" y="197.0" />
-      <point x="728.955078125" y="197.0" />
-      <point x="76.5" y="83.0" />
+      <point x="311.353515625" y="614.0" />
+      <point x="386.353515625" y="614.0" />
+      <point x="386.353515625" y="175.0" />
+      <point x="699.087890625" y="175.0" />
+      <point x="699.087890625" y="165.0" />
+      <point x="427.044921875" y="165.0" />
+      <point x="25.25" y="39.0" />
     </edge>
   </edges>
-  <settings layout="Hierarchic" zoom="0.37832699619771865" showDependencies="false" x="667.5" y="779.0" />
+  <settings layout="Hierarchic" zoom="0.40337837837837837" showDependencies="false" x="731.0" y="730.0" />
   <SelectedNodes />
   <Categories>
     <Category>Columns</Category>
