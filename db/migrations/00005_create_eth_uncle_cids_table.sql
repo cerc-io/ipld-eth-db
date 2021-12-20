@@ -1,13 +1,11 @@
 -- +goose Up
 CREATE TABLE eth.uncle_cids (
-  id                    SERIAL PRIMARY KEY,
-  header_id             INTEGER NOT NULL REFERENCES eth.header_cids (id) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED,
-  block_hash            VARCHAR(66) NOT NULL,
-  parent_hash           VARCHAR(66) NOT NULL,
-  cid                   TEXT NOT NULL,
-  mh_key                TEXT NOT NULL REFERENCES public.blocks (key) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED,
-  reward                NUMERIC NOT NULL,
-  UNIQUE (header_id, block_hash)
+    block_hash            VARCHAR(66) PRIMARY KEY,
+    header_id             VARCHAR(66) NOT NULL REFERENCES eth.header_cids (block_hash) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED,
+    parent_hash           VARCHAR(66) NOT NULL,
+    cid                   TEXT NOT NULL,
+    reward                NUMERIC NOT NULL,
+    mh_key                TEXT NOT NULL REFERENCES public.blocks (key) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED
 );
 
 -- +goose Down

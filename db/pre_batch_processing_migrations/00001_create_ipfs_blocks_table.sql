@@ -1,6 +1,6 @@
 -- +goose Up
 CREATE TABLE IF NOT EXISTS public.blocks (
-  key TEXT PRIMARY KEY,
+  key TEXT NOT NULL,
   data BYTEA NOT NULL
 );
 

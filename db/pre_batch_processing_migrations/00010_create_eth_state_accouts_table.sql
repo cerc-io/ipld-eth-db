@@ -5,9 +5,7 @@ CREATE TABLE eth.state_accounts (
     balance               NUMERIC NOT NULL,
     nonce                 BIGINT NOT NULL,
     code_hash             BYTEA NOT NULL,
-    storage_root          VARCHAR(66) NOT NULL,
-    FOREIGN KEY (header_id, state_path) REFERENCES eth.state_cids (header_id, state_path) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED,
-    PRIMARY KEY (header_id, state_path)
+    storage_root          VARCHAR(66) NOT NULL
 );
 
 -- +goose Down
