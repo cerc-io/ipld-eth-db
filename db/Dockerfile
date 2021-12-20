@@ -8,7 +8,7 @@ ADD . /go/src/github.com/vulcanize/ipld-eth-db
 WORKDIR /go/src/github.com/pressly
 RUN git clone https://github.com/pressly/goose.git
 WORKDIR /go/src/github.com/pressly/goose/cmd/goose
-RUN GCO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags '-extldflags "-static"' -tags='no_mysql no_sqlite' -o goose .
+RUN GCO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags '-extldflags "-static"' -tags='no_sqlite3' -o goose .
 
 # app container
 FROM alpine

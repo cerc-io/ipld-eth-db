@@ -98,7 +98,7 @@ LANGUAGE 'plpgsql';
 -- +goose StatementEnd
 
 -- +goose StatementBegin
-CREATE OR REPLACE FUNCTION canonical_header_id(height BIGINT) RETURNS INTEGER AS
+CREATE OR REPLACE FUNCTION canonical_header_hash(height BIGINT) RETURNS character varying AS
 $BODY$
 DECLARE
   canonical_header eth.header_cids;
@@ -117,13 +117,13 @@ BEGIN
   -- if we have less than 1 header, return NULL
   IF header_count IS NULL OR header_count < 1 THEN
     RETURN NULL;
-  -- if we have one header, return its id
+  -- if we have one header, return its hash
   ELSIF header_count = 1 THEN
-    RETURN headers[1].id;
+    RETURN headers[1].block_hash;
   -- if we have multiple headers we need to determine which one is canonical
   ELSE
     canonical_header = canonical_header_from_array(headers);
-    RETURN canonical_header.id;
+    RETURN canonical_header.block_hash;
   END IF;
 END;
 $BODY$
@@ -132,7 +132,7 @@ LANGUAGE 'plpgsql';
 
 -- +goose Down
 DROP FUNCTION was_state_leaf_removed;
-DROP FUNCTION canonical_header_id;
+DROP FUNCTION canonical_header_hash;
 DROP FUNCTION canonical_header_from_array;
 DROP FUNCTION has_child;
 DROP TYPE child_result;

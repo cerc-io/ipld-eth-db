@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 14beta3
--- Dumped by pg_dump version 14beta3
+-- Dumped from database version 10.12
+-- Dumped by pg_dump version 14.1
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -24,8 +24,6 @@ CREATE SCHEMA eth;
 
 
 SET default_tablespace = '';
-
-SET default_table_access_method = heap;
 
 --
 -- Name: header_cids; Type: TABLE; Schema: eth; Owner: -
@@ -73,6 +71,66 @@ CREATE TYPE public.child_result AS (
 	has_child boolean,
 	children eth.header_cids[]
 );
+
+
+--
+-- Name: graphql_subscription(); Type: FUNCTION; Schema: eth; Owner: -
+--
+
+CREATE FUNCTION eth.graphql_subscription() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+obj jsonb;
+BEGIN
+    IF (TG_TABLE_NAME = 'state_cids') OR (TG_TABLE_NAME = 'state_accounts') THEN
+             obj := json_build_array(
+                        TG_TABLE_NAME,
+                        NEW.header_id,
+                        NEW.state_path
+                    );
+    ELSIF (TG_TABLE_NAME = 'storage_cids') THEN
+         obj := json_build_array(
+                    TG_TABLE_NAME,
+                    NEW.header_id,
+                    NEW.state_path,
+                    NEW.storage_path
+                );
+    ELSIF (TG_TABLE_NAME = 'log_cids') THEN
+         obj := json_build_array(
+                    TG_TABLE_NAME,
+                    NEW.rct_id,
+                    NEW.index
+                );
+    ELSIF (TG_TABLE_NAME = 'receipt_cids') THEN
+         obj := json_build_array(
+                    TG_TABLE_NAME,
+                    NEW.tx_id
+                );
+    ELSIF (TG_TABLE_NAME = 'transaction_cids') THEN
+         obj := json_build_array(
+                    TG_TABLE_NAME,
+                    NEW.tx_hash
+                );
+    ELSIF (TG_TABLE_NAME = 'access_list_elements') THEN
+         obj := json_build_array(
+                    TG_TABLE_NAME,
+                    NEW.tx_id,
+                    NEW.index
+                );
+    ELSIF (TG_TABLE_NAME = 'uncle_cids') OR (TG_TABLE_NAME = 'header_cids') THEN
+         obj := json_build_array(
+                    TG_TABLE_NAME,
+                    NEW.block_hash
+                );
+END IF;
+    perform pg_notify('postgraphile:' || TG_RELNAME , json_build_object(
+            '__node__', obj
+            )::text
+        );
+RETURN NEW;
+END;
+$$;
 
 
 --
@@ -126,10 +184,10 @@ $$;
 
 
 --
--- Name: canonical_header_id(bigint); Type: FUNCTION; Schema: public; Owner: -
+-- Name: canonical_header_hash(bigint); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.canonical_header_id(height bigint) RETURNS integer
+CREATE FUNCTION public.canonical_header_hash(height bigint) RETURNS character varying
     LANGUAGE plpgsql
     AS $$
 DECLARE
@@ -149,13 +207,13 @@ BEGIN
   -- if we have less than 1 header, return NULL
   IF header_count IS NULL OR header_count < 1 THEN
     RETURN NULL;
-  -- if we have one header, return its id
+  -- if we have one header, return its hash
   ELSIF header_count = 1 THEN
-    RETURN headers[1].id;
+    RETURN headers[1].block_hash;
   -- if we have multiple headers we need to determine which one is canonical
   ELSE
     canonical_header = canonical_header_from_array(headers);
-    RETURN canonical_header.id;
+    RETURN canonical_header.block_hash;
   END IF;
 END;
 $$;
@@ -774,6 +832,69 @@ CREATE INDEX uncle_header_id_index ON eth.uncle_cids USING btree (header_id);
 
 
 --
+-- Name: access_list_elements trg_eth_access_list_elements; Type: TRIGGER; Schema: eth; Owner: -
+--
+
+CREATE TRIGGER trg_eth_access_list_elements AFTER INSERT ON eth.access_list_elements FOR EACH ROW EXECUTE PROCEDURE eth.graphql_subscription();
+
+
+--
+-- Name: header_cids trg_eth_header_cids; Type: TRIGGER; Schema: eth; Owner: -
+--
+
+CREATE TRIGGER trg_eth_header_cids AFTER INSERT ON eth.header_cids FOR EACH ROW EXECUTE PROCEDURE eth.graphql_subscription();
+
+
+--
+-- Name: log_cids trg_eth_log_cids; Type: TRIGGER; Schema: eth; Owner: -
+--
+
+CREATE TRIGGER trg_eth_log_cids AFTER INSERT ON eth.log_cids FOR EACH ROW EXECUTE PROCEDURE eth.graphql_subscription();
+
+
+--
+-- Name: receipt_cids trg_eth_receipt_cids; Type: TRIGGER; Schema: eth; Owner: -
+--
+
+CREATE TRIGGER trg_eth_receipt_cids AFTER INSERT ON eth.receipt_cids FOR EACH ROW EXECUTE PROCEDURE eth.graphql_subscription();
+
+
+--
+-- Name: state_accounts trg_eth_state_accounts; Type: TRIGGER; Schema: eth; Owner: -
+--
+
+CREATE TRIGGER trg_eth_state_accounts AFTER INSERT ON eth.state_accounts FOR EACH ROW EXECUTE PROCEDURE eth.graphql_subscription();
+
+
+--
+-- Name: state_cids trg_eth_state_cids; Type: TRIGGER; Schema: eth; Owner: -
+--
+
+CREATE TRIGGER trg_eth_state_cids AFTER INSERT ON eth.state_cids FOR EACH ROW EXECUTE PROCEDURE eth.graphql_subscription();
+
+
+--
+-- Name: storage_cids trg_eth_storage_cids; Type: TRIGGER; Schema: eth; Owner: -
+--
+
+CREATE TRIGGER trg_eth_storage_cids AFTER INSERT ON eth.storage_cids FOR EACH ROW EXECUTE PROCEDURE eth.graphql_subscription();
+
+
+--
+-- Name: transaction_cids trg_eth_transaction_cids; Type: TRIGGER; Schema: eth; Owner: -
+--
+
+CREATE TRIGGER trg_eth_transaction_cids AFTER INSERT ON eth.transaction_cids FOR EACH ROW EXECUTE PROCEDURE eth.graphql_subscription();
+
+
+--
+-- Name: uncle_cids trg_eth_uncle_cids; Type: TRIGGER; Schema: eth; Owner: -
+--
+
+CREATE TRIGGER trg_eth_uncle_cids AFTER INSERT ON eth.uncle_cids FOR EACH ROW EXECUTE PROCEDURE eth.graphql_subscription();
+
+
+--
 -- Name: access_list_elements access_list_elements_tx_id_fkey; Type: FK CONSTRAINT; Schema: eth; Owner: -
 --
 
@@ -830,11 +951,11 @@ ALTER TABLE ONLY eth.receipt_cids
 
 
 --
--- Name: state_accounts state_accounts_header_id_state_path_fkey; Type: FK CONSTRAINT; Schema: eth; Owner: -
+-- Name: state_accounts state_accounts_header_id_fkey; Type: FK CONSTRAINT; Schema: eth; Owner: -
 --
 
 ALTER TABLE ONLY eth.state_accounts
-    ADD CONSTRAINT state_accounts_header_id_state_path_fkey FOREIGN KEY (header_id, state_path) REFERENCES eth.state_cids(header_id, state_path) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT state_accounts_header_id_fkey FOREIGN KEY (header_id, state_path) REFERENCES eth.state_cids(header_id, state_path) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -854,11 +975,11 @@ ALTER TABLE ONLY eth.state_cids
 
 
 --
--- Name: storage_cids storage_cids_header_id_state_path_fkey; Type: FK CONSTRAINT; Schema: eth; Owner: -
+-- Name: storage_cids storage_cids_header_id_fkey; Type: FK CONSTRAINT; Schema: eth; Owner: -
 --
 
 ALTER TABLE ONLY eth.storage_cids
-    ADD CONSTRAINT storage_cids_header_id_state_path_fkey FOREIGN KEY (header_id, state_path) REFERENCES eth.state_cids(header_id, state_path) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT storage_cids_header_id_fkey FOREIGN KEY (header_id, state_path) REFERENCES eth.state_cids(header_id, state_path) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
 
 
 --
