@@ -888,10 +888,10 @@ CREATE TRIGGER trg_eth_transaction_cids AFTER INSERT ON eth.transaction_cids FOR
 
 
 --
--- Name: uncle_cids trg_uncle_cids; Type: TRIGGER; Schema: eth; Owner: -
+-- Name: uncle_cids trg_eth_uncle_cids; Type: TRIGGER; Schema: eth; Owner: -
 --
 
-CREATE TRIGGER trg_uncle_cids AFTER INSERT ON eth.uncle_cids FOR EACH ROW EXECUTE PROCEDURE eth.graphql_subscription();
+CREATE TRIGGER trg_eth_uncle_cids AFTER INSERT ON eth.uncle_cids FOR EACH ROW EXECUTE PROCEDURE eth.graphql_subscription();
 
 
 --

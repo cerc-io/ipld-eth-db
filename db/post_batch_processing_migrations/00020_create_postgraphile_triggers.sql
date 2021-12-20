@@ -62,7 +62,7 @@ CREATE TRIGGER trg_eth_header_cids
     FOR EACH ROW
     EXECUTE PROCEDURE eth.graphql_subscription();
 
-CREATE TRIGGER trg_uncle_cids
+CREATE TRIGGER trg_eth_uncle_cids
     AFTER INSERT ON eth.uncle_cids
     FOR EACH ROW
     EXECUTE PROCEDURE eth.graphql_subscription();
