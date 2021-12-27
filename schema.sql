@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 10.12
--- Dumped by pg_dump version 14.1
+-- Dumped from database version 14beta3
+-- Dumped by pg_dump version 14beta3
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -24,6 +24,8 @@ CREATE SCHEMA eth;
 
 
 SET default_tablespace = '';
+
+SET default_table_access_method = heap;
 
 --
 -- Name: header_cids; Type: TABLE; Schema: eth; Owner: -
@@ -411,6 +413,17 @@ CREATE TABLE public.blocks (
 
 
 --
+-- Name: db_version; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.db_version (
+    singleton boolean DEFAULT true NOT NULL,
+    version text NOT NULL,
+    CONSTRAINT db_version_singleton_check CHECK (singleton)
+);
+
+
+--
 -- Name: goose_db_version; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -554,6 +567,14 @@ ALTER TABLE ONLY eth.uncle_cids
 
 ALTER TABLE ONLY public.blocks
     ADD CONSTRAINT blocks_pkey PRIMARY KEY (key);
+
+
+--
+-- Name: db_version db_version_singleton_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.db_version
+    ADD CONSTRAINT db_version_singleton_key UNIQUE (singleton);
 
 
 --
@@ -835,63 +856,63 @@ CREATE INDEX uncle_header_id_index ON eth.uncle_cids USING btree (header_id);
 -- Name: access_list_elements trg_eth_access_list_elements; Type: TRIGGER; Schema: eth; Owner: -
 --
 
-CREATE TRIGGER trg_eth_access_list_elements AFTER INSERT ON eth.access_list_elements FOR EACH ROW EXECUTE PROCEDURE eth.graphql_subscription();
+CREATE TRIGGER trg_eth_access_list_elements AFTER INSERT ON eth.access_list_elements FOR EACH ROW EXECUTE FUNCTION eth.graphql_subscription();
 
 
 --
 -- Name: header_cids trg_eth_header_cids; Type: TRIGGER; Schema: eth; Owner: -
 --
 
-CREATE TRIGGER trg_eth_header_cids AFTER INSERT ON eth.header_cids FOR EACH ROW EXECUTE PROCEDURE eth.graphql_subscription();
+CREATE TRIGGER trg_eth_header_cids AFTER INSERT ON eth.header_cids FOR EACH ROW EXECUTE FUNCTION eth.graphql_subscription();
 
 
 --
 -- Name: log_cids trg_eth_log_cids; Type: TRIGGER; Schema: eth; Owner: -
 --
 
-CREATE TRIGGER trg_eth_log_cids AFTER INSERT ON eth.log_cids FOR EACH ROW EXECUTE PROCEDURE eth.graphql_subscription();
+CREATE TRIGGER trg_eth_log_cids AFTER INSERT ON eth.log_cids FOR EACH ROW EXECUTE FUNCTION eth.graphql_subscription();
 
 
 --
 -- Name: receipt_cids trg_eth_receipt_cids; Type: TRIGGER; Schema: eth; Owner: -
 --
 
-CREATE TRIGGER trg_eth_receipt_cids AFTER INSERT ON eth.receipt_cids FOR EACH ROW EXECUTE PROCEDURE eth.graphql_subscription();
+CREATE TRIGGER trg_eth_receipt_cids AFTER INSERT ON eth.receipt_cids FOR EACH ROW EXECUTE FUNCTION eth.graphql_subscription();
 
 
 --
 -- Name: state_accounts trg_eth_state_accounts; Type: TRIGGER; Schema: eth; Owner: -
 --
 
-CREATE TRIGGER trg_eth_state_accounts AFTER INSERT ON eth.state_accounts FOR EACH ROW EXECUTE PROCEDURE eth.graphql_subscription();
+CREATE TRIGGER trg_eth_state_accounts AFTER INSERT ON eth.state_accounts FOR EACH ROW EXECUTE FUNCTION eth.graphql_subscription();
 
 
 --
 -- Name: state_cids trg_eth_state_cids; Type: TRIGGER; Schema: eth; Owner: -
 --
 
-CREATE TRIGGER trg_eth_state_cids AFTER INSERT ON eth.state_cids FOR EACH ROW EXECUTE PROCEDURE eth.graphql_subscription();
+CREATE TRIGGER trg_eth_state_cids AFTER INSERT ON eth.state_cids FOR EACH ROW EXECUTE FUNCTION eth.graphql_subscription();
 
 
 --
 -- Name: storage_cids trg_eth_storage_cids; Type: TRIGGER; Schema: eth; Owner: -
 --
 
-CREATE TRIGGER trg_eth_storage_cids AFTER INSERT ON eth.storage_cids FOR EACH ROW EXECUTE PROCEDURE eth.graphql_subscription();
+CREATE TRIGGER trg_eth_storage_cids AFTER INSERT ON eth.storage_cids FOR EACH ROW EXECUTE FUNCTION eth.graphql_subscription();
 
 
 --
 -- Name: transaction_cids trg_eth_transaction_cids; Type: TRIGGER; Schema: eth; Owner: -
 --
 
-CREATE TRIGGER trg_eth_transaction_cids AFTER INSERT ON eth.transaction_cids FOR EACH ROW EXECUTE PROCEDURE eth.graphql_subscription();
+CREATE TRIGGER trg_eth_transaction_cids AFTER INSERT ON eth.transaction_cids FOR EACH ROW EXECUTE FUNCTION eth.graphql_subscription();
 
 
 --
 -- Name: uncle_cids trg_eth_uncle_cids; Type: TRIGGER; Schema: eth; Owner: -
 --
 
-CREATE TRIGGER trg_eth_uncle_cids AFTER INSERT ON eth.uncle_cids FOR EACH ROW EXECUTE PROCEDURE eth.graphql_subscription();
+CREATE TRIGGER trg_eth_uncle_cids AFTER INSERT ON eth.uncle_cids FOR EACH ROW EXECUTE FUNCTION eth.graphql_subscription();
 
 
 --
@@ -951,11 +972,11 @@ ALTER TABLE ONLY eth.receipt_cids
 
 
 --
--- Name: state_accounts state_accounts_header_id_fkey; Type: FK CONSTRAINT; Schema: eth; Owner: -
+-- Name: state_accounts state_accounts_header_id_state_path_fkey; Type: FK CONSTRAINT; Schema: eth; Owner: -
 --
 
 ALTER TABLE ONLY eth.state_accounts
-    ADD CONSTRAINT state_accounts_header_id_fkey FOREIGN KEY (header_id, state_path) REFERENCES eth.state_cids(header_id, state_path) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT state_accounts_header_id_state_path_fkey FOREIGN KEY (header_id, state_path) REFERENCES eth.state_cids(header_id, state_path) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -975,11 +996,11 @@ ALTER TABLE ONLY eth.state_cids
 
 
 --
--- Name: storage_cids storage_cids_header_id_fkey; Type: FK CONSTRAINT; Schema: eth; Owner: -
+-- Name: storage_cids storage_cids_header_id_state_path_fkey; Type: FK CONSTRAINT; Schema: eth; Owner: -
 --
 
 ALTER TABLE ONLY eth.storage_cids
-    ADD CONSTRAINT storage_cids_header_id_fkey FOREIGN KEY (header_id, state_path) REFERENCES eth.state_cids(header_id, state_path) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT storage_cids_header_id_state_path_fkey FOREIGN KEY (header_id, state_path) REFERENCES eth.state_cids(header_id, state_path) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
 
 
 --
