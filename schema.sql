@@ -419,6 +419,7 @@ CREATE TABLE public.blocks (
 CREATE TABLE public.db_version (
     singleton boolean DEFAULT true NOT NULL,
     version text NOT NULL,
+    tstamp timestamp without time zone DEFAULT now(),
     CONSTRAINT db_version_singleton_check CHECK (singleton)
 );
 
