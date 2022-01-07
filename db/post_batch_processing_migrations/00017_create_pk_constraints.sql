@@ -1,7 +1,4 @@
 -- +goose Up
-ALTER TABLE public.blocks
-ADD CONSTRAINT pk_public_blocks PRIMARY KEY (key);
-
 ALTER TABLE public.nodes
 ADD CONSTRAINT pk_public_nodes PRIMARY KEY (node_id);
 
@@ -33,9 +30,6 @@ ALTER TABLE eth.state_accounts
 ADD CONSTRAINT pk_eth_state_accounts PRIMARY KEY (header_id, state_path);
 
 -- +goose Down
-ALTER TABLE public.blocks
-DROP CONSTRAINT pk_public_blocks;
-
 ALTER TABLE public.nodes
 DROP CONSTRAINT pk_public_nodes;
 
