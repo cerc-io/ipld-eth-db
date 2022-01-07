@@ -1,3 +1,7 @@
+ifndef GOPATH
+override GOPATH = $(HOME)/go
+endif
+
 BIN = $(GOPATH)/bin
 
 # Tools
