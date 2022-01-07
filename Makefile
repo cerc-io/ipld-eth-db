@@ -4,7 +4,7 @@ BIN = $(GOPATH)/bin
 ## Migration tool
 GOOSE = $(BIN)/goose
 $(BIN)/goose:
-	go get -u github.com/pressly/goose/cmd/goose
+	GO111MODULE=off go get -u github.com/pressly/goose/cmd/goose
 
 .PHONY: installtools
 installtools: | $(GOOSE)
