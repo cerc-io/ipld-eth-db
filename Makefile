@@ -50,6 +50,11 @@ rollback: $(GOOSE) checkdbvars
 rollback_to: $(GOOSE) checkmigration checkdbvars
 	$(GOOSE) -dir db/migrations postgres "$(CONNECT_STRING)" down-to "$(MIGRATION)"
 
+## Apply the next up migration
+.PHONY: migrate_up_by_one
+migrate_up_by_one: $(GOOSE) checkdbvars
+	$(GOOSE) -dir db/migrations postgres "$(CONNECT_STRING)" up-by-one
+
 ## Apply all migrations not already run
 .PHONY: migrate
 migrate: $(GOOSE) checkdbvars
@@ -60,6 +65,11 @@ migrate: $(GOOSE) checkdbvars
 .PHONY: migrate_pre_batch_set
 migrate_pre_batch_set: $(GOOSE) checkdbvars
 	$(GOOSE) -dir db/pre_batch_processing_migrations postgres "$(CONNECT_STRING)" up
+
+## Apply migrations to be ran after a batch processing, one-by-one
+.PHONY: migrate_post_batch_set_up_by_one
+migrate_post_batch_set_up_by_one: $(GOOSE) checkdbvars
+	$(GOOSE) -dir db/post_batch_processing_migrations postgres "$(CONNECT_STRING)" up-by-one
 
 ## Apply migrations to be ran after a batch processing
 .PHONY: migrate_post_batch_set
