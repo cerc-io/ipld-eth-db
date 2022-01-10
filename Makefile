@@ -48,11 +48,22 @@ rollback: $(GOOSE) checkdbvars
 	$(GOOSE) -dir db/migrations postgres "$(CONNECT_STRING)" down
 	pg_dump -O -s $(CONNECT_STRING) > schema.sql
 
-
 ## Rollback to a select migration (id/timestamp)
 .PHONY: rollback_to
 rollback_to: $(GOOSE) checkmigration checkdbvars
 	$(GOOSE) -dir db/migrations postgres "$(CONNECT_STRING)" down-to "$(MIGRATION)"
+
+## Rollback pre_batch_set
+.PHONY: `rollback_pre_batch_set`
+rollback_pre_batch_set: $(GOOSE) checkdbvars
+	$(GOOSE) -dir db/pre_batch_processing_migrations postgres "$(CONNECT_STRING)" down
+	pg_dump -O -s $(CONNECT_STRING) > schema.sql
+
+## Rollback post_batch_set
+.PHONY: rollback_post_batch_set
+rollback_post_batch_set: $(GOOSE) checkdbvars
+	$(GOOSE) -dir db/post_batch_processing_migrations postgres "$(CONNECT_STRING)" down
+	pg_dump -O -s $(CONNECT_STRING) > schema.sql
 
 ## Apply the next up migration
 .PHONY: migrate_up_by_one
