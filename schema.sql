@@ -553,6 +553,16 @@ ALTER SEQUENCE eth.uncle_cids_id_seq OWNED BY eth.uncle_cids.id;
 
 
 --
+-- Name: watched_addresses; Type: TABLE; Schema: eth; Owner: -
+--
+
+CREATE TABLE eth.watched_addresses (
+    address character varying(66) NOT NULL,
+    added_at bigint NOT NULL
+);
+
+
+--
 -- Name: blocks; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -861,6 +871,14 @@ ALTER TABLE ONLY eth.uncle_cids
 
 ALTER TABLE ONLY eth.uncle_cids
     ADD CONSTRAINT uncle_cids_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: watched_addresses watched_addresses_pkey; Type: CONSTRAINT; Schema: eth; Owner: -
+--
+
+ALTER TABLE ONLY eth.watched_addresses
+    ADD CONSTRAINT watched_addresses_pkey PRIMARY KEY (address);
 
 
 --
