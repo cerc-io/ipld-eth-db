@@ -1,5 +1,6 @@
 -- +goose Up
 -- header indexes
+CREATE INDEX block_number_index ON eth.header_cids USING brin (block_number);
 CREATE INDEX header_cid_index ON eth.header_cids USING btree (cid);
 CREATE INDEX header_mh_index ON eth.header_cids USING btree (mh_key);
 CREATE INDEX state_root_index ON eth.header_cids USING btree (state_root);
@@ -9,6 +10,7 @@ CREATE INDEX timestamp_index ON eth.header_cids USING brin (timestamp);
 CREATE INDEX uncle_header_id_index ON eth.uncle_cids USING btree (header_id);
 
 -- transaction indexes
+CREATE INDEX tx_header_id_index ON eth.transaction_cids USING btree (header_id);
 CREATE INDEX tx_cid_index ON eth.transaction_cids USING btree (cid);
 CREATE INDEX tx_mh_index ON eth.transaction_cids USING btree (mh_key);
 CREATE INDEX tx_dst_index ON eth.transaction_cids USING btree (dst);
@@ -45,6 +47,7 @@ CREATE INDEX access_list_storage_keys_index ON eth.access_list_elements USING gi
 
 -- log indexes
 CREATE INDEX log_cid_index ON  eth.log_cids USING btree (leaf_cid);
+CREATE INDEX log_mh_index ON eth.log_cids USING btree (leaf_mh_key);
 CREATE INDEX log_address_index ON eth.log_cids USING btree (address);
 CREATE INDEX log_topic0_index ON eth.log_cids USING btree (topic0);
 CREATE INDEX log_topic1_index ON eth.log_cids USING btree (topic1);
@@ -58,6 +61,7 @@ DROP INDEX eth.log_topic2_index;
 DROP INDEX eth.log_topic1_index;
 DROP INDEX eth.log_topic0_index;
 DROP INDEX eth.log_address_index;
+DROP INDEX eth.log_mh_index;
 DROP INDEX eth.log_cid_index;
 
 -- access list indexes
@@ -94,6 +98,7 @@ DROP INDEX eth.tx_src_index;
 DROP INDEX eth.tx_dst_index;
 DROP INDEX eth.tx_mh_index;
 DROP INDEX eth.tx_cid_index;
+DROP INDEX eth.tx_header_id_index;
 
 -- uncle indexes
 DROP INDEX eth.uncle_header_id_index;
@@ -103,3 +108,4 @@ DROP INDEX eth.timestamp_index;
 DROP INDEX eth.state_root_index;
 DROP INDEX eth.header_mh_index;
 DROP INDEX eth.header_cid_index;
+DROP INDEX eth.block_number_index;
