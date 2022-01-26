@@ -1,8 +1,8 @@
 -- +goose Up
 -- header indexes
 CREATE INDEX block_number_index ON eth.header_cids USING brin (block_number);
-CREATE INDEX header_cid_index ON eth.header_cids USING btree (cid);
-CREATE INDEX header_mh_index ON eth.header_cids USING btree (mh_key);
+CREATE UNIQUE INDEX header_cid_index ON eth.header_cids USING btree (cid);
+CREATE UNIQUE INDEX header_mh_index ON eth.header_cids USING btree (mh_key);
 CREATE INDEX state_root_index ON eth.header_cids USING btree (state_root);
 CREATE INDEX timestamp_index ON eth.header_cids USING brin (timestamp);
 
@@ -11,14 +11,14 @@ CREATE INDEX uncle_header_id_index ON eth.uncle_cids USING btree (header_id);
 
 -- transaction indexes
 CREATE INDEX tx_header_id_index ON eth.transaction_cids USING btree (header_id);
-CREATE INDEX tx_cid_index ON eth.transaction_cids USING btree (cid);
-CREATE INDEX tx_mh_index ON eth.transaction_cids USING btree (mh_key);
+CREATE UNIQUE INDEX tx_cid_index ON eth.transaction_cids USING btree (cid);
+CREATE UNIQUE INDEX tx_mh_index ON eth.transaction_cids USING btree (mh_key);
 CREATE INDEX tx_dst_index ON eth.transaction_cids USING btree (dst);
 CREATE INDEX tx_src_index ON eth.transaction_cids USING btree (src);
 
 -- receipt indexes
-CREATE INDEX rct_leaf_cid_index ON eth.receipt_cids USING btree (leaf_cid);
-CREATE INDEX rct_leaf_mh_index ON eth.receipt_cids USING btree (leaf_mh_key);
+CREATE UNIQUE INDEX rct_leaf_cid_index ON eth.receipt_cids USING btree (leaf_cid);
+CREATE UNIQUE INDEX rct_leaf_mh_index ON eth.receipt_cids USING btree (leaf_mh_key);
 CREATE INDEX rct_contract_index ON eth.receipt_cids USING btree (contract);
 CREATE INDEX rct_contract_hash_index ON eth.receipt_cids USING btree (contract_hash);
 
