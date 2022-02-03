@@ -558,7 +558,6 @@ ALTER SEQUENCE eth.uncle_cids_id_seq OWNED BY eth.uncle_cids.id;
 
 CREATE TABLE eth.watched_addresses (
     address character varying(66) NOT NULL,
-    kind integer,
     created_at bigint NOT NULL,
     watched_at bigint NOT NULL,
     last_filled_at bigint DEFAULT 0 NOT NULL
