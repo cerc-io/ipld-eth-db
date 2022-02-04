@@ -1,5 +1,5 @@
 -- +goose Up
-CREATE TABLE eth.watched_addresses (
+CREATE TABLE eth_meta.watched_addresses (
     address                 VARCHAR(66) PRIMARY KEY,
     created_at              BIGINT NOT NULL,
     watched_at              BIGINT NOT NULL,
@@ -7,4 +7,4 @@ CREATE TABLE eth.watched_addresses (
 );
 
 -- +goose Down
-DROP TABLE eth.watched_addresses;
+DROP TABLE eth_meta.watched_addresses;

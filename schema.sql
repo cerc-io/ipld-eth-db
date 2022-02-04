@@ -23,6 +23,13 @@ SET row_security = off;
 CREATE SCHEMA eth;
 
 
+--
+-- Name: eth_meta; Type: SCHEMA; Schema: -; Owner: -
+--
+
+CREATE SCHEMA eth_meta;
+
+
 SET default_tablespace = '';
 
 --
@@ -553,10 +560,10 @@ ALTER SEQUENCE eth.uncle_cids_id_seq OWNED BY eth.uncle_cids.id;
 
 
 --
--- Name: watched_addresses; Type: TABLE; Schema: eth; Owner: -
+-- Name: watched_addresses; Type: TABLE; Schema: eth_meta; Owner: -
 --
 
-CREATE TABLE eth.watched_addresses (
+CREATE TABLE eth_meta.watched_addresses (
     address character varying(66) NOT NULL,
     created_at bigint NOT NULL,
     watched_at bigint NOT NULL,
@@ -876,10 +883,10 @@ ALTER TABLE ONLY eth.uncle_cids
 
 
 --
--- Name: watched_addresses watched_addresses_pkey; Type: CONSTRAINT; Schema: eth; Owner: -
+-- Name: watched_addresses watched_addresses_pkey; Type: CONSTRAINT; Schema: eth_meta; Owner: -
 --
 
-ALTER TABLE ONLY eth.watched_addresses
+ALTER TABLE ONLY eth_meta.watched_addresses
     ADD CONSTRAINT watched_addresses_pkey PRIMARY KEY (address);
 
 
