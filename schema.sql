@@ -626,14 +626,14 @@ CREATE INDEX block_number_index ON eth.header_cids USING brin (block_number);
 -- Name: header_cid_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE INDEX header_cid_index ON eth.header_cids USING btree (cid);
+CREATE UNIQUE INDEX header_cid_index ON eth.header_cids USING btree (cid);
 
 
 --
 -- Name: header_mh_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE INDEX header_mh_index ON eth.header_cids USING btree (mh_key);
+CREATE UNIQUE INDEX header_mh_index ON eth.header_cids USING btree (mh_key);
 
 
 --
@@ -815,7 +815,7 @@ CREATE INDEX timestamp_index ON eth.header_cids USING brin ("timestamp");
 -- Name: tx_cid_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE INDEX tx_cid_index ON eth.transaction_cids USING btree (cid);
+CREATE UNIQUE INDEX tx_cid_index ON eth.transaction_cids USING btree (cid);
 
 
 --
@@ -836,7 +836,7 @@ CREATE INDEX tx_header_id_index ON eth.transaction_cids USING btree (header_id);
 -- Name: tx_mh_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE INDEX tx_mh_index ON eth.transaction_cids USING btree (mh_key);
+CREATE UNIQUE INDEX tx_mh_index ON eth.transaction_cids USING btree (mh_key);
 
 
 --
