@@ -23,6 +23,13 @@ SET row_security = off;
 CREATE SCHEMA eth;
 
 
+--
+-- Name: eth_meta; Type: SCHEMA; Schema: -; Owner: -
+--
+
+CREATE SCHEMA eth_meta;
+
+
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
@@ -403,6 +410,18 @@ CREATE TABLE eth.uncle_cids (
 
 
 --
+-- Name: watched_addresses; Type: TABLE; Schema: eth_meta; Owner: -
+--
+
+CREATE TABLE eth_meta.watched_addresses (
+    address character varying(66) NOT NULL,
+    created_at bigint NOT NULL,
+    watched_at bigint NOT NULL,
+    last_filled_at bigint DEFAULT 0 NOT NULL
+);
+
+
+--
 -- Name: blocks; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -560,6 +579,14 @@ ALTER TABLE ONLY eth.transaction_cids
 
 ALTER TABLE ONLY eth.uncle_cids
     ADD CONSTRAINT uncle_cids_pkey PRIMARY KEY (block_hash);
+
+
+--
+-- Name: watched_addresses watched_addresses_pkey; Type: CONSTRAINT; Schema: eth_meta; Owner: -
+--
+
+ALTER TABLE ONLY eth_meta.watched_addresses
+    ADD CONSTRAINT watched_addresses_pkey PRIMARY KEY (address);
 
 
 --
