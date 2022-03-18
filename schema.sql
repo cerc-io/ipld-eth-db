@@ -470,6 +470,18 @@ CREATE TABLE public.nodes (
 
 
 --
+-- Name: known_gaps; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE eth.known_gaps (
+  starting_block_number bigint PRIMARY KEY,
+  ending_block_number bigint,
+  checked_out boolean,
+  modulus_block_number INT
+);
+
+
+--
 -- Name: TABLE nodes; Type: COMMENT; Schema: public; Owner: -
 --
 
