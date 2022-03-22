@@ -7,10 +7,10 @@ CREATE OR REPLACE FUNCTION was_state_leaf_removed(key character varying, hash ch
     FROM eth.state_cids
              INNER JOIN eth.header_cids ON (state_cids.header_id = header_cids.block_hash)
     WHERE state_leaf_key = key
-      AND block_number <= (SELECT block_number
+      AND state_cids.block_number <= (SELECT block_number
                            FROM eth.header_cids
                            WHERE block_hash = hash)
-    ORDER BY block_number DESC LIMIT 1;
+    ORDER BY state_cids.block_number DESC LIMIT 1;
 $$
 language sql;
 -- +goose StatementEnd

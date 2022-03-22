@@ -265,10 +265,10 @@ CREATE FUNCTION public.was_state_leaf_removed(key character varying, hash charac
     FROM eth.state_cids
              INNER JOIN eth.header_cids ON (state_cids.header_id = header_cids.block_hash)
     WHERE state_leaf_key = key
-      AND block_number <= (SELECT block_number
+      AND state_cids.block_number <= (SELECT block_number
                            FROM eth.header_cids
                            WHERE block_hash = hash)
-    ORDER BY block_number DESC LIMIT 1;
+    ORDER BY state_cids.block_number DESC LIMIT 1;
 $$;
 
 
@@ -277,6 +277,7 @@ $$;
 --
 
 CREATE TABLE eth.access_list_elements (
+    block_number bigint NOT NULL,
     tx_id character varying(66) NOT NULL,
     index integer NOT NULL,
     address character varying(66),
@@ -289,6 +290,7 @@ CREATE TABLE eth.access_list_elements (
 --
 
 CREATE TABLE eth.log_cids (
+    block_number bigint NOT NULL,
     leaf_cid text NOT NULL,
     leaf_mh_key text NOT NULL,
     rct_id character varying(66) NOT NULL,
@@ -307,6 +309,7 @@ CREATE TABLE eth.log_cids (
 --
 
 CREATE TABLE eth.receipt_cids (
+    block_number bigint NOT NULL,
     tx_id character varying(66) NOT NULL,
     leaf_cid text NOT NULL,
     contract character varying(66),
@@ -323,6 +326,7 @@ CREATE TABLE eth.receipt_cids (
 --
 
 CREATE TABLE eth.state_accounts (
+    block_number bigint NOT NULL,
     header_id character varying(66) NOT NULL,
     state_path bytea NOT NULL,
     balance numeric NOT NULL,
@@ -337,6 +341,7 @@ CREATE TABLE eth.state_accounts (
 --
 
 CREATE TABLE eth.state_cids (
+    block_number bigint NOT NULL,
     header_id character varying(66) NOT NULL,
     state_leaf_key character varying(66),
     cid text NOT NULL,
@@ -352,6 +357,7 @@ CREATE TABLE eth.state_cids (
 --
 
 CREATE TABLE eth.storage_cids (
+    block_number bigint NOT NULL,
     header_id character varying(66) NOT NULL,
     state_path bytea NOT NULL,
     storage_leaf_key character varying(66),
@@ -368,6 +374,7 @@ CREATE TABLE eth.storage_cids (
 --
 
 CREATE TABLE eth.transaction_cids (
+    block_number bigint NOT NULL,
     header_id character varying(66) NOT NULL,
     tx_hash character varying(66) NOT NULL,
     cid text NOT NULL,
@@ -393,6 +400,7 @@ COMMENT ON TABLE eth.transaction_cids IS '@name EthTransactionCids';
 --
 
 CREATE TABLE eth.uncle_cids (
+    block_number bigint NOT NULL,
     block_hash character varying(66) NOT NULL,
     header_id character varying(66) NOT NULL,
     parent_hash character varying(66) NOT NULL,
@@ -407,6 +415,7 @@ CREATE TABLE eth.uncle_cids (
 --
 
 CREATE TABLE public.blocks (
+    block_number bigint NOT NULL,
     key text NOT NULL,
     data bytea NOT NULL
 );
@@ -563,11 +572,19 @@ ALTER TABLE ONLY eth.uncle_cids
 
 
 --
+-- Name: blocks blocks_key_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.blocks
+    ADD CONSTRAINT blocks_key_key UNIQUE (key);
+
+
+--
 -- Name: blocks blocks_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.blocks
-    ADD CONSTRAINT blocks_pkey PRIMARY KEY (key);
+    ADD CONSTRAINT blocks_pkey PRIMARY KEY (key, block_number);
 
 
 --
@@ -595,6 +612,13 @@ ALTER TABLE ONLY public.nodes
 
 
 --
+-- Name: access_list_block_number_index; Type: INDEX; Schema: eth; Owner: -
+--
+
+CREATE INDEX access_list_block_number_index ON eth.access_list_elements USING brin (block_number);
+
+
+--
 -- Name: access_list_element_address_index; Type: INDEX; Schema: eth; Owner: -
 --
 
@@ -609,6 +633,13 @@ CREATE INDEX access_list_storage_keys_index ON eth.access_list_elements USING gi
 
 
 --
+-- Name: account_block_number_index; Type: INDEX; Schema: eth; Owner: -
+--
+
+CREATE INDEX account_block_number_index ON eth.state_accounts USING brin (block_number);
+
+
+--
 -- Name: account_state_path_index; Type: INDEX; Schema: eth; Owner: -
 --
 
@@ -616,10 +647,10 @@ CREATE INDEX account_state_path_index ON eth.state_accounts USING btree (state_p
 
 
 --
--- Name: block_number_index; Type: INDEX; Schema: eth; Owner: -
+-- Name: header_block_number_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE INDEX block_number_index ON eth.header_cids USING brin (block_number);
+CREATE INDEX header_block_number_index ON eth.header_cids USING brin (block_number);
 
 
 --
@@ -641,6 +672,13 @@ CREATE UNIQUE INDEX header_mh_index ON eth.header_cids USING btree (mh_key);
 --
 
 CREATE INDEX log_address_index ON eth.log_cids USING btree (address);
+
+
+--
+-- Name: log_block_number_index; Type: INDEX; Schema: eth; Owner: -
+--
+
+CREATE INDEX log_block_number_index ON eth.log_cids USING brin (block_number);
 
 
 --
@@ -686,6 +724,13 @@ CREATE INDEX log_topic3_index ON eth.log_cids USING btree (topic3);
 
 
 --
+-- Name: rct_block_number_index; Type: INDEX; Schema: eth; Owner: -
+--
+
+CREATE INDEX rct_block_number_index ON eth.receipt_cids USING brin (block_number);
+
+
+--
 -- Name: rct_contract_hash_index; Type: INDEX; Schema: eth; Owner: -
 --
 
@@ -711,6 +756,13 @@ CREATE INDEX rct_leaf_cid_index ON eth.receipt_cids USING btree (leaf_cid);
 --
 
 CREATE INDEX rct_leaf_mh_index ON eth.receipt_cids USING btree (leaf_mh_key);
+
+
+--
+-- Name: state_block_number_index; Type: INDEX; Schema: eth; Owner: -
+--
+
+CREATE INDEX state_block_number_index ON eth.state_cids USING brin (block_number);
 
 
 --
@@ -753,6 +805,13 @@ CREATE INDEX state_path_index ON eth.state_cids USING btree (state_path);
 --
 
 CREATE INDEX state_root_index ON eth.header_cids USING btree (state_root);
+
+
+--
+-- Name: storage_block_number_index; Type: INDEX; Schema: eth; Owner: -
+--
+
+CREATE INDEX storage_block_number_index ON eth.storage_cids USING brin (block_number);
 
 
 --
@@ -812,6 +871,13 @@ CREATE INDEX timestamp_index ON eth.header_cids USING brin ("timestamp");
 
 
 --
+-- Name: tx_block_number_index; Type: INDEX; Schema: eth; Owner: -
+--
+
+CREATE INDEX tx_block_number_index ON eth.transaction_cids USING brin (block_number);
+
+
+--
 -- Name: tx_cid_index; Type: INDEX; Schema: eth; Owner: -
 --
 
@@ -844,6 +910,13 @@ CREATE UNIQUE INDEX tx_mh_index ON eth.transaction_cids USING btree (mh_key);
 --
 
 CREATE INDEX tx_src_index ON eth.transaction_cids USING btree (src);
+
+
+--
+-- Name: uncle_block_number_index; Type: INDEX; Schema: eth; Owner: -
+--
+
+CREATE INDEX uncle_block_number_index ON eth.uncle_cids USING brin (block_number);
 
 
 --
@@ -925,11 +998,11 @@ ALTER TABLE ONLY eth.access_list_elements
 
 
 --
--- Name: header_cids header_cids_mh_key_fkey; Type: FK CONSTRAINT; Schema: eth; Owner: -
+-- Name: header_cids header_cids_mh_key_block_number_fkey; Type: FK CONSTRAINT; Schema: eth; Owner: -
 --
 
 ALTER TABLE ONLY eth.header_cids
-    ADD CONSTRAINT header_cids_mh_key_fkey FOREIGN KEY (mh_key) REFERENCES public.blocks(key) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT header_cids_mh_key_block_number_fkey FOREIGN KEY (mh_key, block_number) REFERENCES public.blocks(key, block_number) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -941,11 +1014,11 @@ ALTER TABLE ONLY eth.header_cids
 
 
 --
--- Name: log_cids log_cids_leaf_mh_key_fkey; Type: FK CONSTRAINT; Schema: eth; Owner: -
+-- Name: log_cids log_cids_leaf_mh_key_block_number_fkey; Type: FK CONSTRAINT; Schema: eth; Owner: -
 --
 
 ALTER TABLE ONLY eth.log_cids
-    ADD CONSTRAINT log_cids_leaf_mh_key_fkey FOREIGN KEY (leaf_mh_key) REFERENCES public.blocks(key) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT log_cids_leaf_mh_key_block_number_fkey FOREIGN KEY (leaf_mh_key, block_number) REFERENCES public.blocks(key, block_number) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -957,11 +1030,11 @@ ALTER TABLE ONLY eth.log_cids
 
 
 --
--- Name: receipt_cids receipt_cids_leaf_mh_key_fkey; Type: FK CONSTRAINT; Schema: eth; Owner: -
+-- Name: receipt_cids receipt_cids_leaf_mh_key_block_number_fkey; Type: FK CONSTRAINT; Schema: eth; Owner: -
 --
 
 ALTER TABLE ONLY eth.receipt_cids
-    ADD CONSTRAINT receipt_cids_leaf_mh_key_fkey FOREIGN KEY (leaf_mh_key) REFERENCES public.blocks(key) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT receipt_cids_leaf_mh_key_block_number_fkey FOREIGN KEY (leaf_mh_key, block_number) REFERENCES public.blocks(key, block_number) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -989,11 +1062,11 @@ ALTER TABLE ONLY eth.state_cids
 
 
 --
--- Name: state_cids state_cids_mh_key_fkey; Type: FK CONSTRAINT; Schema: eth; Owner: -
+-- Name: state_cids state_cids_mh_key_block_number_fkey; Type: FK CONSTRAINT; Schema: eth; Owner: -
 --
 
 ALTER TABLE ONLY eth.state_cids
-    ADD CONSTRAINT state_cids_mh_key_fkey FOREIGN KEY (mh_key) REFERENCES public.blocks(key) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT state_cids_mh_key_block_number_fkey FOREIGN KEY (mh_key, block_number) REFERENCES public.blocks(key, block_number) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -1005,11 +1078,11 @@ ALTER TABLE ONLY eth.storage_cids
 
 
 --
--- Name: storage_cids storage_cids_mh_key_fkey; Type: FK CONSTRAINT; Schema: eth; Owner: -
+-- Name: storage_cids storage_cids_mh_key_block_number_fkey; Type: FK CONSTRAINT; Schema: eth; Owner: -
 --
 
 ALTER TABLE ONLY eth.storage_cids
-    ADD CONSTRAINT storage_cids_mh_key_fkey FOREIGN KEY (mh_key) REFERENCES public.blocks(key) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT storage_cids_mh_key_block_number_fkey FOREIGN KEY (mh_key, block_number) REFERENCES public.blocks(key, block_number) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -1021,11 +1094,11 @@ ALTER TABLE ONLY eth.transaction_cids
 
 
 --
--- Name: transaction_cids transaction_cids_mh_key_fkey; Type: FK CONSTRAINT; Schema: eth; Owner: -
+-- Name: transaction_cids transaction_cids_mh_key_block_number_fkey; Type: FK CONSTRAINT; Schema: eth; Owner: -
 --
 
 ALTER TABLE ONLY eth.transaction_cids
-    ADD CONSTRAINT transaction_cids_mh_key_fkey FOREIGN KEY (mh_key) REFERENCES public.blocks(key) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT transaction_cids_mh_key_block_number_fkey FOREIGN KEY (mh_key, block_number) REFERENCES public.blocks(key, block_number) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -1037,11 +1110,11 @@ ALTER TABLE ONLY eth.uncle_cids
 
 
 --
--- Name: uncle_cids uncle_cids_mh_key_fkey; Type: FK CONSTRAINT; Schema: eth; Owner: -
+-- Name: uncle_cids uncle_cids_mh_key_block_number_fkey; Type: FK CONSTRAINT; Schema: eth; Owner: -
 --
 
 ALTER TABLE ONLY eth.uncle_cids
-    ADD CONSTRAINT uncle_cids_mh_key_fkey FOREIGN KEY (mh_key) REFERENCES public.blocks(key) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT uncle_cids_mh_key_block_number_fkey FOREIGN KEY (mh_key, block_number) REFERENCES public.blocks(key, block_number) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
 
 
 --

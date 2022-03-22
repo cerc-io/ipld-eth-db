@@ -1,5 +1,6 @@
 -- +goose Up
-CREATE TABLE eth.access_list_elements (
+CREATE TABLE IF NOT EXISTS eth.access_list_elements (
+    block_number          BIGINT NOT NULL,
     tx_id                 VARCHAR(66) NOT NULL,
     index                 INTEGER NOT NULL,
     address               VARCHAR(66),

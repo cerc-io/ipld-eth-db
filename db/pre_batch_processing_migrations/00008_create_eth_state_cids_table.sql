@@ -1,5 +1,6 @@
 -- +goose Up
-CREATE TABLE eth.state_cids (
+CREATE TABLE IF NOT EXISTS eth.state_cids (
+    block_number          BIGINT NOT NULL,
     header_id             VARCHAR(66) NOT NULL,
     state_leaf_key        VARCHAR(66),
     cid                   TEXT NOT NULL,

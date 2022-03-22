@@ -1,5 +1,5 @@
 -- +goose Up
-CREATE TABLE eth.header_cids (
+CREATE TABLE IF NOT EXISTS eth.header_cids (
      block_number          BIGINT NOT NULL,
      block_hash            VARCHAR(66) NOT NULL,
      parent_hash           VARCHAR(66) NOT NULL,
