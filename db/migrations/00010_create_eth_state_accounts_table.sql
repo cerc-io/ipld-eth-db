@@ -1,5 +1,5 @@
 -- +goose Up
-CREATE TABLE eth.state_accounts (
+CREATE TABLE IF NOT EXISTS eth.state_accounts (
     block_number          BIGINT NOT NULL,
     header_id             VARCHAR(66) NOT NULL,
     state_path            BYTEA NOT NULL,

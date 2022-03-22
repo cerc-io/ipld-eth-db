@@ -27,7 +27,7 @@ DROP CONSTRAINT fk_log_leaf_mh_key;
 -- +goose Down
 ALTER TABLE eth.log_cids
 ADD CONSTRAINT fk_log_leaf_mh_key
-    FOREIGN KEY (leaf_mh_key) REFERENCES public.blocks (key)
+    FOREIGN KEY (leaf_mh_key, block_number) REFERENCES public.blocks (key, block_number)
     ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
 
 UPDATE pg_index

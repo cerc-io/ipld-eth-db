@@ -1,5 +1,5 @@
 -- +goose Up
-CREATE TABLE eth.log_cids (
+CREATE TABLE IF NOT EXISTS eth.log_cids (
     block_number        BIGINT NOT NULL,
     leaf_cid            TEXT NOT NULL,
     leaf_mh_key         TEXT NOT NULL,

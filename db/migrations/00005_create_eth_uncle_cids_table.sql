@@ -1,5 +1,5 @@
 -- +goose Up
-CREATE TABLE eth.uncle_cids (
+CREATE TABLE IF NOT EXISTS eth.uncle_cids (
     block_number          BIGINT NOT NULL,
     block_hash            VARCHAR(66) PRIMARY KEY,
     header_id             VARCHAR(66) NOT NULL REFERENCES eth.header_cids (block_hash) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED,

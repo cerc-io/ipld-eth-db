@@ -1,5 +1,5 @@
 -- +goose Up
-CREATE TABLE eth.storage_cids (
+CREATE TABLE IF NOT EXISTS eth.storage_cids (
     block_number          BIGINT NOT NULL,
     header_id             VARCHAR(66) NOT NULL,
     state_path            BYTEA NOT NULL,

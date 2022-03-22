@@ -1,5 +1,5 @@
 -- +goose Up
-CREATE TABLE eth.receipt_cids (
+CREATE TABLE IF NOT EXISTS eth.receipt_cids (
     block_number          BIGINT NOT NULL,
     tx_id                 VARCHAR(66) PRIMARY KEY REFERENCES eth.transaction_cids (tx_hash) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED,
     leaf_cid              TEXT NOT NULL,

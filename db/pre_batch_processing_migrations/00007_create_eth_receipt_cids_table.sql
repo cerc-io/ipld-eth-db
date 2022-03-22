@@ -1,5 +1,6 @@
 -- +goose Up
-CREATE TABLE eth.receipt_cids (
+CREATE TABLE IF NOT EXISTS eth.receipt_cids (
+    block_number          BIGINT NOT NULL,
     tx_id                 VARCHAR(66) NOT NULL,
     leaf_cid              TEXT NOT NULL,
     contract              VARCHAR(66),

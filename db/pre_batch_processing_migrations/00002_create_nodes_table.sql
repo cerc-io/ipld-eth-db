@@ -1,5 +1,5 @@
 -- +goose Up
-CREATE TABLE nodes (
+CREATE TABLE IF NOT EXISTS nodes (
     genesis_block VARCHAR(66),
     network_id    VARCHAR,
     node_id       VARCHAR(128) NOT NULL,

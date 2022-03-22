@@ -1,5 +1,6 @@
 -- +goose Up
-CREATE TABLE eth.transaction_cids (
+CREATE TABLE IF NOT EXISTS eth.transaction_cids (
+    block_number          BIGINT NOT NULL,
     header_id             VARCHAR(66) NOT NULL,
     tx_hash               VARCHAR(66) NOT NULL,
     cid                   TEXT NOT NULL,

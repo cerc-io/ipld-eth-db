@@ -1,7 +1,7 @@
 -- +goose Up
 ALTER TABLE eth.header_cids
 ADD CONSTRAINT fk_header_mh_key
-    FOREIGN KEY (mh_key) REFERENCES public.blocks (key)
+    FOREIGN KEY (mh_key, block_number) REFERENCES public.blocks (key, block_number)
     ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
 
 ALTER TABLE eth.header_cids
@@ -11,7 +11,7 @@ ADD CONSTRAINT fk_header_node_id
 
 ALTER TABLE eth.uncle_cids
 ADD CONSTRAINT fk_uncle_mh_key
-    FOREIGN KEY (mh_key) REFERENCES public.blocks (key)
+    FOREIGN KEY (mh_key, block_number) REFERENCES public.blocks (key, block_number)
     ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
 
 ALTER TABLE eth.uncle_cids
@@ -21,7 +21,7 @@ ADD CONSTRAINT fk_uncle_header_id
 
 ALTER TABLE eth.transaction_cids
 ADD CONSTRAINT fk_tx_mh_key
-    FOREIGN KEY (mh_key) REFERENCES public.blocks (key)
+    FOREIGN KEY (mh_key, block_number) REFERENCES public.blocks (key, block_number)
     ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
 
 ALTER TABLE eth.transaction_cids
@@ -31,7 +31,7 @@ ADD CONSTRAINT fk_tx_header_id
 
 ALTER TABLE eth.receipt_cids
 ADD CONSTRAINT fk_rct_leaf_mh_key
-    FOREIGN KEY (leaf_mh_key) REFERENCES public.blocks (key)
+    FOREIGN KEY (leaf_mh_key, block_number) REFERENCES public.blocks (key, block_number)
     ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
 
 ALTER TABLE eth.receipt_cids
@@ -41,7 +41,7 @@ ADD CONSTRAINT fk_rct_tx_id
 
 ALTER TABLE eth.state_cids
 ADD CONSTRAINT fk_state_mh_key
-    FOREIGN KEY (mh_key) REFERENCES public.blocks (key)
+    FOREIGN KEY (mh_key, block_number) REFERENCES public.blocks (key, block_number)
     ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
 
 ALTER TABLE eth.state_cids
@@ -51,7 +51,7 @@ ADD CONSTRAINT fk_state_header_id
 
 ALTER TABLE eth.storage_cids
 ADD CONSTRAINT fk_storage_mh_key
-    FOREIGN KEY (mh_key) REFERENCES public.blocks (key)
+    FOREIGN KEY (mh_key, block_number) REFERENCES public.blocks (key, block_number)
     ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
 
 ALTER TABLE eth.storage_cids
@@ -71,7 +71,7 @@ ADD CONSTRAINT fk_access_list_tx_id
 
 ALTER TABLE eth.log_cids
 ADD CONSTRAINT fk_log_leaf_mh_key
-    FOREIGN KEY (leaf_mh_key) REFERENCES public.blocks (key)
+    FOREIGN KEY (leaf_mh_key, block_number) REFERENCES public.blocks (key, block_number)
     ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
 
 ALTER TABLE eth.log_cids

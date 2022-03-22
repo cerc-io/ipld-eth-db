@@ -1,5 +1,5 @@
 -- +goose Up
-CREATE TABLE eth.state_cids (
+CREATE TABLE IF NOT EXISTS eth.state_cids (
     block_number          BIGINT NOT NULL,
     header_id             VARCHAR(66) NOT NULL REFERENCES eth.header_cids (block_hash) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED,
     state_leaf_key        VARCHAR(66),

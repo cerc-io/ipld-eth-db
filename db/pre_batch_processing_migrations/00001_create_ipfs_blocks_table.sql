@@ -1,7 +1,8 @@
 -- +goose Up
 CREATE TABLE IF NOT EXISTS public.blocks (
-  key TEXT NOT NULL,
-  data BYTEA NOT NULL
+    block_number BIGINT NOT NULL,
+    key TEXT NOT NULL,
+    data BYTEA NOT NULL
 );
 
 -- +goose Down
