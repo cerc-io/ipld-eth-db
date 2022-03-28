@@ -9,13 +9,13 @@ ALTER TABLE eth.log_cids
 ADD CONSTRAINT pk_eth_log_cids PRIMARY KEY (rct_id, index);
 
 ALTER TABLE eth.state_cids
-ADD CONSTRAINT pk_eth_state_cids PRIMARY KEY (header_id, state_path);
+ADD CONSTRAINT pk_eth_state_cids PRIMARY KEY (state_path, header_id);
 
 ALTER TABLE eth.storage_cids
-ADD CONSTRAINT pk_eth_storage_cids PRIMARY KEY (header_id, state_path, storage_path);
+ADD CONSTRAINT pk_eth_storage_cids PRIMARY KEY (storage_path, state_path, header_id);
 
 ALTER TABLE eth.state_accounts
-ADD CONSTRAINT pk_eth_state_accounts PRIMARY KEY (header_id, state_path);
+ADD CONSTRAINT pk_eth_state_accounts PRIMARY KEY (state_path, header_id);
 
 -- +goose Down
 ALTER TABLE eth.state_accounts

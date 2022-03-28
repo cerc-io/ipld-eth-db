@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS eth.state_cids (
     diff                  BOOLEAN NOT NULL DEFAULT FALSE,
     mh_key                TEXT NOT NULL,
     FOREIGN KEY (mh_key, block_number) REFERENCES public.blocks (key, block_number) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED,
-    PRIMARY KEY (header_id, state_path)
+    PRIMARY KEY (state_path, header_id)
 );
 
 -- +goose Down

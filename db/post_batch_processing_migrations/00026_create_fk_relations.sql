@@ -56,12 +56,12 @@ ADD CONSTRAINT fk_storage_mh_key
 
 ALTER TABLE eth.storage_cids
 ADD CONSTRAINT fk_storage_header_id_state_path
-    FOREIGN KEY (header_id, state_path) REFERENCES eth.state_cids (header_id, state_path)
+    FOREIGN KEY (state_path, header_id) REFERENCES eth.state_cids (state_path, header_id)
     ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
 
 ALTER TABLE eth.state_accounts
 ADD CONSTRAINT fk_account_header_id_state_path
-    FOREIGN KEY (header_id, state_path) REFERENCES eth.state_cids (header_id, state_path)
+    FOREIGN KEY (state_path, header_id) REFERENCES eth.state_cids (state_path, header_id)
     ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
 
 ALTER TABLE eth.access_list_elements
