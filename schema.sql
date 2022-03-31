@@ -477,7 +477,7 @@ CREATE TABLE eth.known_gaps (
   starting_block_number bigint PRIMARY KEY,
   ending_block_number bigint,
   checked_out boolean,
-  processing_key INT
+  processing_key bigint
 );
 
 
