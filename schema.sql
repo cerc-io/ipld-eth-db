@@ -410,6 +410,18 @@ CREATE TABLE eth.uncle_cids (
 
 
 --
+-- Name: known_gaps; Type: TABLE; Schema: eth_meta; Owner: -
+--
+
+CREATE TABLE eth_meta.known_gaps (
+    starting_block_number bigint NOT NULL,
+    ending_block_number bigint,
+    checked_out boolean,
+    processing_key bigint
+);
+
+
+--
 -- Name: watched_addresses; Type: TABLE; Schema: eth_meta; Owner: -
 --
 
@@ -485,18 +497,6 @@ CREATE TABLE public.nodes (
     node_id character varying(128) NOT NULL,
     client_name character varying,
     chain_id integer DEFAULT 1
-);
-
-
---
--- Name: known_gaps; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE eth.known_gaps (
-  starting_block_number bigint PRIMARY KEY,
-  ending_block_number bigint,
-  checked_out boolean,
-  processing_key bigint
 );
 
 
@@ -591,6 +591,14 @@ ALTER TABLE ONLY eth.transaction_cids
 
 ALTER TABLE ONLY eth.uncle_cids
     ADD CONSTRAINT uncle_cids_pkey PRIMARY KEY (block_hash);
+
+
+--
+-- Name: known_gaps known_gaps_pkey; Type: CONSTRAINT; Schema: eth_meta; Owner: -
+--
+
+ALTER TABLE ONLY eth_meta.known_gaps
+    ADD CONSTRAINT known_gaps_pkey PRIMARY KEY (starting_block_number);
 
 
 --
