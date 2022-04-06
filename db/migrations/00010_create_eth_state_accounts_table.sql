@@ -7,8 +7,8 @@ CREATE TABLE IF NOT EXISTS eth.state_accounts (
     nonce                 BIGINT NOT NULL,
     code_hash             BYTEA NOT NULL,
     storage_root          VARCHAR(66) NOT NULL,
-    FOREIGN KEY (header_id, state_path) REFERENCES eth.state_cids (header_id, state_path) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED,
-    PRIMARY KEY (header_id, state_path)
+    FOREIGN KEY (state_path, header_id) REFERENCES eth.state_cids (state_path, header_id) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED,
+    PRIMARY KEY (state_path, header_id)
 );
 
 -- +goose Down

@@ -76,6 +76,35 @@ CREATE TYPE public.child_result AS (
 
 
 --
+-- Name: state_node_result; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.state_node_result AS (
+	data bytea,
+	state_leaf_key character varying(66),
+	cid text,
+	state_path bytea,
+	node_type integer,
+	mh_key text
+);
+
+
+--
+-- Name: storage_node_result; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.storage_node_result AS (
+	data bytea,
+	state_path bytea,
+	storage_leaf_key character varying(66),
+	cid text,
+	storage_path bytea,
+	node_type integer,
+	mh_key text
+);
+
+
+--
 -- Name: graphql_subscription(); Type: FUNCTION; Schema: eth; Owner: -
 --
 
@@ -217,7 +246,7 @@ BEGIN
     canonical_header = canonical_header_from_array(headers);
     RETURN canonical_header.block_hash;
   END IF;
-END;
+END
 $$;
 
 
@@ -250,6 +279,89 @@ BEGIN
     END LOOP;
   END IF;
   RETURN new_child_result;
+END
+$$;
+
+
+--
+-- Name: state_snapshot(bigint, bigint); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.state_snapshot(starting_height bigint, ending_height bigint) RETURNS void
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    canonical_hash VARCHAR(66);
+    results state_node_result[];
+BEGIN
+    -- get the canonical hash for the header at ending_height
+    canonical_hash = canonical_header_hash(ending_height);
+    IF canonical_hash IS NULL THEN
+        RAISE EXCEPTION 'cannot create state snapshot, no header can be found at height %', ending_height;
+    END IF;
+    -- select all of the state nodes for this snapshot: the latest state node record at every unique path, that is not a
+    -- "removed" node-type entry
+    SELECT DISTINCT ON (state_path) blocks.data, state_cids.state_leaf_key, state_cids.cid, state_cids.state_path,
+        state_cids.node_type, state_cids.mh_key
+    INTO results
+    FROM eth.state_cids
+        INNER JOIN public.blocks
+            ON (state_cids.mh_key, state_cids.block_number) = (blocks.key, blocks.block_number)
+    WHERE state_cids.block_number BETWEEN starting_height AND ending_height
+    AND node_type BETWEEN 0 AND 2
+    ORDER BY state_path, block_number DESC;
+    -- from the set returned above, insert public.block records at the ending_height block number
+    INSERT INTO public.blocks (block_number, key, data)
+    SELECT ending_height, r.mh_key, r.data
+    FROM results r;
+    -- from the set returned above, insert eth.state_cids records at the ending_height block number
+    -- anchoring all the records to the canonical header found at ending_height
+    INSERT INTO eth.state_cids (block_number, header_id, state_leaf_key, cid, state_path, node_type, diff, mh_key)
+    SELECT ending_height, canonical_hash, r.state_leaf_key, r.cid, r.state_path, r.node_type, false, r.mh_key
+    FROM results r
+    ON CONFLICT (state_path, header_id) DO NOTHING;
+END
+$$;
+
+
+--
+-- Name: storage_snapshot(bigint, bigint); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.storage_snapshot(starting_height bigint, ending_height bigint) RETURNS void
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    canonical_hash VARCHAR(66);
+    results storage_node_result[];
+BEGIN
+    -- get the canonical hash for the header at ending_height
+    SELECT canonical_header_hash(ending_height) INTO canonical_hash;
+    IF canonical_hash IS NULL THEN
+        RAISE EXCEPTION 'cannot create state snapshot, no header can be found at height %', ending_height;
+    END IF;
+    -- select all of the storage nodes for this snapshot: the latest storage node record at every unique path, that is not a
+    -- "removed" node-type entry
+    SELECT DISTINCT ON (state_path, storage_path) block.data, storage_cids.state_path, storage_cids.storage_leaf_key,
+     storage_cids.cid, storage_cids.storage_path, storage_cids.node_type, storage_cids.mh_key
+    INTO results
+    FROM eth.storage_cids
+        INNER JOIN public.blocks
+        ON (storage_cids.mh_key, storage_cids.block_number) = (blocks.key, blocks.block_number)
+    WHERE storage_cids.block_number BETWEEN starting_height AND ending_height
+    AND node_type BETWEEN 0 AND 2
+    ORDER BY state_path, storage_path, block_number DESC;
+    -- from the set returned above, insert public.block records at the ending_height block number
+    INSERT INTO public.blocks (block_number, key, data)
+    SELECT ending_height, r.mh_key, r.data
+    FROM results r;
+    -- from the set returned above, insert eth.state_cids records at the ending_height block number
+    -- anchoring all the records to the canonical header found at ending_height
+    INSERT INTO eth.storage_cids (block_number, header_id, state_path, storage_leaf_key, cid, storage_path,
+                              node_type, diff, mh_key)
+    SELECT ending_height, canonical_hash, r.state_path, r.storage_leaf_key, r.cid, r.storage_path, r.node_type, false, r.mh_key
+    FROM results r
+    ON CONFLICT (storage_path, state_path, header_id) DO NOTHING;
 END
 $$;
 
@@ -536,7 +648,7 @@ ALTER TABLE ONLY eth.receipt_cids
 --
 
 ALTER TABLE ONLY eth.state_accounts
-    ADD CONSTRAINT state_accounts_pkey PRIMARY KEY (header_id, state_path);
+    ADD CONSTRAINT state_accounts_pkey PRIMARY KEY (state_path, header_id);
 
 
 --
@@ -544,7 +656,7 @@ ALTER TABLE ONLY eth.state_accounts
 --
 
 ALTER TABLE ONLY eth.state_cids
-    ADD CONSTRAINT state_cids_pkey PRIMARY KEY (header_id, state_path);
+    ADD CONSTRAINT state_cids_pkey PRIMARY KEY (state_path, header_id);
 
 
 --
@@ -552,7 +664,7 @@ ALTER TABLE ONLY eth.state_cids
 --
 
 ALTER TABLE ONLY eth.storage_cids
-    ADD CONSTRAINT storage_cids_pkey PRIMARY KEY (header_id, state_path, storage_path);
+    ADD CONSTRAINT storage_cids_pkey PRIMARY KEY (storage_path, state_path, header_id);
 
 
 --
@@ -569,14 +681,6 @@ ALTER TABLE ONLY eth.transaction_cids
 
 ALTER TABLE ONLY eth.uncle_cids
     ADD CONSTRAINT uncle_cids_pkey PRIMARY KEY (block_hash);
-
-
---
--- Name: blocks blocks_key_key; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.blocks
-    ADD CONSTRAINT blocks_key_key UNIQUE (key);
 
 
 --
@@ -640,10 +744,17 @@ CREATE INDEX account_block_number_index ON eth.state_accounts USING brin (block_
 
 
 --
--- Name: account_state_path_index; Type: INDEX; Schema: eth; Owner: -
+-- Name: account_header_id_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE INDEX account_state_path_index ON eth.state_accounts USING btree (state_path);
+CREATE INDEX account_header_id_index ON eth.state_accounts USING btree (header_id);
+
+
+--
+-- Name: account_storage_root_index; Type: INDEX; Schema: eth; Owner: -
+--
+
+CREATE INDEX account_storage_root_index ON eth.state_accounts USING btree (storage_root);
 
 
 --
@@ -661,10 +772,10 @@ CREATE UNIQUE INDEX header_cid_index ON eth.header_cids USING btree (cid);
 
 
 --
--- Name: header_mh_index; Type: INDEX; Schema: eth; Owner: -
+-- Name: header_mh_block_number_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE UNIQUE INDEX header_mh_index ON eth.header_cids USING btree (mh_key);
+CREATE UNIQUE INDEX header_mh_block_number_index ON eth.header_cids USING btree (mh_key, block_number);
 
 
 --
@@ -689,10 +800,10 @@ CREATE INDEX log_cid_index ON eth.log_cids USING btree (leaf_cid);
 
 
 --
--- Name: log_mh_index; Type: INDEX; Schema: eth; Owner: -
+-- Name: log_leaf_mh_block_number_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE INDEX log_mh_index ON eth.log_cids USING btree (leaf_mh_key);
+CREATE INDEX log_leaf_mh_block_number_index ON eth.log_cids USING btree (leaf_mh_key, block_number);
 
 
 --
@@ -752,10 +863,10 @@ CREATE INDEX rct_leaf_cid_index ON eth.receipt_cids USING btree (leaf_cid);
 
 
 --
--- Name: rct_leaf_mh_index; Type: INDEX; Schema: eth; Owner: -
+-- Name: rct_leaf_mh_block_number_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE INDEX rct_leaf_mh_index ON eth.receipt_cids USING btree (leaf_mh_key);
+CREATE INDEX rct_leaf_mh_block_number_index ON eth.receipt_cids USING btree (leaf_mh_key, block_number);
 
 
 --
@@ -773,6 +884,13 @@ CREATE INDEX state_cid_index ON eth.state_cids USING btree (cid);
 
 
 --
+-- Name: state_header_id_index; Type: INDEX; Schema: eth; Owner: -
+--
+
+CREATE INDEX state_header_id_index ON eth.state_cids USING btree (header_id);
+
+
+--
 -- Name: state_leaf_key_index; Type: INDEX; Schema: eth; Owner: -
 --
 
@@ -780,10 +898,10 @@ CREATE INDEX state_leaf_key_index ON eth.state_cids USING btree (state_leaf_key)
 
 
 --
--- Name: state_mh_index; Type: INDEX; Schema: eth; Owner: -
+-- Name: state_mh_block_number_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE INDEX state_mh_index ON eth.state_cids USING btree (mh_key);
+CREATE INDEX state_mh_block_number_index ON eth.state_cids USING btree (mh_key, block_number);
 
 
 --
@@ -791,13 +909,6 @@ CREATE INDEX state_mh_index ON eth.state_cids USING btree (mh_key);
 --
 
 CREATE INDEX state_node_type_index ON eth.state_cids USING btree (node_type);
-
-
---
--- Name: state_path_index; Type: INDEX; Schema: eth; Owner: -
---
-
-CREATE INDEX state_path_index ON eth.state_cids USING btree (state_path);
 
 
 --
@@ -822,6 +933,13 @@ CREATE INDEX storage_cid_index ON eth.storage_cids USING btree (cid);
 
 
 --
+-- Name: storage_header_id_index; Type: INDEX; Schema: eth; Owner: -
+--
+
+CREATE INDEX storage_header_id_index ON eth.storage_cids USING btree (header_id);
+
+
+--
 -- Name: storage_leaf_key_index; Type: INDEX; Schema: eth; Owner: -
 --
 
@@ -829,10 +947,10 @@ CREATE INDEX storage_leaf_key_index ON eth.storage_cids USING btree (storage_lea
 
 
 --
--- Name: storage_mh_index; Type: INDEX; Schema: eth; Owner: -
+-- Name: storage_mh_block_number_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE INDEX storage_mh_index ON eth.storage_cids USING btree (mh_key);
+CREATE INDEX storage_mh_block_number_index ON eth.storage_cids USING btree (mh_key, block_number);
 
 
 --
@@ -840,20 +958,6 @@ CREATE INDEX storage_mh_index ON eth.storage_cids USING btree (mh_key);
 --
 
 CREATE INDEX storage_node_type_index ON eth.storage_cids USING btree (node_type);
-
-
---
--- Name: storage_path_index; Type: INDEX; Schema: eth; Owner: -
---
-
-CREATE INDEX storage_path_index ON eth.storage_cids USING btree (storage_path);
-
-
---
--- Name: storage_root_index; Type: INDEX; Schema: eth; Owner: -
---
-
-CREATE INDEX storage_root_index ON eth.state_accounts USING btree (storage_root);
 
 
 --
@@ -899,10 +1003,10 @@ CREATE INDEX tx_header_id_index ON eth.transaction_cids USING btree (header_id);
 
 
 --
--- Name: tx_mh_index; Type: INDEX; Schema: eth; Owner: -
+-- Name: tx_mh_block_number_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE UNIQUE INDEX tx_mh_index ON eth.transaction_cids USING btree (mh_key);
+CREATE UNIQUE INDEX tx_mh_block_number_index ON eth.transaction_cids USING btree (mh_key, block_number);
 
 
 --
@@ -924,6 +1028,13 @@ CREATE INDEX uncle_block_number_index ON eth.uncle_cids USING brin (block_number
 --
 
 CREATE INDEX uncle_header_id_index ON eth.uncle_cids USING btree (header_id);
+
+
+--
+-- Name: uncle_mh_block_number_index; Type: INDEX; Schema: eth; Owner: -
+--
+
+CREATE UNIQUE INDEX uncle_mh_block_number_index ON eth.uncle_cids USING btree (mh_key, block_number);
 
 
 --
@@ -1046,11 +1157,11 @@ ALTER TABLE ONLY eth.receipt_cids
 
 
 --
--- Name: state_accounts state_accounts_header_id_state_path_fkey; Type: FK CONSTRAINT; Schema: eth; Owner: -
+-- Name: state_accounts state_accounts_state_path_header_id_fkey; Type: FK CONSTRAINT; Schema: eth; Owner: -
 --
 
 ALTER TABLE ONLY eth.state_accounts
-    ADD CONSTRAINT state_accounts_header_id_state_path_fkey FOREIGN KEY (header_id, state_path) REFERENCES eth.state_cids(header_id, state_path) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT state_accounts_state_path_header_id_fkey FOREIGN KEY (state_path, header_id) REFERENCES eth.state_cids(state_path, header_id) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -1070,19 +1181,19 @@ ALTER TABLE ONLY eth.state_cids
 
 
 --
--- Name: storage_cids storage_cids_header_id_state_path_fkey; Type: FK CONSTRAINT; Schema: eth; Owner: -
---
-
-ALTER TABLE ONLY eth.storage_cids
-    ADD CONSTRAINT storage_cids_header_id_state_path_fkey FOREIGN KEY (header_id, state_path) REFERENCES eth.state_cids(header_id, state_path) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
-
-
---
 -- Name: storage_cids storage_cids_mh_key_block_number_fkey; Type: FK CONSTRAINT; Schema: eth; Owner: -
 --
 
 ALTER TABLE ONLY eth.storage_cids
     ADD CONSTRAINT storage_cids_mh_key_block_number_fkey FOREIGN KEY (mh_key, block_number) REFERENCES public.blocks(key, block_number) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: storage_cids storage_cids_state_path_header_id_fkey; Type: FK CONSTRAINT; Schema: eth; Owner: -
+--
+
+ALTER TABLE ONLY eth.storage_cids
+    ADD CONSTRAINT storage_cids_state_path_header_id_fkey FOREIGN KEY (state_path, header_id) REFERENCES eth.state_cids(state_path, header_id) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
 
 
 --

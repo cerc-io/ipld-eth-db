@@ -10,8 +10,8 @@ CREATE TABLE IF NOT EXISTS eth.storage_cids (
     diff                  BOOLEAN NOT NULL DEFAULT FALSE,
     mh_key                TEXT NOT NULL,
     FOREIGN KEY (mh_key, block_number) REFERENCES public.blocks (key, block_number) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED,
-    FOREIGN KEY (header_id, state_path) REFERENCES eth.state_cids (header_id, state_path) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED,
-    PRIMARY KEY (header_id, state_path, storage_path)
+    FOREIGN KEY (state_path, header_id) REFERENCES eth.state_cids (state_path, header_id) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED,
+    PRIMARY KEY (storage_path, state_path, header_id)
 );
 
 -- +goose Down
