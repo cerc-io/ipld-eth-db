@@ -4,11 +4,6 @@ ADD CONSTRAINT fk_header_mh_key
     FOREIGN KEY (mh_key, block_number) REFERENCES public.blocks (key, block_number)
     ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
 
-ALTER TABLE eth.header_cids
-ADD CONSTRAINT fk_header_node_id
-    FOREIGN KEY (node_id) REFERENCES public.nodes (node_id)
-    ON DELETE CASCADE;
-
 ALTER TABLE eth.uncle_cids
 ADD CONSTRAINT fk_uncle_mh_key
     FOREIGN KEY (mh_key, block_number) REFERENCES public.blocks (key, block_number)
@@ -82,9 +77,6 @@ ADD CONSTRAINT fk_log_rct_id
 -- +goose Down
 ALTER TABLE eth.header_cids
 DROP CONSTRAINT fk_header_mh_key;
-
-ALTER TABLE eth.header_cids
-DROP CONSTRAINT fk_header_node_id;
 
 ALTER TABLE eth.uncle_cids
 DROP CONSTRAINT fk_uncle_mh_key;

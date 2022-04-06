@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS eth.header_cids (
     parent_hash           VARCHAR(66) NOT NULL,
     cid                   TEXT NOT NULL,
     td                    NUMERIC NOT NULL,
-    node_id               VARCHAR(128) NOT NULL REFERENCES nodes (node_id) ON DELETE CASCADE,
+    node_id               VARCHAR(128) NOT NULL,
     reward                NUMERIC NOT NULL,
     state_root            VARCHAR(66) NOT NULL,
     tx_root               VARCHAR(66) NOT NULL,
