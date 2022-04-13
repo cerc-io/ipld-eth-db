@@ -36,7 +36,7 @@ CREATE INDEX state_node_type_index ON eth.state_cids USING btree (node_type);
 
 -- storage node indexes
 CREATE INDEX storage_block_number_index ON eth.storage_cids USING brin (block_number);
-CREATE INDEX storage_state_path_index ON eth.storage_cids USING btree (state_path);
+CREATE INDEX storage_state_leaf_key_index ON eth.storage_cids USING btree (state_leaf_key);
 CREATE INDEX storage_leaf_key_index ON eth.storage_cids USING btree (storage_leaf_key);
 CREATE INDEX storage_cid_index ON eth.storage_cids USING btree (cid);
 CREATE INDEX storage_mh_block_number_index ON eth.storage_cids USING btree (mh_key, block_number);
@@ -90,7 +90,7 @@ DROP INDEX eth.storage_header_id_index;
 DROP INDEX eth.storage_mh_block_number_index;
 DROP INDEX eth.storage_cid_index;
 DROP INDEX eth.storage_leaf_key_index;
-DROP INDEX eth.storage_state_path_index;
+DROP INDEX eth.storage_state_leaf_key_index;
 DROP INDEX eth.storage_block_number_index;
 
 -- state node indexes

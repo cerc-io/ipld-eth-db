@@ -163,7 +163,6 @@ BEGIN
         INNER JOIN public.blocks
             ON (state_cids.mh_key, state_cids.block_number) = (blocks.key, blocks.block_number)
     WHERE state_cids.block_number BETWEEN starting_height AND ending_height
-    AND node_type BETWEEN 0 AND 2
     ORDER BY state_path, block_number DESC;
 
     -- from the set returned above, insert public.block records at the ending_height block number
@@ -218,7 +217,6 @@ BEGIN
         INNER JOIN public.blocks
         ON (storage_cids.mh_key, storage_cids.block_number) = (blocks.key, blocks.block_number)
     WHERE storage_cids.block_number BETWEEN starting_height AND ending_height
-    AND node_type BETWEEN 0 AND 2
     ORDER BY state_path, storage_path, block_number DESC;
 
     -- from the set returned above, insert public.block records at the ending_height block number
