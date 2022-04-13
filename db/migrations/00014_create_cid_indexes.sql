@@ -1,7 +1,7 @@
 -- +goose Up
 -- header indexes
 CREATE INDEX header_block_number_index ON eth.header_cids USING brin (block_number);
-CREATE UNIQUE INDEX header_cid_index ON eth.header_cids USING btree (cid);
+CREATE UNIQUE INDEX header_cid_index ON eth.header_cids USING btree (cid, block_number);
 CREATE UNIQUE INDEX header_mh_block_number_index ON eth.header_cids USING btree (mh_key, block_number);
 CREATE INDEX state_root_index ON eth.header_cids USING btree (state_root);
 CREATE INDEX timestamp_index ON eth.header_cids USING brin (timestamp);
@@ -14,7 +14,7 @@ CREATE INDEX uncle_header_id_index ON eth.uncle_cids USING btree (header_id);
 -- transaction indexes
 CREATE INDEX tx_block_number_index ON eth.transaction_cids USING brin (block_number);
 CREATE INDEX tx_header_id_index ON eth.transaction_cids USING btree (header_id);
-CREATE UNIQUE INDEX tx_cid_index ON eth.transaction_cids USING btree (cid);
+CREATE UNIQUE INDEX tx_cid_index ON eth.transaction_cids USING btree (cid, block_number);
 CREATE UNIQUE INDEX tx_mh_block_number_index ON eth.transaction_cids USING btree (mh_key, block_number);
 CREATE INDEX tx_dst_index ON eth.transaction_cids USING btree (dst);
 CREATE INDEX tx_src_index ON eth.transaction_cids USING btree (src);
@@ -36,7 +36,7 @@ CREATE INDEX state_node_type_index ON eth.state_cids USING btree (node_type);
 
 -- storage node indexes
 CREATE INDEX storage_block_number_index ON eth.storage_cids USING brin (block_number);
-CREATE INDEX storage_state_leaf_key_index ON eth.storage_cids USING btree (state_leaf_key);
+CREATE INDEX storage_state_path_index ON eth.storage_cids USING btree (state_path);
 CREATE INDEX storage_leaf_key_index ON eth.storage_cids USING btree (storage_leaf_key);
 CREATE INDEX storage_cid_index ON eth.storage_cids USING btree (cid);
 CREATE INDEX storage_mh_block_number_index ON eth.storage_cids USING btree (mh_key, block_number);
@@ -90,7 +90,7 @@ DROP INDEX eth.storage_header_id_index;
 DROP INDEX eth.storage_mh_block_number_index;
 DROP INDEX eth.storage_cid_index;
 DROP INDEX eth.storage_leaf_key_index;
-DROP INDEX eth.storage_state_leaf_key_index;
+DROP INDEX eth.storage_state_path_index;
 DROP INDEX eth.storage_block_number_index;
 
 -- state node indexes

@@ -1,6 +1,6 @@
 -- +goose Up
 SELECT create_hypertable('public.blocks', 'block_number', migrate_data => true, chunk_time_interval => 32768);
-SELECT create_hypertable('eth.header_cids', 'block_number' migrate_data => true, chunk_time_interval => 32768);
+SELECT create_hypertable('eth.header_cids', 'block_number', migrate_data => true, chunk_time_interval => 32768);
 SELECT create_hypertable('eth.uncle_cids', 'block_number', migrate_data => true, chunk_time_interval => 32768);
 SELECT create_hypertable('eth.transaction_cids', 'block_number', migrate_data => true, chunk_time_interval => 32768);
 SELECT create_hypertable('eth.receipt_cids', 'block_number', migrate_data => true, chunk_time_interval => 32768);
@@ -32,15 +32,15 @@ CREATE TABLE public.blocks_i (LIKE public.blocks INCLUDING ALL);
 
 -- migrate data
 INSERT INTO eth.log_cids_i (SELECT * FROM eth.log_cids);
-INSERT INTO eth.access_list_elements_i (SELECT eth.access_list_elements);
-INSERT INTO eth.state_accounts_i (SELECT eth.state_accounts);
-INSERT INTO eth.storage_cids_i (SELECT eth.storage_cids);
-INSERT INTO eth.state_cids_i (SELECT eth.state_cids);
-INSERT INTO eth.receipt_cids_i (SELECT eth.receipt_cids);
-INSERT INTO eth.transaction_cids_i (SELECT eth.transaction_cids);
-INSERT INTO eth.uncle_cids_i (SELECT eth.uncle_cids);
-INSERT INTO eth.header_cids_i (SELECT eth.header_cids);
-INSERT INTO public.blocks_i (SELECT public.blocks);
+INSERT INTO eth.access_list_elements_i (SELECT * FROM eth.access_list_elements);
+INSERT INTO eth.state_accounts_i (SELECT * FROM eth.state_accounts);
+INSERT INTO eth.storage_cids_i (SELECT * FROM eth.storage_cids);
+INSERT INTO eth.state_cids_i (SELECT * FROM eth.state_cids);
+INSERT INTO eth.receipt_cids_i (SELECT * FROM eth.receipt_cids);
+INSERT INTO eth.transaction_cids_i (SELECT * FROM eth.transaction_cids);
+INSERT INTO eth.uncle_cids_i (SELECT * FROM eth.uncle_cids);
+INSERT INTO eth.header_cids_i (SELECT * FROM eth.header_cids);
+INSERT INTO public.blocks_i (SELECT * FROM public.blocks);
 
 -- drops hypertables
 DROP TABLE eth.log_cids;
