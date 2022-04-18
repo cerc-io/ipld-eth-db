@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 14beta3
--- Dumped by pg_dump version 14beta3
+-- Dumped from database version 14.2
+-- Dumped by pg_dump version 14.2
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -15,6 +15,20 @@ SET check_function_bodies = false;
 SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
+
+--
+-- Name: timescaledb; Type: EXTENSION; Schema: -; Owner: -
+--
+
+CREATE EXTENSION IF NOT EXISTS timescaledb WITH SCHEMA public;
+
+
+--
+-- Name: EXTENSION timescaledb; Type: COMMENT; Schema: -; Owner: -
+--
+
+COMMENT ON EXTENSION timescaledb IS 'Enables scalable inserts and complex queries for time-series data';
+
 
 --
 -- Name: eth; Type: SCHEMA; Schema: -; Owner: -
@@ -299,8 +313,7 @@ BEGIN
     IF canonical_hash IS NULL THEN
         RAISE EXCEPTION 'cannot create state snapshot, no header can be found at height %', ending_height;
     END IF;
-    -- select all of the state nodes for this snapshot: the latest state node record at every unique path, that is not a
-    -- "removed" node-type entry
+    -- select all of the state nodes for this snapshot: the latest state node record at every unique path
     SELECT DISTINCT ON (state_path) blocks.data, state_cids.state_leaf_key, state_cids.cid, state_cids.state_path,
         state_cids.node_type, state_cids.mh_key
     INTO results
@@ -308,7 +321,6 @@ BEGIN
         INNER JOIN public.blocks
             ON (state_cids.mh_key, state_cids.block_number) = (blocks.key, blocks.block_number)
     WHERE state_cids.block_number BETWEEN starting_height AND ending_height
-    AND node_type BETWEEN 0 AND 2
     ORDER BY state_path, block_number DESC;
     -- from the set returned above, insert public.block records at the ending_height block number
     INSERT INTO public.blocks (block_number, key, data)
@@ -340,16 +352,16 @@ BEGIN
     IF canonical_hash IS NULL THEN
         RAISE EXCEPTION 'cannot create state snapshot, no header can be found at height %', ending_height;
     END IF;
-    -- select all of the storage nodes for this snapshot: the latest storage node record at every unique path, that is not a
-    -- "removed" node-type entry
-    SELECT DISTINCT ON (state_path, storage_path) block.data, storage_cids.state_path, storage_cids.storage_leaf_key,
+    -- select all of the storage nodes for this snapshot: the latest storage node record at every unique state leaf key
+    SELECT DISTINCT ON (state_leaf_key, storage_path) block.data, storage_cids.state_path, storage_cids.storage_leaf_key,
      storage_cids.cid, storage_cids.storage_path, storage_cids.node_type, storage_cids.mh_key
     INTO results
     FROM eth.storage_cids
         INNER JOIN public.blocks
         ON (storage_cids.mh_key, storage_cids.block_number) = (blocks.key, blocks.block_number)
+        INNER JOIN eth.state_cids
+        ON (storage_cids.state_path, storage_cids.header_id) = (state_cids.state_path, state_cids.header_id)
     WHERE storage_cids.block_number BETWEEN starting_height AND ending_height
-    AND node_type BETWEEN 0 AND 2
     ORDER BY state_path, storage_path, block_number DESC;
     -- from the set returned above, insert public.block records at the ending_height block number
     INSERT INTO public.blocks (block_number, key, data)
@@ -616,7 +628,7 @@ ALTER TABLE ONLY public.goose_db_version ALTER COLUMN id SET DEFAULT nextval('pu
 --
 
 ALTER TABLE ONLY eth.access_list_elements
-    ADD CONSTRAINT access_list_elements_pkey PRIMARY KEY (tx_id, index);
+    ADD CONSTRAINT access_list_elements_pkey PRIMARY KEY (tx_id, index, block_number);
 
 
 --
@@ -624,7 +636,7 @@ ALTER TABLE ONLY eth.access_list_elements
 --
 
 ALTER TABLE ONLY eth.header_cids
-    ADD CONSTRAINT header_cids_pkey PRIMARY KEY (block_hash);
+    ADD CONSTRAINT header_cids_pkey PRIMARY KEY (block_hash, block_number);
 
 
 --
@@ -632,7 +644,7 @@ ALTER TABLE ONLY eth.header_cids
 --
 
 ALTER TABLE ONLY eth.log_cids
-    ADD CONSTRAINT log_cids_pkey PRIMARY KEY (rct_id, index);
+    ADD CONSTRAINT log_cids_pkey PRIMARY KEY (rct_id, index, block_number);
 
 
 --
@@ -640,7 +652,7 @@ ALTER TABLE ONLY eth.log_cids
 --
 
 ALTER TABLE ONLY eth.receipt_cids
-    ADD CONSTRAINT receipt_cids_pkey PRIMARY KEY (tx_id);
+    ADD CONSTRAINT receipt_cids_pkey PRIMARY KEY (tx_id, block_number);
 
 
 --
@@ -648,7 +660,7 @@ ALTER TABLE ONLY eth.receipt_cids
 --
 
 ALTER TABLE ONLY eth.state_accounts
-    ADD CONSTRAINT state_accounts_pkey PRIMARY KEY (state_path, header_id);
+    ADD CONSTRAINT state_accounts_pkey PRIMARY KEY (state_path, header_id, block_number);
 
 
 --
@@ -656,7 +668,7 @@ ALTER TABLE ONLY eth.state_accounts
 --
 
 ALTER TABLE ONLY eth.state_cids
-    ADD CONSTRAINT state_cids_pkey PRIMARY KEY (state_path, header_id);
+    ADD CONSTRAINT state_cids_pkey PRIMARY KEY (state_path, header_id, block_number);
 
 
 --
@@ -664,7 +676,7 @@ ALTER TABLE ONLY eth.state_cids
 --
 
 ALTER TABLE ONLY eth.storage_cids
-    ADD CONSTRAINT storage_cids_pkey PRIMARY KEY (storage_path, state_path, header_id);
+    ADD CONSTRAINT storage_cids_pkey PRIMARY KEY (storage_path, state_path, header_id, block_number);
 
 
 --
@@ -672,7 +684,7 @@ ALTER TABLE ONLY eth.storage_cids
 --
 
 ALTER TABLE ONLY eth.transaction_cids
-    ADD CONSTRAINT transaction_cids_pkey PRIMARY KEY (tx_hash);
+    ADD CONSTRAINT transaction_cids_pkey PRIMARY KEY (tx_hash, block_number);
 
 
 --
@@ -680,7 +692,7 @@ ALTER TABLE ONLY eth.transaction_cids
 --
 
 ALTER TABLE ONLY eth.uncle_cids
-    ADD CONSTRAINT uncle_cids_pkey PRIMARY KEY (block_hash);
+    ADD CONSTRAINT uncle_cids_pkey PRIMARY KEY (block_hash, block_number);
 
 
 --
@@ -768,7 +780,7 @@ CREATE INDEX header_block_number_index ON eth.header_cids USING brin (block_numb
 -- Name: header_cid_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE UNIQUE INDEX header_cid_index ON eth.header_cids USING btree (cid);
+CREATE UNIQUE INDEX header_cid_index ON eth.header_cids USING btree (cid, block_number);
 
 
 --
@@ -985,7 +997,7 @@ CREATE INDEX tx_block_number_index ON eth.transaction_cids USING brin (block_num
 -- Name: tx_cid_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE UNIQUE INDEX tx_cid_index ON eth.transaction_cids USING btree (cid);
+CREATE UNIQUE INDEX tx_cid_index ON eth.transaction_cids USING btree (cid, block_number);
 
 
 --
@@ -1035,6 +1047,13 @@ CREATE INDEX uncle_header_id_index ON eth.uncle_cids USING btree (header_id);
 --
 
 CREATE UNIQUE INDEX uncle_mh_block_number_index ON eth.uncle_cids USING btree (mh_key, block_number);
+
+
+--
+-- Name: blocks_block_number_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX blocks_block_number_idx ON public.blocks USING btree (block_number DESC);
 
 
 --
@@ -1101,11 +1120,81 @@ CREATE TRIGGER trg_eth_uncle_cids AFTER INSERT ON eth.uncle_cids FOR EACH ROW EX
 
 
 --
--- Name: access_list_elements access_list_elements_tx_id_fkey; Type: FK CONSTRAINT; Schema: eth; Owner: -
+-- Name: access_list_elements ts_insert_blocker; Type: TRIGGER; Schema: eth; Owner: -
+--
+
+CREATE TRIGGER ts_insert_blocker BEFORE INSERT ON eth.access_list_elements FOR EACH ROW EXECUTE FUNCTION _timescaledb_internal.insert_blocker();
+
+
+--
+-- Name: header_cids ts_insert_blocker; Type: TRIGGER; Schema: eth; Owner: -
+--
+
+CREATE TRIGGER ts_insert_blocker BEFORE INSERT ON eth.header_cids FOR EACH ROW EXECUTE FUNCTION _timescaledb_internal.insert_blocker();
+
+
+--
+-- Name: log_cids ts_insert_blocker; Type: TRIGGER; Schema: eth; Owner: -
+--
+
+CREATE TRIGGER ts_insert_blocker BEFORE INSERT ON eth.log_cids FOR EACH ROW EXECUTE FUNCTION _timescaledb_internal.insert_blocker();
+
+
+--
+-- Name: receipt_cids ts_insert_blocker; Type: TRIGGER; Schema: eth; Owner: -
+--
+
+CREATE TRIGGER ts_insert_blocker BEFORE INSERT ON eth.receipt_cids FOR EACH ROW EXECUTE FUNCTION _timescaledb_internal.insert_blocker();
+
+
+--
+-- Name: state_accounts ts_insert_blocker; Type: TRIGGER; Schema: eth; Owner: -
+--
+
+CREATE TRIGGER ts_insert_blocker BEFORE INSERT ON eth.state_accounts FOR EACH ROW EXECUTE FUNCTION _timescaledb_internal.insert_blocker();
+
+
+--
+-- Name: state_cids ts_insert_blocker; Type: TRIGGER; Schema: eth; Owner: -
+--
+
+CREATE TRIGGER ts_insert_blocker BEFORE INSERT ON eth.state_cids FOR EACH ROW EXECUTE FUNCTION _timescaledb_internal.insert_blocker();
+
+
+--
+-- Name: storage_cids ts_insert_blocker; Type: TRIGGER; Schema: eth; Owner: -
+--
+
+CREATE TRIGGER ts_insert_blocker BEFORE INSERT ON eth.storage_cids FOR EACH ROW EXECUTE FUNCTION _timescaledb_internal.insert_blocker();
+
+
+--
+-- Name: transaction_cids ts_insert_blocker; Type: TRIGGER; Schema: eth; Owner: -
+--
+
+CREATE TRIGGER ts_insert_blocker BEFORE INSERT ON eth.transaction_cids FOR EACH ROW EXECUTE FUNCTION _timescaledb_internal.insert_blocker();
+
+
+--
+-- Name: uncle_cids ts_insert_blocker; Type: TRIGGER; Schema: eth; Owner: -
+--
+
+CREATE TRIGGER ts_insert_blocker BEFORE INSERT ON eth.uncle_cids FOR EACH ROW EXECUTE FUNCTION _timescaledb_internal.insert_blocker();
+
+
+--
+-- Name: blocks ts_insert_blocker; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER ts_insert_blocker BEFORE INSERT ON public.blocks FOR EACH ROW EXECUTE FUNCTION _timescaledb_internal.insert_blocker();
+
+
+--
+-- Name: access_list_elements access_list_elements_tx_id_block_number_fkey; Type: FK CONSTRAINT; Schema: eth; Owner: -
 --
 
 ALTER TABLE ONLY eth.access_list_elements
-    ADD CONSTRAINT access_list_elements_tx_id_fkey FOREIGN KEY (tx_id) REFERENCES eth.transaction_cids(tx_hash) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT access_list_elements_tx_id_block_number_fkey FOREIGN KEY (tx_id, block_number) REFERENCES eth.transaction_cids(tx_hash, block_number) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -1117,14 +1206,6 @@ ALTER TABLE ONLY eth.header_cids
 
 
 --
--- Name: header_cids header_cids_node_id_fkey; Type: FK CONSTRAINT; Schema: eth; Owner: -
---
-
-ALTER TABLE ONLY eth.header_cids
-    ADD CONSTRAINT header_cids_node_id_fkey FOREIGN KEY (node_id) REFERENCES public.nodes(node_id) ON DELETE CASCADE;
-
-
---
 -- Name: log_cids log_cids_leaf_mh_key_block_number_fkey; Type: FK CONSTRAINT; Schema: eth; Owner: -
 --
 
@@ -1133,11 +1214,11 @@ ALTER TABLE ONLY eth.log_cids
 
 
 --
--- Name: log_cids log_cids_rct_id_fkey; Type: FK CONSTRAINT; Schema: eth; Owner: -
+-- Name: log_cids log_cids_rct_id_block_number_fkey; Type: FK CONSTRAINT; Schema: eth; Owner: -
 --
 
 ALTER TABLE ONLY eth.log_cids
-    ADD CONSTRAINT log_cids_rct_id_fkey FOREIGN KEY (rct_id) REFERENCES eth.receipt_cids(tx_id) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT log_cids_rct_id_block_number_fkey FOREIGN KEY (rct_id, block_number) REFERENCES eth.receipt_cids(tx_id, block_number) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -1149,27 +1230,27 @@ ALTER TABLE ONLY eth.receipt_cids
 
 
 --
--- Name: receipt_cids receipt_cids_tx_id_fkey; Type: FK CONSTRAINT; Schema: eth; Owner: -
+-- Name: receipt_cids receipt_cids_tx_id_block_number_fkey; Type: FK CONSTRAINT; Schema: eth; Owner: -
 --
 
 ALTER TABLE ONLY eth.receipt_cids
-    ADD CONSTRAINT receipt_cids_tx_id_fkey FOREIGN KEY (tx_id) REFERENCES eth.transaction_cids(tx_hash) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT receipt_cids_tx_id_block_number_fkey FOREIGN KEY (tx_id, block_number) REFERENCES eth.transaction_cids(tx_hash, block_number) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
 
 
 --
--- Name: state_accounts state_accounts_state_path_header_id_fkey; Type: FK CONSTRAINT; Schema: eth; Owner: -
+-- Name: state_accounts state_accounts_state_path_header_id_block_number_fkey; Type: FK CONSTRAINT; Schema: eth; Owner: -
 --
 
 ALTER TABLE ONLY eth.state_accounts
-    ADD CONSTRAINT state_accounts_state_path_header_id_fkey FOREIGN KEY (state_path, header_id) REFERENCES eth.state_cids(state_path, header_id) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT state_accounts_state_path_header_id_block_number_fkey FOREIGN KEY (state_path, header_id, block_number) REFERENCES eth.state_cids(state_path, header_id, block_number) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
 
 
 --
--- Name: state_cids state_cids_header_id_fkey; Type: FK CONSTRAINT; Schema: eth; Owner: -
+-- Name: state_cids state_cids_header_id_block_number_fkey; Type: FK CONSTRAINT; Schema: eth; Owner: -
 --
 
 ALTER TABLE ONLY eth.state_cids
-    ADD CONSTRAINT state_cids_header_id_fkey FOREIGN KEY (header_id) REFERENCES eth.header_cids(block_hash) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT state_cids_header_id_block_number_fkey FOREIGN KEY (header_id, block_number) REFERENCES eth.header_cids(block_hash, block_number) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -1189,19 +1270,19 @@ ALTER TABLE ONLY eth.storage_cids
 
 
 --
--- Name: storage_cids storage_cids_state_path_header_id_fkey; Type: FK CONSTRAINT; Schema: eth; Owner: -
+-- Name: storage_cids storage_cids_state_path_header_id_block_number_fkey; Type: FK CONSTRAINT; Schema: eth; Owner: -
 --
 
 ALTER TABLE ONLY eth.storage_cids
-    ADD CONSTRAINT storage_cids_state_path_header_id_fkey FOREIGN KEY (state_path, header_id) REFERENCES eth.state_cids(state_path, header_id) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT storage_cids_state_path_header_id_block_number_fkey FOREIGN KEY (state_path, header_id, block_number) REFERENCES eth.state_cids(state_path, header_id, block_number) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
 
 
 --
--- Name: transaction_cids transaction_cids_header_id_fkey; Type: FK CONSTRAINT; Schema: eth; Owner: -
+-- Name: transaction_cids transaction_cids_header_id_block_number_fkey; Type: FK CONSTRAINT; Schema: eth; Owner: -
 --
 
 ALTER TABLE ONLY eth.transaction_cids
-    ADD CONSTRAINT transaction_cids_header_id_fkey FOREIGN KEY (header_id) REFERENCES eth.header_cids(block_hash) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT transaction_cids_header_id_block_number_fkey FOREIGN KEY (header_id, block_number) REFERENCES eth.header_cids(block_hash, block_number) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -1213,11 +1294,11 @@ ALTER TABLE ONLY eth.transaction_cids
 
 
 --
--- Name: uncle_cids uncle_cids_header_id_fkey; Type: FK CONSTRAINT; Schema: eth; Owner: -
+-- Name: uncle_cids uncle_cids_header_id_block_number_fkey; Type: FK CONSTRAINT; Schema: eth; Owner: -
 --
 
 ALTER TABLE ONLY eth.uncle_cids
-    ADD CONSTRAINT uncle_cids_header_id_fkey FOREIGN KEY (header_id) REFERENCES eth.header_cids(block_hash) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT uncle_cids_header_id_block_number_fkey FOREIGN KEY (header_id, block_number) REFERENCES eth.header_cids(block_hash, block_number) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
 
 
 --

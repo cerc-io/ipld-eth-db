@@ -154,8 +154,7 @@ BEGIN
         RAISE EXCEPTION 'cannot create state snapshot, no header can be found at height %', ending_height;
     END IF;
 
-    -- select all of the state nodes for this snapshot: the latest state node record at every unique path, that is not a
-    -- "removed" node-type entry
+    -- select all of the state nodes for this snapshot: the latest state node record at every unique path
     SELECT DISTINCT ON (state_path) blocks.data, state_cids.state_leaf_key, state_cids.cid, state_cids.state_path,
         state_cids.node_type, state_cids.mh_key
     INTO results
@@ -208,14 +207,15 @@ BEGIN
         RAISE EXCEPTION 'cannot create state snapshot, no header can be found at height %', ending_height;
     END IF;
 
-    -- select all of the storage nodes for this snapshot: the latest storage node record at every unique path, that is not a
-    -- "removed" node-type entry
-    SELECT DISTINCT ON (state_path, storage_path) block.data, storage_cids.state_path, storage_cids.storage_leaf_key,
+    -- select all of the storage nodes for this snapshot: the latest storage node record at every unique state leaf key
+    SELECT DISTINCT ON (state_leaf_key, storage_path) block.data, storage_cids.state_path, storage_cids.storage_leaf_key,
      storage_cids.cid, storage_cids.storage_path, storage_cids.node_type, storage_cids.mh_key
     INTO results
     FROM eth.storage_cids
         INNER JOIN public.blocks
         ON (storage_cids.mh_key, storage_cids.block_number) = (blocks.key, blocks.block_number)
+        INNER JOIN eth.state_cids
+        ON (storage_cids.state_path, storage_cids.header_id) = (state_cids.state_path, state_cids.header_id)
     WHERE storage_cids.block_number BETWEEN starting_height AND ending_height
     ORDER BY state_path, storage_path, block_number DESC;
 
