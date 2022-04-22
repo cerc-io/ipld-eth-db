@@ -16,8 +16,7 @@ CREATE TABLE IF NOT EXISTS eth.header_cids (
     mh_key                TEXT NOT NULL,
     times_validated       INTEGER NOT NULL DEFAULT 1,
     coinbase              VARCHAR(66) NOT NULL,
-    PRIMARY KEY (block_hash, block_number),
-    FOREIGN KEY (mh_key, block_number) REFERENCES public.blocks (key, block_number) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED
+    PRIMARY KEY (block_hash, block_number)
 );
 
 -- +goose Down

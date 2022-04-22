@@ -11,9 +11,7 @@ CREATE TABLE IF NOT EXISTS eth.log_cids (
     topic2              VARCHAR(66),
     topic3              VARCHAR(66),
     log_data            BYTEA,
-    PRIMARY KEY (rct_id, index, block_number),
-    FOREIGN KEY (rct_id, block_number) REFERENCES eth.receipt_cids (tx_id, block_number) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED,
-    FOREIGN KEY (leaf_mh_key, block_number) REFERENCES public.blocks (key, block_number) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED
+    PRIMARY KEY (rct_id, index, block_number)
 );
 
 -- +goose Down

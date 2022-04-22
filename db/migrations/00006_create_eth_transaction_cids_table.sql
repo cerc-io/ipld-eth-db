@@ -11,9 +11,7 @@ CREATE TABLE IF NOT EXISTS eth.transaction_cids (
     tx_data               BYTEA,
     tx_type               INTEGER,
     value                 NUMERIC,
-    PRIMARY KEY (tx_hash, block_number),
-    FOREIGN KEY (header_id, block_number) REFERENCES eth.header_cids (block_hash, block_number) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED,
-    FOREIGN KEY (mh_key, block_number) REFERENCES public.blocks (key, block_number) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED
+    PRIMARY KEY (tx_hash, block_number)
 );
 
 -- +goose Down
