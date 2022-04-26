@@ -9,8 +9,6 @@ CREATE TABLE IF NOT EXISTS eth.storage_cids (
     node_type             INTEGER NOT NULL,
     diff                  BOOLEAN NOT NULL DEFAULT FALSE,
     mh_key                TEXT NOT NULL,
-    FOREIGN KEY (mh_key, block_number) REFERENCES public.blocks (key, block_number) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED,
-    FOREIGN KEY (state_path, header_id, block_number) REFERENCES eth.state_cids (state_path, header_id, block_number) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED,
     PRIMARY KEY (storage_path, state_path, header_id, block_number)
 );
 

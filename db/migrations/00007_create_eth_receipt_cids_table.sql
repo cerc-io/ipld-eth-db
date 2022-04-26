@@ -9,9 +9,7 @@ CREATE TABLE IF NOT EXISTS eth.receipt_cids (
     post_state            VARCHAR(66),
     post_status           INTEGER,
     log_root              VARCHAR(66),
-    PRIMARY KEY (tx_id, block_number),
-    FOREIGN KEY (tx_id, block_number) REFERENCES eth.transaction_cids (tx_hash, block_number) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED,
-    FOREIGN KEY (leaf_mh_key, block_number) REFERENCES public.blocks (key, block_number) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED
+    PRIMARY KEY (tx_id, block_number)
 );
 
 -- +goose Down
