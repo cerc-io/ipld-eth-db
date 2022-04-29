@@ -12,16 +12,16 @@ CREATE TABLE eth.header_cids_i (LIKE eth.header_cids INCLUDING ALL);
 CREATE TABLE public.blocks_i (LIKE public.blocks INCLUDING ALL);
 
 -- turn them into distributed hypertables
-SELECT create_distributed_hypertable('public.blocks_i', 'block_number', chunk_time_interval => 32768, replication_factor => 3);
-SELECT create_distributed_hypertable('eth.header_cids_i', 'block_number' chunk_time_interval => 32768, replication_factor => 3);
-SELECT create_distributed_hypertable('eth.uncle_cids_i', 'block_number', chunk_time_interval => 32768, replication_factor => 3);
-SELECT create_distributed_hypertable('eth.transaction_cids_i', 'block_number', chunk_time_interval => 32768, replication_factor => 3);
-SELECT create_distributed_hypertable('eth.receipt_cids_i', 'block_number', chunk_time_interval => 32768, replication_factor => 3);
-SELECT create_distributed_hypertable('eth.state_cids_i', 'block_number', chunk_time_interval => 32768, replication_factor => 3);
-SELECT create_distributed_hypertable('eth.storage_cids_i', 'block_number', chunk_time_interval => 32768, replication_factor => 3);
-SELECT create_distributed_hypertable('eth.state_accounts_i', 'block_number', chunk_time_interval => 32768, replication_factor => 3);
-SELECT create_distributed_hypertable('eth.access_list_elements_i', 'block_number', chunk_time_interval => 32768, replication_factor => 3);
-SELECT create_distributed_hypertable('eth.log_cids_i', 'block_number', chunk_time_interval => 32768, replication_factor => 3);
+SELECT create_distributed_hypertable('public.blocks_i', 'block_number', chunk_time_interval => 32768);
+SELECT create_distributed_hypertable('eth.header_cids_i', 'block_number', chunk_time_interval => 32768);
+SELECT create_distributed_hypertable('eth.uncle_cids_i', 'block_number', chunk_time_interval => 32768);
+SELECT create_distributed_hypertable('eth.transaction_cids_i', 'block_number', chunk_time_interval => 32768);
+SELECT create_distributed_hypertable('eth.receipt_cids_i', 'block_number', chunk_time_interval => 32768);
+SELECT create_distributed_hypertable('eth.state_cids_i', 'block_number', chunk_time_interval => 32768);
+SELECT create_distributed_hypertable('eth.storage_cids_i', 'block_number', chunk_time_interval => 32768);
+SELECT create_distributed_hypertable('eth.state_accounts_i', 'block_number', chunk_time_interval => 32768);
+SELECT create_distributed_hypertable('eth.access_list_elements_i', 'block_number', chunk_time_interval => 32768);
+SELECT create_distributed_hypertable('eth.log_cids_i', 'block_number', chunk_time_interval => 32768);
 
 -- migrate data
 INSERT INTO eth.log_cids_i (SELECT * FROM eth.log_cids);
@@ -81,7 +81,7 @@ CREATE TABLE public.blocks_i (LIKE public.blocks INCLUDING ALL);
 
 -- turn them into hypertables
 SELECT create_hypertable('public.blocks_i', 'block_number', migrate_data => true, chunk_time_interval => 32768);
-SELECT create_hypertable('eth.header_cids_i', 'block_number' migrate_data => true, chunk_time_interval => 32768);
+SELECT create_hypertable('eth.header_cids_i', 'block_number', migrate_data => true, chunk_time_interval => 32768);
 SELECT create_hypertable('eth.uncle_cids_i', 'block_number', migrate_data => true, chunk_time_interval => 32768);
 SELECT create_hypertable('eth.transaction_cids_i', 'block_number', migrate_data => true, chunk_time_interval => 32768);
 SELECT create_hypertable('eth.receipt_cids_i', 'block_number', migrate_data => true, chunk_time_interval => 32768);

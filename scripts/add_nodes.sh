@@ -3,7 +3,7 @@
 if [ -z "$1" ] || [ -z "$2" ] || [ -z "$3" ] || [ -z "$4" ] || [ -z "$5" ]
   then
     echo "Env variables not provided"
-    echo "Usage: ./ipfs_postgres.sh <MIGRATION_FILE_PATH:string> <NODE_NAME:string> <NODE_HOST:string> <NODE_PORT:numeric/string> <NODE_DATABASE:string> <EXECUTE_SQ:bool>"
+    echo "Usage: ./add_nodes.sh <MIGRATION_FILE_PATH:string> <NODE_NAME:string> <NODE_HOST:string> <NODE_PORT:numeric/string> <NODE_DATABASE:string> <EXECUTE_SQL:bool>"
     echo "Only <EXECUTE_SQL> is optional"
     exit 1
 fi
