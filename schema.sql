@@ -446,18 +446,27 @@ CREATE TABLE ethcl.slots(
     slot bigint NOT NULL,
     block_root VARCHAR(66) UNIQUE,
     state_root VARCHAR(66) UNIQUE,
-    status bytea NOT NULL,
+    status bytea NOT NULL
+);
+
+--
+-- Name: beacon_block; Type: TABLE; Schema: ethcl; Owner: -
+--
+
+CREATE TABLE ethcl.beacon_block(
+    slot bigint NOT NULL,
+    block_root VARCHAR(66) UNIQUE,
     mh_key text NOT NULL
 );
 
 --
--- Name: non_finalized_slots; Type: TABLE; Schema: ethcl; Owner: -
+-- Name: beacon_state; Type: TABLE; Schema: ethcl; Owner: -
 --
 
-CREATE TABLE ethcl.non_finalized_slots(
+CREATE TABLE ethcl.beacon_state(
     slot bigint NOT NULL,
-    block_root VARCHAR(66) UNIQUE,
-    state_root VARCHAR(66) UNIQUE
+    state_root VARCHAR(66) UNIQUE,
+    mh_key text NOT NULL
 );
 
 --
@@ -643,11 +652,18 @@ ALTER TABLE ONLY ethcl.slots
     ADD CONSTRAINT slots_pkey PRIMARY KEY (slot, block_root);
 
 --
--- Name: slots non_finalized_slots_pkey; Type: CONSTRAINT; Schema: ethcl; Owner: -
+-- Name: slots beacon_block_pkey; Type: CONSTRAINT; Schema: ethcl; Owner: -
 --
 
-ALTER TABLE ONLY ethcl.non_finalized_slots
-    ADD CONSTRAINT non_finalized_slots_pkey PRIMARY KEY (slot, block_root);
+ALTER TABLE ONLY ethcl.beacon_block
+    ADD CONSTRAINT beacon_block_pkey PRIMARY KEY (slot, block_root);
+
+--
+-- Name: slots beacon_state_pkey; Type: CONSTRAINT; Schema: ethcl; Owner: -
+--
+
+ALTER TABLE ONLY ethcl.beacon_state
+    ADD CONSTRAINT beacon_state_pkey PRIMARY KEY (slot, state_root);
 
 
 --
@@ -927,11 +943,17 @@ CREATE INDEX tx_header_id_index ON eth.transaction_cids USING btree (header_id);
 CREATE UNIQUE INDEX tx_mh_index ON eth.transaction_cids USING btree (mh_key);
 
 --
--- Name: slot_mh_index; Type: INDEX; Schema: eth; Owner: -
+-- Name: beacon_block_mh_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE UNIQUE INDEX slot_mh_index ON ethcl.slots USING btree (mh_key);
+CREATE UNIQUE INDEX beacon_block_mh_index ON ethcl.beacon_block USING btree (mh_key);
 
+
+--
+-- Name: beacon_state_mh_index; Type: INDEX; Schema: eth; Owner: -
+--
+
+CREATE UNIQUE INDEX beacon_state_mh_index ON ethcl.beacon_block USING btree (mh_key);
 
 --
 -- Name: tx_src_index; Type: INDEX; Schema: eth; Owner: -
@@ -1138,26 +1160,19 @@ ALTER TABLE ONLY eth.uncle_cids
     ADD CONSTRAINT uncle_cids_mh_key_fkey FOREIGN KEY (mh_key) REFERENCES public.blocks(key) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
 
 --
--- Name: slots slots_slot_fkey; Type: FK CONSTRAINT; Schema: eth; Owner: -
+-- Name: slots beacon_block_mh_key_fkey; Type: FK CONSTRAINT; Schema: eth; Owner: -
 --
 
-ALTER TABLE ONLY ethcl.slots
-    ADD CONSTRAINT slots_slot_fkey FOREIGN KEY (mh_key) REFERENCES public.blocks(key) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: non_finalized_slots non_finalized_slots_block_root_fkey; Type: FK CONSTRAINT; Schema: eth; Owner: -
---
-
-ALTER TABLE ONLY ethcl.non_finalized_slots
-    ADD CONSTRAINT non_finalized_slots_block_root_fkey FOREIGN KEY (slot, block_root) REFERENCES ethcl.slots(slot, block_root) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
+ALTER TABLE ONLY ethcl.beacon_block
+    ADD CONSTRAINT beacon_block_mh_key_fkey FOREIGN KEY (mh_key) REFERENCES public.blocks(key) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
 
 --
--- Name: non_finalized_slots non_finalized_slots_state_root_fkey; Type: FK CONSTRAINT; Schema: eth; Owner: -
+-- Name: slots beacon_state_mh_key_fkey; Type: FK CONSTRAINT; Schema: eth; Owner: -
 --
 
-ALTER TABLE ONLY ethcl.non_finalized_slots
-    ADD CONSTRAINT non_finalized_slots_state_root_fkey FOREIGN KEY (state_root) REFERENCES ethcl.slots(state_root) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
+ALTER TABLE ONLY ethcl.beacon_state
+    ADD CONSTRAINT beacon_state_mh_key_fkey FOREIGN KEY (mh_key) REFERENCES public.blocks(key) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
+
 
 --
 -- PostgreSQL database dump complete
