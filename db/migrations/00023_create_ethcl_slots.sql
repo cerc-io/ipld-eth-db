@@ -5,7 +5,7 @@ CREATE TABLE ethcl.slots (
   "block_root" VARCHAR(66) UNIQUE,
   "state_root" VARCHAR(66) UNIQUE,
   "status" bytea NOT NULL,
-  mh_key text NOT NULL
+  mh_key text NOT NULL,
   PRIMARY KEY (slot, block_root)
 );
 
