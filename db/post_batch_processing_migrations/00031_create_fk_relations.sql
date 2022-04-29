@@ -79,6 +79,21 @@ ADD CONSTRAINT fk_log_rct_id
     FOREIGN KEY (rct_id) REFERENCES eth.receipt_cids (tx_id)
     ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
 
+ALTER TABLE ethcl.slots
+ADD CONSTRAINT fk_slots_mh_key
+    FOREIGN KEY (mh_key) REFERENCES public.blocks (key)
+    ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
+
+ALTER TABLE ethcl.non_finalized_slots
+ADD CONSTRAINT fk_non_finalized_slots_pk_slot
+    FOREIGN KEY (slot, block_root) REFERENCES eth.slots (slot, block_root)
+    ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
+
+ALTER TABLE ethcl.non_finalized_slots
+ADD CONSTRAINT fk_non_finalized_slots_state_root
+    FOREIGN KEY (state_root) REFERENCES eth.slots (state_root)
+    ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
+
 -- +goose Down
 ALTER TABLE eth.header_cids
 DROP CONSTRAINT fk_header_mh_key;
@@ -127,3 +142,12 @@ DROP CONSTRAINT fk_log_leaf_mh_key;
 
 ALTER TABLE eth.log_cids
 DROP CONSTRAINT fk_log_rct_id;
+
+ALTER TABLE eth.slots
+DROP CONSTRAINT fk_slots_mh_key;
+
+ALTER TABLE eth.non_finalized_slots
+DROP CONSTRAINT fk_non_finalized_slots_pk_slot;
+
+ALTER TABLE eth.non_finalized_slots
+DROP CONSTRAINT fk_non_finalized_slots_state_root;
