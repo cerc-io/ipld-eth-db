@@ -14,6 +14,11 @@ grep "max_prepared_transactions" /var/lib/postgresql/data/postgresql.conf
 sed -ri "s!^#?(statement_timeout)\s*=.*!\1 = 0!" /var/lib/postgresql/data/postgresql.conf
 grep "statement_timeout" /var/lib/postgresql/data/postgresql.conf
 
+# On the data nodes, set the wal_level to logical or higher to move or copy chunks between data nodes.
+# https://www.postgresql.org/docs/14/runtime-config-wal.html
+sed -ri "s!^#?(wal_level)\s*=.*!\1 = 'logical'!" /var/lib/postgresql/data/postgresql.conf
+grep "wal_level" /var/lib/postgresql/data/postgresql.conf
+
 # https://docs.timescale.com/timescaledb/latest/how-to-guides/multinode-timescaledb/multinode-auth/
 # https://docs.timescale.com/timescaledb/latest/how-to-guides/multinode-timescaledb/multinode-auth/#password-authentication
 

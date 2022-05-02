@@ -58,3 +58,17 @@ services:
       - "127.0.0.1:8068:5432"
     volumes:
       - ./scripts/init-data-node.sh:/docker-entrypoint-initdb.d/init-data-node.sh
+
+  pg_data_node_3:
+    image: timescale/timescaledb:latest-pg14
+    container_name: pg_data_node_3
+    restart: unless-stopped
+    command: ["postgres", "-c", "log_statement=all"]
+    environment:
+      POSTGRES_USER: "postgres"
+      POSTGRES_DB: "vulcanize_testing_v4"
+      POSTGRES_PASSWORD: "password"
+    ports:
+      - "127.0.0.1:8069:5432"
+    volumes:
+      - ./scripts/init-data-node.sh:/docker-entrypoint-initdb.d/init-data-node.sh

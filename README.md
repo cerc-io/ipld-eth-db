@@ -12,13 +12,13 @@ Schemas and utils for IPLD ETH Postgres database
   docker-compose down -v --remove-orphans
   ```
 
-* Spin up an access node and two data nodes using [docker-compose.test.yml](./docker-compose.test.yml):
+* Spin up an access node and three data nodes using [docker-compose.test.yml](./docker-compose.test.yml):
 
   ```bash
-  docker-compose -f docker-compose.test.yml up timescale-test-db pg_data_node_1 pg_data_node_2
+  docker-compose -f docker-compose.test.yml up timescale-test-db pg_data_node_1 pg_data_node_2 pg_data_node_3
   ```
 
-  Following final output should be seen on each node:
+  Following final output should be seen on all the nodes:
 
     ```
     LOG:  TimescaleDB background worker launcher connected to shared catalogs
@@ -27,7 +27,7 @@ Schemas and utils for IPLD ETH Postgres database
 * Edit [startup_script.sh](./scripts/startup_script.sh) to change the number of migrations to be run:
 
   ```bash
-  ./goose -dir migrations/vulcanizedb postgres "$VDB_PG_CONNECT" up-to 21
+  ./goose -dir migrations/vulcanizedb postgres "$VDB_PG_CONNECT" up-to 23
   ```
 
 * In another `ipld-eth-db` terminal window, build an image `migrations-test` using [Dockerfile](./db/Dockerfile):
