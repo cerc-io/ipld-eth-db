@@ -1,3 +1,4 @@
 FROM timescale/timescaledb:latest-pg14
 
-COPY ./schema.sql /docker-entrypoint-initdb.d/init.sql
+COPY ./schema.bak /schema.bak
+COPY ./scripts/tsdb-import.sh /docker-entrypoint-initdb.d/002_tsdb_import.sh

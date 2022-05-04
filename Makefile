@@ -16,8 +16,8 @@ installtools: | $(GOOSE)
 
 #Database
 HOST_NAME = localhost
-PORT = 5432
-NAME =
+PORT = 8066
+NAME = vulcanize_testing_v4
 USER = postgres
 PASSWORD = password
 CONNECT_STRING=postgresql://$(USER):$(PASSWORD)@$(HOST_NAME):$(PORT)/$(NAME)?sslmode=disable
@@ -72,7 +72,7 @@ migrate_up_by_one: $(GOOSE) checkdbvars
 .PHONY: migrate
 migrate: $(GOOSE) checkdbvars
 	$(GOOSE) -dir db/migrations postgres "$(CONNECT_STRING)" up
-	pg_dump -O -s $(CONNECT_STRING) > schema.sql
+	pg_dump -Fc --no-owner -f schema.bak -s $(CONNECT_STRING)
 
 ## Apply migrations to be ran before a batch processing
 .PHONY: migrate_pre_batch_set
@@ -124,4 +124,4 @@ docker-concise-migration-build:
 
 .PHONY: test-migrations
 test-migrations: $(GOOSE)
-	./scripts/test_migration.sh
+	./scripts/test-migration.sh
