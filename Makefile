@@ -21,6 +21,7 @@ NAME = vulcanize_testing_v4
 USER = postgres
 PASSWORD = password
 CONNECT_STRING=postgresql://$(USER):$(PASSWORD)@$(HOST_NAME):$(PORT)/$(NAME)?sslmode=disable
+CONNECT_STRING_INTERNAL=postgresql://$(USER):$(PASSWORD)@127.0.0.1:$(PORT)/$(NAME)?sslmode=disable
 
 # Parameter checks
 ## Check that DB variables are provided
@@ -72,7 +73,8 @@ migrate_up_by_one: $(GOOSE) checkdbvars
 .PHONY: migrate
 migrate: $(GOOSE) checkdbvars
 	$(GOOSE) -dir db/migrations postgres "$(CONNECT_STRING)" up
-	pg_dump -Fc --no-owner -f schema.bak -s $(CONNECT_STRING)
+	docker-compose exec timescale-test-db pg_dump -Fc -O -f schema.bak -s "$(CONNECT_STRING)"
+	docker-compose cp timescale-test-db:schema.bak ./schema.bak
 
 ## Apply migrations to be ran before a batch processing
 .PHONY: migrate_pre_batch_set

@@ -397,6 +397,39 @@ $$;
 
 
 --
+-- Name: dn1; Type: SERVER; Schema: -; Owner: -
+--
+
+CREATE SERVER dn1 FOREIGN DATA WRAPPER timescaledb_fdw OPTIONS (
+    dbname 'vulcanize_testing_v4',
+    host 'pg_data_node_1',
+    port '5432'
+);
+
+
+--
+-- Name: dn2; Type: SERVER; Schema: -; Owner: -
+--
+
+CREATE SERVER dn2 FOREIGN DATA WRAPPER timescaledb_fdw OPTIONS (
+    dbname 'vulcanize_testing_v4',
+    host 'pg_data_node_2',
+    port '5432'
+);
+
+
+--
+-- Name: dn3; Type: SERVER; Schema: -; Owner: -
+--
+
+CREATE SERVER dn3 FOREIGN DATA WRAPPER timescaledb_fdw OPTIONS (
+    dbname 'vulcanize_testing_v4',
+    host 'pg_data_node_3',
+    port '5432'
+);
+
+
+--
 -- Name: access_list_elements; Type: TABLE; Schema: eth; Owner: -
 --
 
@@ -1117,6 +1150,56 @@ CREATE TRIGGER trg_eth_transaction_cids AFTER INSERT ON eth.transaction_cids FOR
 --
 
 CREATE TRIGGER trg_eth_uncle_cids AFTER INSERT ON eth.uncle_cids FOR EACH ROW EXECUTE FUNCTION eth.graphql_subscription();
+
+
+--
+--
+
+
+
+--
+--
+
+
+
+--
+--
+
+
+
+--
+--
+
+
+
+--
+--
+
+
+
+--
+--
+
+
+
+--
+--
+
+
+
+--
+--
+
+
+
+--
+--
+
+
+
+--
+--
+
 
 
 --
