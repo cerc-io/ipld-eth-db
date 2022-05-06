@@ -1,23 +1,6 @@
 version: '3.2'
 
 services:
-  statediff-migrations:
-    restart: on-failure
-    depends_on:
-      - test-db
-    image: vulcanize/statediff-migrations:v0.9.0
-
-  test-db:
-    restart: always
-    image: postgres:10.12-alpine
-    command: ["postgres", "-c", "log_statement=all"]
-    environment:
-      POSTGRES_USER: "vdbm"
-      POSTGRES_DB: "vulcanize_testing"
-      POSTGRES_PASSWORD: "password"
-    ports:
-      - "127.0.0.1:8066:5432"
-
   timescale-test-db:
     restart: always
     image: timescale/timescaledb:latest-pg14
