@@ -27,7 +27,7 @@ Schemas and utils for IPLD ETH Postgres database
 * Edit [startup_script.sh](./scripts/startup_script.sh) to change the number of migrations to be run:
 
   ```bash
-  ./goose -dir migrations/vulcanizedb postgres "$VDB_PG_CONNECT" up-to 22
+  ./goose -dir migrations/vulcanizedb postgres "$VDB_PG_CONNECT" up-to 21
   ```
 
 * In another `ipld-eth-db` terminal window, build an image `migrations-test` using [Dockerfile](./db/Dockerfile):
