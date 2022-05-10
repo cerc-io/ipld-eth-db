@@ -9,7 +9,7 @@ VDB_PG_CONNECT=postgresql://$DATABASE_USER:$DATABASE_PASSWORD@$DATABASE_HOSTNAME
 echo "Connecting with: $VDB_PG_CONNECT"
 sleep 15
 echo "Running database migrations"
-./goose -dir migrations/vulcanizedb postgres "$VDB_PG_CONNECT" up-to 21
+./goose -dir migrations/vulcanizedb postgres "$VDB_PG_CONNECT" up-to 24
 
 # If the db migrations ran without err
 if [[ $? -eq 0 ]]; then
