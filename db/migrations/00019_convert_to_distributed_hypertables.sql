@@ -1,4 +1,8 @@
 -- +goose Up
+-- creating distributed hypertables from duplicate tables for now as we are getting the following error (while running geth
+-- unit tests) if regular tables are directly converted to distributed hypertables
+-- error: "cannot PREPARE a transaction that has executed LISTEN, UNLISTEN, or NOTIFY"
+
 -- create new regular tables
 CREATE TABLE eth.log_cids_i (LIKE eth.log_cids INCLUDING ALL);
 CREATE TABLE eth.access_list_elements_i (LIKE eth.access_list_elements INCLUDING ALL);
@@ -35,7 +39,7 @@ INSERT INTO eth.uncle_cids_i (SELECT * FROM eth.uncle_cids);
 INSERT INTO eth.header_cids_i (SELECT * FROM eth.header_cids);
 INSERT INTO public.blocks_i (SELECT * FROM public.blocks);
 
--- drops hypertables
+-- drop tables
 DROP TABLE eth.log_cids;
 DROP TABLE eth.access_list_elements;
 DROP TABLE eth.state_accounts;
@@ -74,9 +78,9 @@ INSERT INTO public.db_version (singleton, version) VALUES (true, 'v4.0.00-dh')
     ON CONFLICT (singleton) DO UPDATE SET (version, tstamp) = ('v4.0.0-dh', NOW());
 
 -- +goose Down
-INSERT INTO public.db_version (singleton, version) VALUES (true, 'v4.0.0-h')
-    ON CONFLICT (singleton) DO UPDATE SET (version, tstamp) = ('v4.0.0-h', NOW());
--- reversing conversion to hypertable requires migrating all data from every chunk back to a single table
+INSERT INTO public.db_version (singleton, version) VALUES (true, 'v4.0.0')
+    ON CONFLICT (singleton) DO UPDATE SET (version, tstamp) = ('v4.0.0', NOW());
+-- reversing conversion to hypertables requires migrating all data from every chunk back to a single table
 -- create new regular tables
 CREATE TABLE eth.log_cids_i (LIKE eth.log_cids INCLUDING ALL);
 CREATE TABLE eth.access_list_elements_i (LIKE eth.access_list_elements INCLUDING ALL);
@@ -88,18 +92,6 @@ CREATE TABLE eth.transaction_cids_i (LIKE eth.transaction_cids INCLUDING ALL);
 CREATE TABLE eth.uncle_cids_i (LIKE eth.uncle_cids INCLUDING ALL);
 CREATE TABLE eth.header_cids_i (LIKE eth.header_cids INCLUDING ALL);
 CREATE TABLE public.blocks_i (LIKE public.blocks INCLUDING ALL);
-
--- turn them into hypertables
-SELECT create_hypertable('public.blocks_i', 'block_number', migrate_data => true, chunk_time_interval => 32768);
-SELECT create_hypertable('eth.header_cids_i', 'block_number', migrate_data => true, chunk_time_interval => 32768);
-SELECT create_hypertable('eth.uncle_cids_i', 'block_number', migrate_data => true, chunk_time_interval => 32768);
-SELECT create_hypertable('eth.transaction_cids_i', 'block_number', migrate_data => true, chunk_time_interval => 32768);
-SELECT create_hypertable('eth.receipt_cids_i', 'block_number', migrate_data => true, chunk_time_interval => 32768);
-SELECT create_hypertable('eth.state_cids_i', 'block_number', migrate_data => true, chunk_time_interval => 32768);
-SELECT create_hypertable('eth.storage_cids_i', 'block_number', migrate_data => true, chunk_time_interval => 32768);
-SELECT create_hypertable('eth.state_accounts_i', 'block_number', migrate_data => true, chunk_time_interval => 32768);
-SELECT create_hypertable('eth.access_list_elements_i', 'block_number', migrate_data => true, chunk_time_interval => 32768);
-SELECT create_hypertable('eth.log_cids_i', 'block_number', migrate_data => true, chunk_time_interval => 32768);
 
 -- migrate data
 INSERT INTO eth.log_cids_i (SELECT * FROM eth.log_cids);
@@ -113,7 +105,7 @@ INSERT INTO eth.uncle_cids_i (SELECT * FROM eth.uncle_cids);
 INSERT INTO eth.header_cids_i (SELECT * FROM eth.header_cids);
 INSERT INTO public.blocks_i (SELECT * FROM public.blocks);
 
--- drops distributed hypertables
+-- drop distributed hypertables
 DROP TABLE eth.log_cids;
 DROP TABLE eth.access_list_elements;
 DROP TABLE eth.state_accounts;
