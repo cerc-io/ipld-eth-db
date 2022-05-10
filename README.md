@@ -15,7 +15,7 @@ Schemas and utils for IPLD ETH Postgres database
 * Spin up an access node and three data nodes using [docker-compose.test.yml](./docker-compose.test.yml):
 
   ```bash
-  docker-compose -f docker-compose.test.yml up timescale-test-db pg_data_node_1 pg_data_node_2 pg_data_node_3
+  docker-compose -f docker-compose.test.yml up
   ```
 
   Following final output should be seen on all the nodes:
