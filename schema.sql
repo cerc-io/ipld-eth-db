@@ -456,7 +456,8 @@ CREATE TABLE ethcl.slots(
 CREATE TABLE ethcl.signed_beacon_block(
     slot bigint NOT NULL,
     block_root VARCHAR(66) UNIQUE,
-    parent_block_root VARCHAR(66) UNIQUE,
+    parent_block_root VARCHAR(66),
+    eth1_block_hash VARCHAR(66),
     mh_key text NOT NULL
 );
 
@@ -471,17 +472,16 @@ CREATE TABLE ethcl.beacon_state(
 );
 
 --
--- Name: batch_processing; Type: TABLE; Schema: ethcl; Owner: -
+-- Name: known_gaps; Type: TABLE; Schema: ethcl; Owner: -
 --
 
-CREATE TABLE ethcl.batch_processing (
+CREATE TABLE ethcl.known_gaps (
   start_slot bigint NOT NULL,
   end_slot bigint NOT NULL,
   checked_out boolean DEFAULT false NOT NULL,
-  processing_key int,
   reprocessing_error text,
   entry_error text,
-  entry_time timestamp without time zone DEFAULT now(),
+  entry_time timestamp without time zone DEFAULT (now() at time zone 'utc'),
   entry_process text
 );
 --
@@ -682,11 +682,11 @@ ALTER TABLE ONLY ethcl.beacon_state
 
 
 --
--- Name: slots batch_processing; Type: CONSTRAINT; Schema: ethcl; Owner: -
+-- Name: slots known_gaps; Type: CONSTRAINT; Schema: ethcl; Owner: -
 --
 
-ALTER TABLE ONLY ethcl.batch_processing
-    ADD CONSTRAINT batch_processing_pkey PRIMARY KEY (start_slot, end_slot);
+ALTER TABLE ONLY ethcl.known_gaps
+    ADD CONSTRAINT known_gaps_pkey PRIMARY KEY (start_slot, end_slot);
 
 --
 -- Name: blocks blocks_pkey; Type: CONSTRAINT; Schema: public; Owner: -
@@ -963,13 +963,6 @@ CREATE INDEX tx_header_id_index ON eth.transaction_cids USING btree (header_id);
 --
 
 CREATE UNIQUE INDEX tx_mh_index ON eth.transaction_cids USING btree (mh_key);
-
---
--- Name: signed_beacon_block_mh_index; Type: INDEX; Schema: eth; Owner: -
---
-
-CREATE UNIQUE INDEX signed_beacon_block_mh_index ON ethcl.signed_beacon_block USING btree (mh_key);
-
 
 --
 -- Name: beacon_state_mh_index; Type: INDEX; Schema: eth; Owner: -
