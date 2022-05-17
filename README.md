@@ -24,12 +24,6 @@ Schemas and utils for IPLD ETH Postgres database
     LOG:  TimescaleDB background worker launcher connected to shared catalogs
     ```
 
-* Edit [startup_script.sh](./scripts/startup_script.sh) to change the number of migrations to be run if required:
-
-  ```bash
-  ./goose -dir migrations/vulcanizedb postgres "$VDB_PG_CONNECT" up-to 22
-  ```
-
 * In another `ipld-eth-db` terminal window, build an image `migrations-test` using [Dockerfile](./db/Dockerfile):
 
   ```bash

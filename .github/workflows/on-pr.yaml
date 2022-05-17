@@ -4,6 +4,8 @@ on: [pull_request]
 
 jobs:
   test:
+    # Add a dummy job to avoid failing GitHub CI checks.
+    # Other checks to be added later.
     name: Dummy job
     runs-on: ubuntu-latest
     steps:
