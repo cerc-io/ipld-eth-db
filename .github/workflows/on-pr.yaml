@@ -3,6 +3,14 @@ name: Docker Build
 on: [pull_request]
 
 jobs:
+  test:
+    # Add a dummy job to avoid failing GitHub CI checks.
+    # Other checks to be added later.
+    name: Dummy job
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run dummy job
+        run: echo "Empty dummy job"
   # concise_migration_diff:
   #   name: Verify concise migration and generated schema
   #   runs-on: ubuntu-latest

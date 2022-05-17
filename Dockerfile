@@ -17,10 +17,8 @@ WORKDIR /app
 
 COPY --from=builder /go/src/github.com/vulcanize/ipld-eth-db/scripts/startup_script.sh .
 
-# copy over files for multi-node setup
-COPY --from=builder /go/src/github.com/vulcanize/ipld-eth-db/docker-compose.test.yml docker-multi-node/docker-compose.test.yml
-COPY --from=builder /go/src/github.com/vulcanize/ipld-eth-db/scripts/init-access-node.sh docker-multi-node/scripts/init-access-node.sh
-COPY --from=builder /go/src/github.com/vulcanize/ipld-eth-db/scripts/init-data-node.sh docker-multi-node/scripts/init-data-node.sh
+# copy over file for TimescaleDB setup
+COPY --from=builder /go/src/github.com/vulcanize/ipld-eth-db/docker-compose.test.yml docker-tsdb/docker-compose.test.yml
 
 COPY --from=builder /go/src/github.com/pressly/goose/cmd/goose/goose goose
 COPY --from=builder /go/src/github.com/vulcanize/ipld-eth-db/db/migrations migrations/vulcanizedb
