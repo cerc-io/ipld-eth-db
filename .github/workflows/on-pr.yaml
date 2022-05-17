@@ -3,6 +3,12 @@ name: Docker Build
 on: [pull_request]
 
 jobs:
+  test:
+    name: Dummy job
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run dummy job
+        run: echo "Empty dummy job"
   # concise_migration_diff:
   #   name: Verify concise migration and generated schema
   #   runs-on: ubuntu-latest
