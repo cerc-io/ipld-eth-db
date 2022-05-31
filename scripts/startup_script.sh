@@ -13,6 +13,7 @@ echo "Running database migrations"
 # If the db migrations ran without err
 if [[ $? -eq 0 ]]; then
     echo "Migration process ran successfully"
+    tail -f /dev/null
 else
     echo "Could not run migrations. Are the database details correct?"
     exit 1
