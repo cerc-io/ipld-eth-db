@@ -1,8 +1,8 @@
 -- +goose Up
 CREATE TABLE IF NOT EXISTS eth.log_cids (
     block_number        BIGINT NOT NULL,
-    leaf_cid            TEXT NOT NULL,
-    leaf_mh_key         TEXT NOT NULL,
+    cid                 TEXT NOT NULL,
+    mh_key              TEXT NOT NULL,
     rct_id              VARCHAR(66) NOT NULL,
     address             VARCHAR(66) NOT NULL,
     index               INTEGER NOT NULL,

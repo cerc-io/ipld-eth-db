@@ -6,13 +6,13 @@ CREATE FUNCTION eth.graphql_subscription() RETURNS TRIGGER AS $$
 DECLARE
 obj jsonb;
 BEGIN
-    IF (TG_TABLE_NAME = 'state_cids') OR (TG_TABLE_NAME = 'state_accounts') THEN
+    IF (TG_TABLE_NAME = 'state_leaf_cids') OR (TG_TABLE_NAME = 'state_accounts') THEN
              obj := json_build_array(
                         TG_TABLE_NAME,
                         NEW.header_id,
                         NEW.state_path
                     );
-    ELSIF (TG_TABLE_NAME = 'storage_cids') THEN
+    ELSIF (TG_TABLE_NAME = 'storage_leaf_cids') THEN
          obj := json_build_array(
                     TG_TABLE_NAME,
                     NEW.header_id,
@@ -77,8 +77,8 @@ CREATE TRIGGER trg_eth_receipt_cids
     FOR EACH ROW
     EXECUTE PROCEDURE eth.graphql_subscription();
 
-CREATE TRIGGER trg_eth_state_cids
-    AFTER INSERT ON eth.state_cids
+CREATE TRIGGER trg_eth_state_leaf_cids
+    AFTER INSERT ON eth.state_leaf_cids
     FOR EACH ROW
     EXECUTE PROCEDURE eth.graphql_subscription();
 
@@ -87,8 +87,8 @@ CREATE TRIGGER trg_eth_log_cids
     FOR EACH ROW
     EXECUTE PROCEDURE eth.graphql_subscription();
 
-CREATE TRIGGER trg_eth_storage_cids
-    AFTER INSERT ON eth.storage_cids
+CREATE TRIGGER trg_eth_storage_leaf_cids
+    AFTER INSERT ON eth.storage_leaf_cids
     FOR EACH ROW
     EXECUTE PROCEDURE eth.graphql_subscription();
 
@@ -105,8 +105,8 @@ CREATE TRIGGER trg_eth_access_list_elements
 -- +goose Down
 DROP TRIGGER trg_eth_uncle_cids ON eth.uncle_cids;
 DROP TRIGGER trg_eth_transaction_cids ON eth.transaction_cids;
-DROP TRIGGER trg_eth_storage_cids ON eth.storage_cids;
-DROP TRIGGER trg_eth_state_cids ON eth.state_cids;
+DROP TRIGGER trg_eth_storage_leaf_cids ON eth.storage_leaf_cids;
+DROP TRIGGER trg_eth_state_leaf_cids ON eth.state_leaf_cids;
 DROP TRIGGER trg_eth_state_accounts ON eth.state_accounts;
 DROP TRIGGER trg_eth_receipt_cids ON eth.receipt_cids;
 DROP TRIGGER trg_eth_header_cids ON eth.header_cids;
