@@ -12,28 +12,24 @@ Schemas and utils for IPLD ETH Postgres database
   docker-compose down -v --remove-orphans
   ```
 
-* Spin up a TimescaleDB instance using [docker-compose.test.yml](./docker-compose.test.yml):
+* Spin up `ipld-eth-db` using an existing image:
 
-  ```bash
-  docker-compose -f docker-compose.test.yml up
-  ```
+  * Update image source used for running the migrations in [docker-compose.yml](./docker-compose.yml) (if required).
 
-  Following final output should be seen:
+  * Run:
 
     ```
-    LOG:  TimescaleDB background worker launcher connected to shared catalogs
+    docker-compose -f docker-compose.yml up
     ```
 
-* In another `ipld-eth-db` terminal window, build an image `migrations-test` using [Dockerfile](./db/Dockerfile):
+* Spin up `ipld-eth-db` using a locally built image:
 
-  ```bash
-  docker build -t migrations-test -f ./db/Dockerfile .
-  ```
+  * Update [Dockerfile](./Dockerfile) (if required).
 
-* Start a container using `migrations-test` image to run the db migrations:
+  * Update build context used for running the migrations in [docker-compose.test.yml](./docker-compose.test.yml) (if required).
 
-  ```bash
-  # Here, we are running the container using host network.
-  # So connect to TimescaleDB on 127.0.0.1:8066
-  docker run --rm --network host -e DATABASE_USER=vdbm -e DATABASE_PASSWORD=password -e DATABASE_HOSTNAME=127.0.0.1 -e DATABASE_PORT=8066 -e DATABASE_NAME=vulcanize_testing_v4 migrations-test
-  ```
+  * Run:
+
+    ```
+    docker-compose -f docker-compose.test.yml up
+    ```
