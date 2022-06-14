@@ -3,6 +3,13 @@ name: Docker Build
 on: [pull_request]
 
 jobs:
+  build:
+    name: Run docker build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run docker build
+        run: make docker-build
   test:
     # Add a dummy job to avoid failing GitHub CI checks.
     # Other checks to be added later.
