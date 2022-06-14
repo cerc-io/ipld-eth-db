@@ -58,7 +58,7 @@ CREATE TABLE eth.header_cids (
     parent_hash character varying(66) NOT NULL,
     cid text NOT NULL,
     td numeric NOT NULL,
-    node_id character varying(128) NOT NULL,
+    node_id character varying(128)[] NOT NULL,
     reward numeric NOT NULL,
     state_root character varying(66) NOT NULL,
     tx_root character varying(66) NOT NULL,
