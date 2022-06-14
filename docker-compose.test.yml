@@ -5,10 +5,9 @@ services:
     restart: on-failure
     depends_on:
       - ipld-eth-db
+    image: vulcanize/ipld-eth-db
     # Build image using local context
-    build:
-      context: .
-      dockerfile: Dockerfile
+    build: .
     environment:
       DATABASE_USER: "vdbm"
       DATABASE_NAME: "vulcanize_testing"
