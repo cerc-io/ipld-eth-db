@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS eth.header_cids (
     timestamp             BIGINT NOT NULL,
     mh_key                TEXT NOT NULL,
     times_validated       INTEGER NOT NULL DEFAULT 1,
+    duplicate_block_number INTEGER DEFAULT 0 NOT NULL,
     coinbase              VARCHAR(66) NOT NULL,
     PRIMARY KEY (block_hash, block_number)
 );

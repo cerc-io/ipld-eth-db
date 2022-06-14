@@ -68,6 +68,7 @@ CREATE TABLE eth.header_cids (
     "timestamp" bigint NOT NULL,
     mh_key text NOT NULL,
     times_validated integer DEFAULT 1 NOT NULL,
+    duplicate_block_number integer DEFAULT 0 NOT NULL,
     coinbase character varying(66) NOT NULL
 );
 
@@ -403,6 +404,22 @@ CREATE FUNCTION public.was_state_leaf_removed(key character varying, hash charac
 $$;
 
 
+--
+-- Name: increment_duplocate(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION eth.increment_duplicate_blocks() RETURNS TRIGGER AS $$
+DECLARE
+duplicate_row_count integer;
+BEGIN
+    SELECT INTO duplicate_row_count COUNT(*) FROM eth.header_cids WHERE block_number=NEW.block_number;
+    IF duplicate_row_count > 0 THEN
+        UPDATE eth.header_cids SET duplicate_block_number=(duplicate_row_count+1) WHERE block_number=NEW.block_number;
+        NEW.duplicate_block_number=(duplicate_row_count+1);
+END IF;
+RETURN NEW;
+END;
+$$ language plpgsql;
 --
 -- Name: access_list_elements; Type: TABLE; Schema: eth; Owner: -
 --
@@ -1117,6 +1134,11 @@ CREATE TRIGGER trg_eth_access_list_elements AFTER INSERT ON eth.access_list_elem
 CREATE TRIGGER trg_eth_header_cids AFTER INSERT ON eth.header_cids FOR EACH ROW EXECUTE FUNCTION eth.graphql_subscription();
 
 
+--
+-- Name: header_cids trg_eth_header_cids_duplicate; Type: TRIGGER; Schema: eth; Owner: -
+--
+
+CREATE TRIGGER trg_eth_header_cids_duplicate BEFORE INSERT ON eth.header_cids FOR EACH ROW EXECUTE PROCEDURE eth.increment_duplicate_blocks();
 --
 -- Name: log_cids trg_eth_log_cids; Type: TRIGGER; Schema: eth; Owner: -
 --
