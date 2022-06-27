@@ -8,7 +8,6 @@ CREATE INDEX timestamp_index ON eth.header_cids USING brin (timestamp);
 
 -- uncle indexes
 CREATE INDEX uncle_block_number_index ON eth.uncle_cids USING brin (block_number);
-CREATE UNIQUE INDEX uncle_mh_block_number_index ON eth.uncle_cids USING btree (mh_key, block_number);
 CREATE INDEX uncle_header_id_index ON eth.uncle_cids USING btree (header_id);
 
 -- transaction indexes
@@ -118,7 +117,6 @@ DROP INDEX eth.tx_block_number_index;
 
 -- uncle indexes
 DROP INDEX eth.uncle_block_number_index;
-DROP INDEX eth.uncle_mh_block_number_index;
 DROP INDEX eth.uncle_header_id_index;
 
 -- header indexes
