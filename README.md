@@ -31,5 +31,5 @@ Schemas and utils for IPLD ETH Postgres database
   * Run:
 
     ```
-    docker-compose -f docker-compose.test.yml up
+    docker-compose -f docker-compose.test.yml up --build
     ```

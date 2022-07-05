@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS eth.transaction_cids (
     tx_data               BYTEA,
     tx_type               INTEGER,
     value                 NUMERIC,
-    PRIMARY KEY (tx_hash, block_number)
+    PRIMARY KEY (tx_hash, header_id, block_number)
 );
 
 -- +goose Down
