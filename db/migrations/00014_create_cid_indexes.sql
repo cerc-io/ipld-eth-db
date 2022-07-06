@@ -14,8 +14,8 @@ CREATE INDEX uncle_header_id_index ON eth.uncle_cids USING btree (header_id);
 -- transaction indexes
 CREATE INDEX tx_block_number_index ON eth.transaction_cids USING brin (block_number);
 CREATE INDEX tx_header_id_index ON eth.transaction_cids USING btree (header_id);
-CREATE UNIQUE INDEX tx_cid_index ON eth.transaction_cids USING btree (cid, block_number);
-CREATE UNIQUE INDEX tx_mh_block_number_index ON eth.transaction_cids USING btree (mh_key, block_number);
+CREATE INDEX tx_cid_index ON eth.transaction_cids USING btree (cid, block_number);
+CREATE INDEX tx_mh_block_number_index ON eth.transaction_cids USING btree (mh_key, block_number);
 CREATE INDEX tx_dst_index ON eth.transaction_cids USING btree (dst);
 CREATE INDEX tx_src_index ON eth.transaction_cids USING btree (src);
 
