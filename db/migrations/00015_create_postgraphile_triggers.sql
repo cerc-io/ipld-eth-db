@@ -22,17 +22,20 @@ BEGIN
     ELSIF (TG_TABLE_NAME = 'log_cids') THEN
          obj := json_build_array(
                     TG_TABLE_NAME,
+                    NEW.header_id,
                     NEW.rct_id,
                     NEW.index
                 );
     ELSIF (TG_TABLE_NAME = 'receipt_cids') THEN
          obj := json_build_array(
                     TG_TABLE_NAME,
+                    NEW.header_id,
                     NEW.tx_id
                 );
     ELSIF (TG_TABLE_NAME = 'transaction_cids') THEN
          obj := json_build_array(
                     TG_TABLE_NAME,
+                    NEW.header_id,
                     NEW.tx_hash
                 );
     ELSIF (TG_TABLE_NAME = 'access_list_elements') THEN
