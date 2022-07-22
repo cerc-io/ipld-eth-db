@@ -6,7 +6,8 @@ ADD . /go/src/github.com/vulcanize/ipld-eth-db
 
 # Build migration tool
 WORKDIR /go/src/github.com/pressly
-RUN git clone https://github.com/pressly/goose.git
+ARG GOOSE_VER="v3.6.1"
+RUN git clone --depth 1 --branch ${GOOSE_VER} https://github.com/pressly/goose.git
 WORKDIR /go/src/github.com/pressly/goose/cmd/goose
 RUN GCO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags '-extldflags "-static"' -tags='no_sqlite3' -o goose .
 
