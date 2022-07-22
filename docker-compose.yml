@@ -6,7 +6,7 @@ services:
     depends_on:
       - ipld-eth-db
     # Use an existing image
-    image: vulcanize/ipld-eth-db:v4.1.4-alpha
+    image: vulcanize/ipld-eth-db:v4.2.1-alpha
     environment:
       DATABASE_USER: "vdbm"
       DATABASE_NAME: "vulcanize_testing"

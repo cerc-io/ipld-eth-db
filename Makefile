@@ -117,10 +117,10 @@ import:
 docker-build:
 	docker-compose -f docker-compose.test.yml build
 
-## Build docker image for migration
-.PHONY: docker-concise-migration-build
-docker-concise-migration-build:
-	docker build -t vulcanize/concise-migration-build -f ./db/Dockerfile .
+# ## Build docker image for migration
+# .PHONY: docker-concise-migration-build
+# docker-concise-migration-build:
+# 	docker build -t vulcanize/concise-migration-build -f ./db/Dockerfile .
 
 .PHONY: test-migrations
 test-migrations: $(GOOSE)
