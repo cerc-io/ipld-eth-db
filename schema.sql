@@ -519,7 +519,7 @@ CREATE INDEX access_list_block_number_index ON eth.access_list_elements USING br
 -- Name: access_list_element_address_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE INDEX access_list_element_address_index ON eth.access_list_elements USING btree (address);
+CREATE INDEX access_list_element_address_index ON eth.access_list_elements USING hash (address);
 
 
 --
@@ -540,14 +540,14 @@ CREATE INDEX account_block_number_index ON eth.state_accounts USING brin (block_
 -- Name: account_header_id_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE INDEX account_header_id_index ON eth.state_accounts USING btree (header_id);
+CREATE INDEX account_header_id_index ON eth.state_accounts USING hash (header_id);
 
 
 --
 -- Name: account_storage_root_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE INDEX account_storage_root_index ON eth.state_accounts USING btree (storage_root);
+CREATE INDEX account_storage_root_index ON eth.state_accounts USING hash (storage_root);
 
 
 --
@@ -575,7 +575,7 @@ CREATE UNIQUE INDEX header_mh_block_number_index ON eth.header_cids USING btree 
 -- Name: log_address_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE INDEX log_address_index ON eth.log_cids USING btree (address);
+CREATE INDEX log_address_index ON eth.log_cids USING hash (address);
 
 
 --
@@ -603,7 +603,7 @@ CREATE INDEX log_data_index ON eth.log_cids USING hash (log_data);
 -- Name: log_header_id_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE INDEX log_header_id_index ON eth.log_cids USING btree (header_id);
+CREATE INDEX log_header_id_index ON eth.log_cids USING hash (header_id);
 
 
 --
@@ -617,28 +617,28 @@ CREATE INDEX log_leaf_mh_block_number_index ON eth.log_cids USING btree (leaf_mh
 -- Name: log_topic0_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE INDEX log_topic0_index ON eth.log_cids USING btree (topic0);
+CREATE INDEX log_topic0_index ON eth.log_cids USING hash (topic0);
 
 
 --
 -- Name: log_topic1_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE INDEX log_topic1_index ON eth.log_cids USING btree (topic1);
+CREATE INDEX log_topic1_index ON eth.log_cids USING hash (topic1);
 
 
 --
 -- Name: log_topic2_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE INDEX log_topic2_index ON eth.log_cids USING btree (topic2);
+CREATE INDEX log_topic2_index ON eth.log_cids USING hash (topic2);
 
 
 --
 -- Name: log_topic3_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE INDEX log_topic3_index ON eth.log_cids USING btree (topic3);
+CREATE INDEX log_topic3_index ON eth.log_cids USING hash (topic3);
 
 
 --
@@ -659,14 +659,14 @@ CREATE INDEX rct_contract_hash_index ON eth.receipt_cids USING btree (contract_h
 -- Name: rct_contract_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE INDEX rct_contract_index ON eth.receipt_cids USING btree (contract);
+CREATE INDEX rct_contract_index ON eth.receipt_cids USING hash (contract);
 
 
 --
 -- Name: rct_header_id_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE INDEX rct_header_id_index ON eth.receipt_cids USING btree (header_id);
+CREATE INDEX rct_header_id_index ON eth.receipt_cids USING hash (header_id);
 
 
 --
@@ -701,7 +701,7 @@ CREATE INDEX state_cid_index ON eth.state_cids USING btree (cid);
 -- Name: state_header_id_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE INDEX state_header_id_index ON eth.state_cids USING btree (header_id);
+CREATE INDEX state_header_id_index ON eth.state_cids USING hash (header_id);
 
 
 --
@@ -729,7 +729,7 @@ CREATE INDEX state_node_type_index ON eth.state_cids USING btree (node_type);
 -- Name: state_root_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE INDEX state_root_index ON eth.header_cids USING btree (state_root);
+CREATE INDEX state_root_index ON eth.header_cids USING hash (state_root);
 
 
 --
@@ -750,7 +750,7 @@ CREATE INDEX storage_cid_index ON eth.storage_cids USING btree (cid);
 -- Name: storage_header_id_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE INDEX storage_header_id_index ON eth.storage_cids USING btree (header_id);
+CREATE INDEX storage_header_id_index ON eth.storage_cids USING hash (header_id);
 
 
 --
@@ -813,14 +813,14 @@ CREATE INDEX tx_data_index ON eth.transaction_cids USING hash (tx_data);
 -- Name: tx_dst_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE INDEX tx_dst_index ON eth.transaction_cids USING btree (dst);
+CREATE INDEX tx_dst_index ON eth.transaction_cids USING hash (dst);
 
 
 --
 -- Name: tx_header_id_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE INDEX tx_header_id_index ON eth.transaction_cids USING btree (header_id);
+CREATE INDEX tx_header_id_index ON eth.transaction_cids USING hash (header_id);
 
 
 --
@@ -834,7 +834,7 @@ CREATE INDEX tx_mh_block_number_index ON eth.transaction_cids USING btree (mh_ke
 -- Name: tx_src_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE INDEX tx_src_index ON eth.transaction_cids USING btree (src);
+CREATE INDEX tx_src_index ON eth.transaction_cids USING hash (src);
 
 
 --
