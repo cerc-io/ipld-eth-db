@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS eth.receipt_cids (
     contract_hash         VARCHAR(66),
     leaf_mh_key           TEXT NOT NULL,
     post_state            VARCHAR(66),
-    post_status           INTEGER,
+    post_status           SMALLINT,
     log_root              VARCHAR(66),
     PRIMARY KEY (tx_id, header_id, block_number)
 );

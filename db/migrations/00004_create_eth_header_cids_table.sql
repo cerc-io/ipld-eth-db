@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS eth.header_cids (
     state_root            VARCHAR(66) NOT NULL,
     tx_root               VARCHAR(66) NOT NULL,
     receipt_root          VARCHAR(66) NOT NULL,
-    uncle_root            VARCHAR(66) NOT NULL,
+    uncles_hash           VARCHAR(66) NOT NULL,
     bloom                 BYTEA NOT NULL,
     timestamp             BIGINT NOT NULL,
     mh_key                TEXT NOT NULL,

@@ -18,6 +18,7 @@ CREATE INDEX tx_cid_index ON eth.transaction_cids USING btree (cid, block_number
 CREATE INDEX tx_mh_block_number_index ON eth.transaction_cids USING btree (mh_key, block_number);
 CREATE INDEX tx_dst_index ON eth.transaction_cids USING btree (dst);
 CREATE INDEX tx_src_index ON eth.transaction_cids USING btree (src);
+CREATE INDEX tx_data_index ON eth.transaction_cids USING hash (tx_data);
 
 -- receipt indexes
 CREATE INDEX rct_block_number_index ON eth.receipt_cids USING brin (block_number);
@@ -64,9 +65,11 @@ CREATE INDEX log_topic0_index ON eth.log_cids USING btree (topic0);
 CREATE INDEX log_topic1_index ON eth.log_cids USING btree (topic1);
 CREATE INDEX log_topic2_index ON eth.log_cids USING btree (topic2);
 CREATE INDEX log_topic3_index ON eth.log_cids USING btree (topic3);
+CREATE INDEX log_data_index ON eth.log_cids USING hash (log_data);
 
 -- +goose Down
 -- log indexes
+DROP INDEX eth.log_data_index;
 DROP INDEX eth.log_topic3_index;
 DROP INDEX eth.log_topic2_index;
 DROP INDEX eth.log_topic1_index;
@@ -113,6 +116,7 @@ DROP INDEX eth.rct_header_id_index;
 DROP INDEX eth.rct_block_number_index;
 
 -- transaction indexes
+DROP INDEX eth.tx_data_index;
 DROP INDEX eth.tx_src_index;
 DROP INDEX eth.tx_dst_index;
 DROP INDEX eth.tx_mh_block_number_index;
