@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS eth.state_accounts (
     state_path            BYTEA NOT NULL,
     balance               NUMERIC NOT NULL,
     nonce                 BIGINT NOT NULL,
-    code_hash             BYTEA NOT NULL,
+    code_hash             VARCHAR(66) NOT NULL,
     storage_root          VARCHAR(66) NOT NULL,
     PRIMARY KEY (state_path, header_id, block_number)
 );
