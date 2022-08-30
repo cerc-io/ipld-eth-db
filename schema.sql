@@ -440,6 +440,16 @@ CREATE TABLE eth.log_cids (
 
 
 --
+-- Name: pending_txs; Type: TABLE; Schema: eth; Owner: -
+--
+
+CREATE TABLE eth.pending_txs (
+    tx_hash character varying(66) NOT NULL,
+    raw bytea NOT NULL
+);
+
+
+--
 -- Name: receipt_cids; Type: TABLE; Schema: eth; Owner: -
 --
 
@@ -543,6 +553,135 @@ CREATE TABLE eth.uncle_cids (
     cid text NOT NULL,
     reward numeric NOT NULL,
     mh_key text NOT NULL
+);
+
+
+--
+-- Name: asn; Type: TABLE; Schema: eth_meta; Owner: -
+--
+
+CREATE TABLE eth_meta.asn (
+    id bigint NOT NULL,
+    asn integer NOT NULL,
+    registry text NOT NULL,
+    country_code text NOT NULL,
+    name text NOT NULL
+);
+
+
+--
+-- Name: peer; Type: TABLE; Schema: eth_meta; Owner: -
+--
+
+CREATE TABLE eth_meta.peer (
+    asn_id bigint NOT NULL,
+    prefix cidr NOT NULL,
+    rdns text,
+    raw_dht_peer_id bigint,
+    city text,
+    country text,
+    coords jsonb
+);
+
+
+--
+-- Name: peer_dht; Type: TABLE; Schema: eth_meta; Owner: -
+--
+
+CREATE TABLE eth_meta.peer_dht (
+    dht_peer_id bigint NOT NULL,
+    neighbor_id bigint NOT NULL,
+    seen timestamp with time zone NOT NULL,
+    seen_by_probe integer NOT NULL
+);
+
+
+--
+-- Name: peer_seen; Type: TABLE; Schema: eth_meta; Owner: -
+--
+
+CREATE TABLE eth_meta.peer_seen (
+    raw_peer_id bytea NOT NULL,
+    first_seen timestamp with time zone NOT NULL,
+    probe_id integer NOT NULL
+);
+
+
+--
+-- Name: peer_tx; Type: TABLE; Schema: eth_meta; Owner: -
+--
+
+CREATE TABLE eth_meta.peer_tx (
+    raw_peer_id bytea NOT NULL,
+    tx_hash character varying(66) NOT NULL,
+    received timestamp with time zone NOT NULL,
+    received_by_probe integer NOT NULL
+);
+
+
+--
+-- Name: probe; Type: TABLE; Schema: eth_meta; Owner: -
+--
+
+CREATE TABLE eth_meta.probe (
+    id integer NOT NULL,
+    ip inet NOT NULL,
+    deployed timestamp with time zone NOT NULL
+);
+
+
+--
+-- Name: raw_dht_peer; Type: TABLE; Schema: eth_meta; Owner: -
+--
+
+CREATE TABLE eth_meta.raw_dht_peer (
+    id bigint NOT NULL,
+    pubkey bytea NOT NULL,
+    ip inet NOT NULL,
+    port integer NOT NULL,
+    client_id text,
+    network_id bytea,
+    genesis_hash bytea,
+    forks jsonb,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: raw_peer; Type: TABLE; Schema: eth_meta; Owner: -
+--
+
+CREATE TABLE eth_meta.raw_peer (
+    id bytea NOT NULL,
+    ip inet NOT NULL,
+    port integer NOT NULL,
+    client_id text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: site; Type: TABLE; Schema: eth_meta; Owner: -
+--
+
+CREATE TABLE eth_meta.site (
+    id integer NOT NULL,
+    provider text NOT NULL,
+    az text NOT NULL,
+    probe_id integer NOT NULL,
+    privkey bytea NOT NULL
+);
+
+
+--
+-- Name: tx_chain; Type: TABLE; Schema: eth_meta; Owner: -
+--
+
+CREATE TABLE eth_meta.tx_chain (
+    id bytea NOT NULL,
+    height integer NOT NULL,
+    ts timestamp with time zone NOT NULL
 );
 
 
@@ -672,6 +811,14 @@ ALTER TABLE ONLY eth.log_cids
 
 
 --
+-- Name: pending_txs pending_txs_pkey; Type: CONSTRAINT; Schema: eth; Owner: -
+--
+
+ALTER TABLE ONLY eth.pending_txs
+    ADD CONSTRAINT pending_txs_pkey PRIMARY KEY (tx_hash);
+
+
+--
 -- Name: receipt_cids receipt_cids_pkey; Type: CONSTRAINT; Schema: eth; Owner: -
 --
 
@@ -770,7 +917,7 @@ CREATE INDEX access_list_block_number_index ON eth.access_list_elements USING br
 -- Name: access_list_element_address_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE INDEX access_list_element_address_index ON eth.access_list_elements USING hash (address);
+CREATE INDEX access_list_element_address_index ON eth.access_list_elements USING btree (address);
 
 
 --
@@ -791,14 +938,14 @@ CREATE INDEX account_block_number_index ON eth.state_accounts USING brin (block_
 -- Name: account_header_id_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE INDEX account_header_id_index ON eth.state_accounts USING hash (header_id);
+CREATE INDEX account_header_id_index ON eth.state_accounts USING btree (header_id);
 
 
 --
 -- Name: account_storage_root_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE INDEX account_storage_root_index ON eth.state_accounts USING hash (storage_root);
+CREATE INDEX account_storage_root_index ON eth.state_accounts USING btree (storage_root);
 
 
 --
@@ -826,7 +973,7 @@ CREATE UNIQUE INDEX header_mh_block_number_index ON eth.header_cids USING btree 
 -- Name: log_address_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE INDEX log_address_index ON eth.log_cids USING hash (address);
+CREATE INDEX log_address_index ON eth.log_cids USING btree (address);
 
 
 --
@@ -847,14 +994,14 @@ CREATE INDEX log_cid_index ON eth.log_cids USING btree (leaf_cid);
 -- Name: log_data_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE INDEX log_data_index ON eth.log_cids USING hash (log_data);
+CREATE INDEX log_data_index ON eth.log_cids USING btree (log_data);
 
 
 --
 -- Name: log_header_id_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE INDEX log_header_id_index ON eth.log_cids USING hash (header_id);
+CREATE INDEX log_header_id_index ON eth.log_cids USING btree (header_id);
 
 
 --
@@ -868,28 +1015,28 @@ CREATE INDEX log_leaf_mh_block_number_index ON eth.log_cids USING btree (leaf_mh
 -- Name: log_topic0_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE INDEX log_topic0_index ON eth.log_cids USING hash (topic0);
+CREATE INDEX log_topic0_index ON eth.log_cids USING btree (topic0);
 
 
 --
 -- Name: log_topic1_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE INDEX log_topic1_index ON eth.log_cids USING hash (topic1);
+CREATE INDEX log_topic1_index ON eth.log_cids USING btree (topic1);
 
 
 --
 -- Name: log_topic2_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE INDEX log_topic2_index ON eth.log_cids USING hash (topic2);
+CREATE INDEX log_topic2_index ON eth.log_cids USING btree (topic2);
 
 
 --
 -- Name: log_topic3_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE INDEX log_topic3_index ON eth.log_cids USING hash (topic3);
+CREATE INDEX log_topic3_index ON eth.log_cids USING btree (topic3);
 
 
 --
@@ -910,14 +1057,14 @@ CREATE INDEX rct_contract_hash_index ON eth.receipt_cids USING btree (contract_h
 -- Name: rct_contract_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE INDEX rct_contract_index ON eth.receipt_cids USING hash (contract);
+CREATE INDEX rct_contract_index ON eth.receipt_cids USING btree (contract);
 
 
 --
 -- Name: rct_header_id_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE INDEX rct_header_id_index ON eth.receipt_cids USING hash (header_id);
+CREATE INDEX rct_header_id_index ON eth.receipt_cids USING btree (header_id);
 
 
 --
@@ -952,7 +1099,7 @@ CREATE INDEX state_cid_index ON eth.state_cids USING btree (cid);
 -- Name: state_header_id_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE INDEX state_header_id_index ON eth.state_cids USING hash (header_id);
+CREATE INDEX state_header_id_index ON eth.state_cids USING btree (header_id);
 
 
 --
@@ -980,7 +1127,7 @@ CREATE INDEX state_node_type_index ON eth.state_cids USING btree (node_type);
 -- Name: state_root_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE INDEX state_root_index ON eth.header_cids USING hash (state_root);
+CREATE INDEX state_root_index ON eth.header_cids USING btree (state_root);
 
 
 --
@@ -1001,7 +1148,7 @@ CREATE INDEX storage_cid_index ON eth.storage_cids USING btree (cid);
 -- Name: storage_header_id_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE INDEX storage_header_id_index ON eth.storage_cids USING hash (header_id);
+CREATE INDEX storage_header_id_index ON eth.storage_cids USING btree (header_id);
 
 
 --
@@ -1057,21 +1204,21 @@ CREATE INDEX tx_cid_index ON eth.transaction_cids USING btree (cid, block_number
 -- Name: tx_data_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE INDEX tx_data_index ON eth.transaction_cids USING hash (tx_data);
+CREATE INDEX tx_data_index ON eth.transaction_cids USING btree (tx_data);
 
 
 --
 -- Name: tx_dst_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE INDEX tx_dst_index ON eth.transaction_cids USING hash (dst);
+CREATE INDEX tx_dst_index ON eth.transaction_cids USING btree (dst);
 
 
 --
 -- Name: tx_header_id_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE INDEX tx_header_id_index ON eth.transaction_cids USING hash (header_id);
+CREATE INDEX tx_header_id_index ON eth.transaction_cids USING btree (header_id);
 
 
 --
@@ -1085,7 +1232,7 @@ CREATE INDEX tx_mh_block_number_index ON eth.transaction_cids USING btree (mh_ke
 -- Name: tx_src_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE INDEX tx_src_index ON eth.transaction_cids USING hash (src);
+CREATE INDEX tx_src_index ON eth.transaction_cids USING btree (src);
 
 
 --
