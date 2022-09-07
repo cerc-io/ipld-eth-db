@@ -17,6 +17,20 @@ SET client_min_messages = warning;
 SET row_security = off;
 
 --
+-- Name: timescaledb; Type: EXTENSION; Schema: -; Owner: -
+--
+
+CREATE EXTENSION IF NOT EXISTS timescaledb WITH SCHEMA public;
+
+
+--
+-- Name: EXTENSION timescaledb; Type: COMMENT; Schema: -; Owner: -
+--
+
+COMMENT ON EXTENSION timescaledb IS 'Enables scalable inserts and complex queries for time-series data';
+
+
+--
 -- Name: eth; Type: SCHEMA; Schema: -; Owner: -
 --
 
@@ -28,6 +42,87 @@ CREATE SCHEMA eth;
 --
 
 CREATE SCHEMA eth_meta;
+
+
+SET default_tablespace = '';
+
+SET default_table_access_method = heap;
+
+--
+-- Name: header_cids; Type: TABLE; Schema: eth; Owner: -
+--
+
+CREATE TABLE eth.header_cids (
+    block_number bigint NOT NULL,
+    block_hash character varying(66) NOT NULL,
+    parent_hash character varying(66) NOT NULL,
+    cid text NOT NULL,
+    td numeric NOT NULL,
+    node_id character varying(128) NOT NULL,
+    reward numeric NOT NULL,
+    state_root character varying(66) NOT NULL,
+    tx_root character varying(66) NOT NULL,
+    receipt_root character varying(66) NOT NULL,
+    uncles_hash character varying(66) NOT NULL,
+    bloom bytea NOT NULL,
+    "timestamp" bigint NOT NULL,
+    mh_key text NOT NULL,
+    times_validated integer DEFAULT 1 NOT NULL,
+    coinbase character varying(66) NOT NULL
+);
+
+
+--
+-- Name: TABLE header_cids; Type: COMMENT; Schema: eth; Owner: -
+--
+
+COMMENT ON TABLE eth.header_cids IS '@name EthHeaderCids';
+
+
+--
+-- Name: COLUMN header_cids.node_id; Type: COMMENT; Schema: eth; Owner: -
+--
+
+COMMENT ON COLUMN eth.header_cids.node_id IS '@name EthNodeID';
+
+
+--
+-- Name: child_result; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.child_result AS (
+	has_child boolean,
+	children eth.header_cids[]
+);
+
+
+--
+-- Name: state_node_result; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.state_node_result AS (
+	data bytea,
+	state_leaf_key character varying(66),
+	cid text,
+	state_path bytea,
+	node_type integer,
+	mh_key text
+);
+
+
+--
+-- Name: storage_node_result; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.storage_node_result AS (
+	data bytea,
+	state_path bytea,
+	storage_leaf_key character varying(66),
+	cid text,
+	storage_path bytea,
+	node_type integer,
+	mh_key text
+);
 
 
 --
@@ -93,9 +188,223 @@ END;
 $$;
 
 
-SET default_tablespace = '';
+--
+-- Name: canonical_header_from_array(eth.header_cids[]); Type: FUNCTION; Schema: public; Owner: -
+--
 
-SET default_table_access_method = heap;
+CREATE FUNCTION public.canonical_header_from_array(headers eth.header_cids[]) RETURNS eth.header_cids
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+  canonical_header eth.header_cids;
+  canonical_child eth.header_cids;
+  header eth.header_cids;
+  current_child_result child_result;
+  child_headers eth.header_cids[];
+  current_header_with_child eth.header_cids;
+  has_children_count INT DEFAULT 0;
+BEGIN
+  -- for each header in the provided set
+  FOREACH header IN ARRAY headers
+  LOOP
+    -- check if it has any children
+    current_child_result = has_child(header.block_hash, header.block_number);
+    IF current_child_result.has_child THEN
+      -- if it does, take note
+      has_children_count = has_children_count + 1;
+      current_header_with_child = header;
+      -- and add the children to the growing set of child headers
+      child_headers = array_cat(child_headers, current_child_result.children);
+    END IF;
+  END LOOP;
+  -- if none of the headers had children, none is more canonical than the other
+  IF has_children_count = 0 THEN
+    -- return the first one selected
+    SELECT * INTO canonical_header FROM unnest(headers) LIMIT 1;
+  -- if only one header had children, it can be considered the heaviest/canonical header of the set
+  ELSIF has_children_count = 1 THEN
+    -- return the only header with a child
+    canonical_header = current_header_with_child;
+  -- if there are multiple headers with children
+  ELSE
+    -- find the canonical header from the child set
+    canonical_child = canonical_header_from_array(child_headers);
+    -- the header that is parent to this header, is the canonical header at this level
+    SELECT * INTO canonical_header FROM unnest(headers)
+    WHERE block_hash = canonical_child.parent_hash;
+  END IF;
+  RETURN canonical_header;
+END
+$$;
+
+
+--
+-- Name: canonical_header_hash(bigint); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.canonical_header_hash(height bigint) RETURNS character varying
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+  canonical_header eth.header_cids;
+  headers eth.header_cids[];
+  header_count INT;
+  temp_header eth.header_cids;
+BEGIN
+  -- collect all headers at this height
+  FOR temp_header IN
+  SELECT * FROM eth.header_cids WHERE block_number = height
+  LOOP
+    headers = array_append(headers, temp_header);
+  END LOOP;
+  -- count the number of headers collected
+  header_count = array_length(headers, 1);
+  -- if we have less than 1 header, return NULL
+  IF header_count IS NULL OR header_count < 1 THEN
+    RETURN NULL;
+  -- if we have one header, return its hash
+  ELSIF header_count = 1 THEN
+    RETURN headers[1].block_hash;
+  -- if we have multiple headers we need to determine which one is canonical
+  ELSE
+    canonical_header = canonical_header_from_array(headers);
+    RETURN canonical_header.block_hash;
+  END IF;
+END
+$$;
+
+
+--
+-- Name: has_child(character varying, bigint); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.has_child(hash character varying, height bigint) RETURNS public.child_result
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+  child_height INT;
+  temp_child eth.header_cids;
+  new_child_result child_result;
+BEGIN
+  child_height = height + 1;
+  -- short circuit if there are no children
+  SELECT exists(SELECT 1
+              FROM eth.header_cids
+              WHERE parent_hash = hash
+                AND block_number = child_height
+              LIMIT 1)
+  INTO new_child_result.has_child;
+  -- collect all the children for this header
+  IF new_child_result.has_child THEN
+    FOR temp_child IN
+    SELECT * FROM eth.header_cids WHERE parent_hash = hash AND block_number = child_height
+    LOOP
+      new_child_result.children = array_append(new_child_result.children, temp_child);
+    END LOOP;
+  END IF;
+  RETURN new_child_result;
+END
+$$;
+
+
+--
+-- Name: state_snapshot(bigint, bigint); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.state_snapshot(starting_height bigint, ending_height bigint) RETURNS void
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    canonical_hash VARCHAR(66);
+    results state_node_result[];
+BEGIN
+    -- get the canonical hash for the header at ending_height
+    canonical_hash = canonical_header_hash(ending_height);
+    IF canonical_hash IS NULL THEN
+        RAISE EXCEPTION 'cannot create state snapshot, no header can be found at height %', ending_height;
+    END IF;
+    -- select all of the state nodes for this snapshot: the latest state node record at every unique path
+    SELECT ARRAY (SELECT DISTINCT ON (state_path) ROW (blocks.data, state_cids.state_leaf_key, state_cids.cid, state_cids.state_path,
+        state_cids.node_type, state_cids.mh_key)
+    FROM eth.state_cids
+        INNER JOIN public.blocks
+            ON (state_cids.mh_key, state_cids.block_number) = (blocks.key, blocks.block_number)
+    WHERE state_cids.block_number BETWEEN starting_height AND ending_height
+    ORDER BY state_path, state_cids.block_number DESC)
+    INTO results;
+    -- from the set returned above, insert public.block records at the ending_height block number
+    INSERT INTO public.blocks (block_number, key, data)
+    SELECT ending_height, r.mh_key, r.data
+    FROM unnest(results) r;
+    -- from the set returned above, insert eth.state_cids records at the ending_height block number
+    -- anchoring all the records to the canonical header found at ending_height
+    INSERT INTO eth.state_cids (block_number, header_id, state_leaf_key, cid, state_path, node_type, diff, mh_key)
+    SELECT ending_height, canonical_hash, r.state_leaf_key, r.cid, r.state_path, r.node_type, false, r.mh_key
+    FROM unnest(results) r
+    ON CONFLICT (state_path, header_id, block_number) DO NOTHING;
+END
+$$;
+
+
+--
+-- Name: storage_snapshot(bigint, bigint); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.storage_snapshot(starting_height bigint, ending_height bigint) RETURNS void
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    canonical_hash VARCHAR(66);
+    results storage_node_result[];
+BEGIN
+    -- get the canonical hash for the header at ending_height
+    SELECT canonical_header_hash(ending_height) INTO canonical_hash;
+    IF canonical_hash IS NULL THEN
+        RAISE EXCEPTION 'cannot create state snapshot, no header can be found at height %', ending_height;
+    END IF;
+    -- select all of the storage nodes for this snapshot: the latest storage node record at every unique state leaf key
+    SELECT ARRAY (SELECT DISTINCT ON (state_leaf_key, storage_path) ROW (blocks.data, storage_cids.state_path, storage_cids.storage_leaf_key,
+     storage_cids.cid, storage_cids.storage_path, storage_cids.node_type, storage_cids.mh_key)
+    FROM eth.storage_cids
+        INNER JOIN public.blocks
+        ON (storage_cids.mh_key, storage_cids.block_number) = (blocks.key, blocks.block_number)
+        INNER JOIN eth.state_cids
+        ON (storage_cids.state_path, storage_cids.header_id) = (state_cids.state_path, state_cids.header_id)
+    WHERE storage_cids.block_number BETWEEN starting_height AND ending_height
+    ORDER BY state_leaf_key, storage_path, storage_cids.state_path, storage_cids.block_number DESC)
+    INTO results;
+    -- from the set returned above, insert public.block records at the ending_height block number
+    INSERT INTO public.blocks (block_number, key, data)
+    SELECT ending_height, r.mh_key, r.data
+    FROM unnest(results) r;
+    -- from the set returned above, insert eth.state_cids records at the ending_height block number
+    -- anchoring all the records to the canonical header found at ending_height
+    INSERT INTO eth.storage_cids (block_number, header_id, state_path, storage_leaf_key, cid, storage_path,
+                              node_type, diff, mh_key)
+    SELECT ending_height, canonical_hash, r.state_path, r.storage_leaf_key, r.cid, r.storage_path, r.node_type, false, r.mh_key
+    FROM unnest(results) r
+    ON CONFLICT (storage_path, state_path, header_id, block_number) DO NOTHING;
+END
+$$;
+
+
+--
+-- Name: was_state_leaf_removed(character varying, character varying); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.was_state_leaf_removed(key character varying, hash character varying) RETURNS boolean
+    LANGUAGE sql
+    AS $$
+    SELECT state_cids.node_type = 3
+    FROM eth.state_cids
+             INNER JOIN eth.header_cids ON (state_cids.header_id = header_cids.block_hash)
+    WHERE state_leaf_key = key
+      AND state_cids.block_number <= (SELECT block_number
+                           FROM eth.header_cids
+                           WHERE block_hash = hash)
+    ORDER BY state_cids.block_number DESC LIMIT 1;
+$$;
+
 
 --
 -- Name: access_list_elements; Type: TABLE; Schema: eth; Owner: -
@@ -108,44 +417,6 @@ CREATE TABLE eth.access_list_elements (
     address character varying(66),
     storage_keys character varying(66)[]
 );
-
-
---
--- Name: header_cids; Type: TABLE; Schema: eth; Owner: -
---
-
-CREATE TABLE eth.header_cids (
-    block_number bigint NOT NULL,
-    block_hash character varying(66) NOT NULL,
-    parent_hash character varying(66) NOT NULL,
-    cid text NOT NULL,
-    td numeric NOT NULL,
-    node_id character varying(128) NOT NULL,
-    reward numeric NOT NULL,
-    state_root character varying(66) NOT NULL,
-    tx_root character varying(66) NOT NULL,
-    receipt_root character varying(66) NOT NULL,
-    uncles_hash character varying(66) NOT NULL,
-    bloom bytea NOT NULL,
-    "timestamp" bigint NOT NULL,
-    mh_key text NOT NULL,
-    times_validated integer DEFAULT 1 NOT NULL,
-    coinbase character varying(66) NOT NULL
-);
-
-
---
--- Name: TABLE header_cids; Type: COMMENT; Schema: eth; Owner: -
---
-
-COMMENT ON TABLE eth.header_cids IS '@name EthHeaderCids';
-
-
---
--- Name: COLUMN header_cids.node_id; Type: COMMENT; Schema: eth; Owner: -
---
-
-COMMENT ON COLUMN eth.header_cids.node_id IS '@name EthNodeID';
 
 
 --
@@ -165,6 +436,16 @@ CREATE TABLE eth.log_cids (
     topic2 character varying(66),
     topic3 character varying(66),
     log_data bytea
+);
+
+
+--
+-- Name: pending_txs; Type: TABLE; Schema: eth; Owner: -
+--
+
+CREATE TABLE eth.pending_txs (
+    tx_hash character varying(66) NOT NULL,
+    raw bytea NOT NULL
 );
 
 
@@ -276,14 +557,131 @@ CREATE TABLE eth.uncle_cids (
 
 
 --
--- Name: known_gaps; Type: TABLE; Schema: eth_meta; Owner: -
+-- Name: asn; Type: TABLE; Schema: eth_meta; Owner: -
 --
 
-CREATE TABLE eth_meta.known_gaps (
-    starting_block_number bigint NOT NULL,
-    ending_block_number bigint,
-    checked_out boolean,
-    processing_key bigint
+CREATE TABLE eth_meta.asn (
+    id bigint NOT NULL,
+    asn integer NOT NULL,
+    registry text NOT NULL,
+    country_code text NOT NULL,
+    name text NOT NULL
+);
+
+
+--
+-- Name: peer; Type: TABLE; Schema: eth_meta; Owner: -
+--
+
+CREATE TABLE eth_meta.peer (
+    asn_id bigint NOT NULL,
+    prefix cidr NOT NULL,
+    rdns text,
+    raw_dht_peer_id bigint,
+    city text,
+    country text,
+    coords jsonb
+);
+
+
+--
+-- Name: peer_dht; Type: TABLE; Schema: eth_meta; Owner: -
+--
+
+CREATE TABLE eth_meta.peer_dht (
+    dht_peer_id bigint NOT NULL,
+    neighbor_id bigint NOT NULL,
+    seen timestamp with time zone NOT NULL,
+    seen_by_probe integer NOT NULL
+);
+
+
+--
+-- Name: peer_seen; Type: TABLE; Schema: eth_meta; Owner: -
+--
+
+CREATE TABLE eth_meta.peer_seen (
+    raw_peer_id bytea NOT NULL,
+    first_seen timestamp with time zone NOT NULL,
+    probe_id integer NOT NULL
+);
+
+
+--
+-- Name: peer_tx; Type: TABLE; Schema: eth_meta; Owner: -
+--
+
+CREATE TABLE eth_meta.peer_tx (
+    raw_peer_id bytea NOT NULL,
+    tx_hash character varying(66) NOT NULL,
+    received timestamp with time zone NOT NULL,
+    received_by_probe integer NOT NULL
+);
+
+
+--
+-- Name: probe; Type: TABLE; Schema: eth_meta; Owner: -
+--
+
+CREATE TABLE eth_meta.probe (
+    id integer NOT NULL,
+    ip inet NOT NULL,
+    deployed timestamp with time zone NOT NULL
+);
+
+
+--
+-- Name: raw_dht_peer; Type: TABLE; Schema: eth_meta; Owner: -
+--
+
+CREATE TABLE eth_meta.raw_dht_peer (
+    id bigint NOT NULL,
+    pubkey bytea NOT NULL,
+    ip inet NOT NULL,
+    port integer NOT NULL,
+    client_id text,
+    network_id bytea,
+    genesis_hash bytea,
+    forks jsonb,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: raw_peer; Type: TABLE; Schema: eth_meta; Owner: -
+--
+
+CREATE TABLE eth_meta.raw_peer (
+    id bytea NOT NULL,
+    ip inet NOT NULL,
+    port integer NOT NULL,
+    client_id text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: site; Type: TABLE; Schema: eth_meta; Owner: -
+--
+
+CREATE TABLE eth_meta.site (
+    id integer NOT NULL,
+    provider text NOT NULL,
+    az text NOT NULL,
+    probe_id integer NOT NULL,
+    privkey bytea NOT NULL
+);
+
+
+--
+-- Name: tx_chain; Type: TABLE; Schema: eth_meta; Owner: -
+--
+
+CREATE TABLE eth_meta.tx_chain (
+    id bytea NOT NULL,
+    height integer NOT NULL,
+    ts timestamp with time zone NOT NULL
 );
 
 
@@ -413,6 +811,14 @@ ALTER TABLE ONLY eth.log_cids
 
 
 --
+-- Name: pending_txs pending_txs_pkey; Type: CONSTRAINT; Schema: eth; Owner: -
+--
+
+ALTER TABLE ONLY eth.pending_txs
+    ADD CONSTRAINT pending_txs_pkey PRIMARY KEY (tx_hash);
+
+
+--
 -- Name: receipt_cids receipt_cids_pkey; Type: CONSTRAINT; Schema: eth; Owner: -
 --
 
@@ -458,14 +864,6 @@ ALTER TABLE ONLY eth.transaction_cids
 
 ALTER TABLE ONLY eth.uncle_cids
     ADD CONSTRAINT uncle_cids_pkey PRIMARY KEY (block_hash, block_number);
-
-
---
--- Name: known_gaps known_gaps_pkey; Type: CONSTRAINT; Schema: eth_meta; Owner: -
---
-
-ALTER TABLE ONLY eth_meta.known_gaps
-    ADD CONSTRAINT known_gaps_pkey PRIMARY KEY (starting_block_number);
 
 
 --
@@ -596,7 +994,7 @@ CREATE INDEX log_cid_index ON eth.log_cids USING btree (leaf_cid);
 -- Name: log_data_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE INDEX log_data_index ON eth.log_cids USING hash (log_data);
+CREATE INDEX log_data_index ON eth.log_cids USING btree (log_data);
 
 
 --
@@ -806,7 +1204,7 @@ CREATE INDEX tx_cid_index ON eth.transaction_cids USING btree (cid, block_number
 -- Name: tx_data_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE INDEX tx_data_index ON eth.transaction_cids USING hash (tx_data);
+CREATE INDEX tx_data_index ON eth.transaction_cids USING btree (tx_data);
 
 
 --
@@ -856,6 +1254,13 @@ CREATE INDEX uncle_header_id_index ON eth.uncle_cids USING btree (header_id);
 --
 
 CREATE UNIQUE INDEX uncle_mh_block_number_index ON eth.uncle_cids USING btree (mh_key, block_number);
+
+
+--
+-- Name: blocks_block_number_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX blocks_block_number_idx ON public.blocks USING btree (block_number DESC);
 
 
 --
@@ -919,6 +1324,76 @@ CREATE TRIGGER trg_eth_transaction_cids AFTER INSERT ON eth.transaction_cids FOR
 --
 
 CREATE TRIGGER trg_eth_uncle_cids AFTER INSERT ON eth.uncle_cids FOR EACH ROW EXECUTE FUNCTION eth.graphql_subscription();
+
+
+--
+-- Name: access_list_elements ts_insert_blocker; Type: TRIGGER; Schema: eth; Owner: -
+--
+
+CREATE TRIGGER ts_insert_blocker BEFORE INSERT ON eth.access_list_elements FOR EACH ROW EXECUTE FUNCTION _timescaledb_internal.insert_blocker();
+
+
+--
+-- Name: header_cids ts_insert_blocker; Type: TRIGGER; Schema: eth; Owner: -
+--
+
+CREATE TRIGGER ts_insert_blocker BEFORE INSERT ON eth.header_cids FOR EACH ROW EXECUTE FUNCTION _timescaledb_internal.insert_blocker();
+
+
+--
+-- Name: log_cids ts_insert_blocker; Type: TRIGGER; Schema: eth; Owner: -
+--
+
+CREATE TRIGGER ts_insert_blocker BEFORE INSERT ON eth.log_cids FOR EACH ROW EXECUTE FUNCTION _timescaledb_internal.insert_blocker();
+
+
+--
+-- Name: receipt_cids ts_insert_blocker; Type: TRIGGER; Schema: eth; Owner: -
+--
+
+CREATE TRIGGER ts_insert_blocker BEFORE INSERT ON eth.receipt_cids FOR EACH ROW EXECUTE FUNCTION _timescaledb_internal.insert_blocker();
+
+
+--
+-- Name: state_accounts ts_insert_blocker; Type: TRIGGER; Schema: eth; Owner: -
+--
+
+CREATE TRIGGER ts_insert_blocker BEFORE INSERT ON eth.state_accounts FOR EACH ROW EXECUTE FUNCTION _timescaledb_internal.insert_blocker();
+
+
+--
+-- Name: state_cids ts_insert_blocker; Type: TRIGGER; Schema: eth; Owner: -
+--
+
+CREATE TRIGGER ts_insert_blocker BEFORE INSERT ON eth.state_cids FOR EACH ROW EXECUTE FUNCTION _timescaledb_internal.insert_blocker();
+
+
+--
+-- Name: storage_cids ts_insert_blocker; Type: TRIGGER; Schema: eth; Owner: -
+--
+
+CREATE TRIGGER ts_insert_blocker BEFORE INSERT ON eth.storage_cids FOR EACH ROW EXECUTE FUNCTION _timescaledb_internal.insert_blocker();
+
+
+--
+-- Name: transaction_cids ts_insert_blocker; Type: TRIGGER; Schema: eth; Owner: -
+--
+
+CREATE TRIGGER ts_insert_blocker BEFORE INSERT ON eth.transaction_cids FOR EACH ROW EXECUTE FUNCTION _timescaledb_internal.insert_blocker();
+
+
+--
+-- Name: uncle_cids ts_insert_blocker; Type: TRIGGER; Schema: eth; Owner: -
+--
+
+CREATE TRIGGER ts_insert_blocker BEFORE INSERT ON eth.uncle_cids FOR EACH ROW EXECUTE FUNCTION _timescaledb_internal.insert_blocker();
+
+
+--
+-- Name: blocks ts_insert_blocker; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER ts_insert_blocker BEFORE INSERT ON public.blocks FOR EACH ROW EXECUTE FUNCTION _timescaledb_internal.insert_blocker();
 
 
 --
