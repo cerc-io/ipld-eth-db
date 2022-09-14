@@ -2,7 +2,7 @@ FROM golang:1.18-alpine as builder
 
 RUN apk --update --no-cache add make git g++ linux-headers
 
-ADD . /go/src/github.com/vulcanize/ipld-eth-db
+ADD . /go/src/github.com/cerc-io/ipld-eth-db
 
 # Build migration tool
 WORKDIR /go/src/github.com/pressly
@@ -16,9 +16,9 @@ FROM alpine
 
 WORKDIR /app
 
-COPY --from=builder /go/src/github.com/vulcanize/ipld-eth-db/scripts/startup_script.sh .
+COPY --from=builder /go/src/github.com/cerc-io/ipld-eth-db/scripts/startup_script.sh .
 
 COPY --from=builder /go/src/github.com/pressly/goose/cmd/goose/goose goose
-COPY --from=builder /go/src/github.com/vulcanize/ipld-eth-db/db/migrations migrations/vulcanizedb
+COPY --from=builder /go/src/github.com/cerc-io/ipld-eth-db/db/migrations migrations/vulcanizedb
 
 ENTRYPOINT ["/app/startup_script.sh"]
