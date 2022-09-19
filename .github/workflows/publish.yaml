@@ -13,7 +13,6 @@ jobs:
         run: |
           echo ::set-output name=sha::$(echo ${GITHUB_SHA:0:7})
           echo ::set-output name=tag::$(echo ${GITHUB_REF#refs/tags/})
-          - name: Docker Login to Github Registry
       - name: Run docker build
         run: make docker-build
       - name: Tag docker image
