@@ -53,6 +53,9 @@ DECLARE
     blockNo bigint;
 BEGIN
     SELECT h.BLOCK_NUMBER INTO blockNo FROM ETH.HEADER_CIDS as h WHERE BLOCK_HASH = blockHash limit 1;
+    IF blockNo IS NULL THEN
+        RETURN;
+    END IF;
     RETURN QUERY SELECT * FROM get_storage_at_by_number(stateLeafKey, storageLeafKey, blockNo);
 END
 $$;
