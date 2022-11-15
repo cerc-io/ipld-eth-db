@@ -151,17 +151,20 @@ BEGIN
     ELSIF (TG_TABLE_NAME = 'log_cids') THEN
          obj := json_build_array(
                     TG_TABLE_NAME,
+                    NEW.header_id,
                     NEW.rct_id,
                     NEW.index
                 );
     ELSIF (TG_TABLE_NAME = 'receipt_cids') THEN
          obj := json_build_array(
                     TG_TABLE_NAME,
+                    NEW.header_id,
                     NEW.tx_id
                 );
     ELSIF (TG_TABLE_NAME = 'transaction_cids') THEN
          obj := json_build_array(
                     TG_TABLE_NAME,
+                    NEW.header_id,
                     NEW.tx_hash
                 );
     ELSIF (TG_TABLE_NAME = 'access_list_elements') THEN
@@ -272,6 +275,62 @@ $$;
 
 
 --
+-- Name: get_storage_at_by_hash(text, text, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.get_storage_at_by_hash(stateleafkey text, storageleafkey text, blockhash text) RETURNS TABLE(cid text, mh_key text, block_number bigint, node_type integer, state_leaf_removed boolean)
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    blockNo bigint;
+BEGIN
+    SELECT h.BLOCK_NUMBER INTO blockNo FROM ETH.HEADER_CIDS as h WHERE BLOCK_HASH = blockHash limit 1;
+    RETURN QUERY SELECT * FROM get_storage_at_by_number(stateLeafKey, storageLeafKey, blockNo);
+END
+$$;
+
+
+--
+-- Name: get_storage_at_by_number(text, text, bigint); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.get_storage_at_by_number(stateleafkey text, storageleafkey text, blockno bigint) RETURNS TABLE(cid text, mh_key text, block_number bigint, node_type integer, state_leaf_removed boolean)
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    RETURN QUERY SELECT STORAGE_CIDS.CID,
+                        STORAGE_CIDS.MH_KEY,
+                        STORAGE_CIDS.BLOCK_NUMBER,
+                        STORAGE_CIDS.NODE_TYPE,
+                        was_state_leaf_removed_by_number(
+                                stateLeafKey,
+                                blockNo
+                            ) AS STATE_LEAF_REMOVED
+                 FROM ETH.STORAGE_CIDS
+                          INNER JOIN ETH.STATE_CIDS ON (
+                             STORAGE_CIDS.HEADER_ID = STATE_CIDS.HEADER_ID
+                         AND STORAGE_CIDS.BLOCK_NUMBER = STATE_CIDS.BLOCK_NUMBER
+                         AND STORAGE_CIDS.STATE_PATH = STATE_CIDS.STATE_PATH
+                         AND STORAGE_CIDS.BLOCK_NUMBER <= blockNo
+                     )
+                          INNER JOIN ETH.HEADER_CIDS ON (
+                             STATE_CIDS.HEADER_ID = HEADER_CIDS.BLOCK_HASH
+                         AND STATE_CIDS.BLOCK_NUMBER = HEADER_CIDS.BLOCK_NUMBER
+                         AND STATE_CIDS.BLOCK_NUMBER <= blockNo
+                     )
+                 WHERE STATE_LEAF_KEY = stateLeafKey
+                   AND STATE_CIDS.BLOCK_NUMBER <= blockNo
+                   AND STORAGE_LEAF_KEY = storageLeafKey
+                   AND STORAGE_CIDS.BLOCK_NUMBER <= blockNo
+                   AND HEADER_CIDS.BLOCK_NUMBER <= blockNo
+                   AND HEADER_CIDS.BLOCK_HASH = (SELECT CANONICAL_HEADER_HASH(HEADER_CIDS.BLOCK_NUMBER))
+                 ORDER BY HEADER_CIDS.BLOCK_NUMBER DESC
+                 LIMIT 1;
+END
+$$;
+
+
+--
 -- Name: has_child(character varying, bigint); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -321,24 +380,24 @@ BEGIN
         RAISE EXCEPTION 'cannot create state snapshot, no header can be found at height %', ending_height;
     END IF;
     -- select all of the state nodes for this snapshot: the latest state node record at every unique path
-    SELECT DISTINCT ON (state_path) blocks.data, state_cids.state_leaf_key, state_cids.cid, state_cids.state_path,
-        state_cids.node_type, state_cids.mh_key
-    INTO results
+    SELECT ARRAY (SELECT DISTINCT ON (state_path) ROW (blocks.data, state_cids.state_leaf_key, state_cids.cid, state_cids.state_path,
+        state_cids.node_type, state_cids.mh_key)
     FROM eth.state_cids
         INNER JOIN public.blocks
             ON (state_cids.mh_key, state_cids.block_number) = (blocks.key, blocks.block_number)
     WHERE state_cids.block_number BETWEEN starting_height AND ending_height
-    ORDER BY state_path, block_number DESC;
+    ORDER BY state_path, state_cids.block_number DESC)
+    INTO results;
     -- from the set returned above, insert public.block records at the ending_height block number
     INSERT INTO public.blocks (block_number, key, data)
     SELECT ending_height, r.mh_key, r.data
-    FROM results r;
+    FROM unnest(results) r;
     -- from the set returned above, insert eth.state_cids records at the ending_height block number
     -- anchoring all the records to the canonical header found at ending_height
     INSERT INTO eth.state_cids (block_number, header_id, state_leaf_key, cid, state_path, node_type, diff, mh_key)
     SELECT ending_height, canonical_hash, r.state_leaf_key, r.cid, r.state_path, r.node_type, false, r.mh_key
-    FROM results r
-    ON CONFLICT (state_path, header_id) DO NOTHING;
+    FROM unnest(results) r
+    ON CONFLICT (state_path, header_id, block_number) DO NOTHING;
 END
 $$;
 
@@ -360,27 +419,27 @@ BEGIN
         RAISE EXCEPTION 'cannot create state snapshot, no header can be found at height %', ending_height;
     END IF;
     -- select all of the storage nodes for this snapshot: the latest storage node record at every unique state leaf key
-    SELECT DISTINCT ON (state_leaf_key, storage_path) block.data, storage_cids.state_path, storage_cids.storage_leaf_key,
-     storage_cids.cid, storage_cids.storage_path, storage_cids.node_type, storage_cids.mh_key
-    INTO results
+    SELECT ARRAY (SELECT DISTINCT ON (state_leaf_key, storage_path) ROW (blocks.data, storage_cids.state_path, storage_cids.storage_leaf_key,
+     storage_cids.cid, storage_cids.storage_path, storage_cids.node_type, storage_cids.mh_key)
     FROM eth.storage_cids
         INNER JOIN public.blocks
         ON (storage_cids.mh_key, storage_cids.block_number) = (blocks.key, blocks.block_number)
         INNER JOIN eth.state_cids
         ON (storage_cids.state_path, storage_cids.header_id) = (state_cids.state_path, state_cids.header_id)
     WHERE storage_cids.block_number BETWEEN starting_height AND ending_height
-    ORDER BY state_path, storage_path, block_number DESC;
+    ORDER BY state_leaf_key, storage_path, storage_cids.state_path, storage_cids.block_number DESC)
+    INTO results;
     -- from the set returned above, insert public.block records at the ending_height block number
     INSERT INTO public.blocks (block_number, key, data)
     SELECT ending_height, r.mh_key, r.data
-    FROM results r;
+    FROM unnest(results) r;
     -- from the set returned above, insert eth.state_cids records at the ending_height block number
     -- anchoring all the records to the canonical header found at ending_height
     INSERT INTO eth.storage_cids (block_number, header_id, state_path, storage_leaf_key, cid, storage_path,
                               node_type, diff, mh_key)
     SELECT ending_height, canonical_hash, r.state_path, r.storage_leaf_key, r.cid, r.storage_path, r.node_type, false, r.mh_key
-    FROM results r
-    ON CONFLICT (storage_path, state_path, header_id) DO NOTHING;
+    FROM unnest(results) r
+    ON CONFLICT (storage_path, state_path, header_id, block_number) DO NOTHING;
 END
 $$;
 
@@ -404,6 +463,22 @@ $$;
 
 
 --
+-- Name: was_state_leaf_removed_by_number(character varying, bigint); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.was_state_leaf_removed_by_number(key character varying, blockno bigint) RETURNS boolean
+    LANGUAGE sql
+    AS $$
+SELECT state_cids.node_type = 3
+FROM eth.state_cids
+         INNER JOIN eth.header_cids ON (state_cids.header_id = header_cids.block_hash)
+WHERE state_leaf_key = key
+  AND state_cids.block_number <= blockNo
+ORDER BY state_cids.block_number DESC LIMIT 1;
+$$;
+
+
+--
 -- Name: access_list_elements; Type: TABLE; Schema: eth; Owner: -
 --
 
@@ -422,6 +497,7 @@ CREATE TABLE eth.access_list_elements (
 
 CREATE TABLE eth.log_cids (
     block_number bigint NOT NULL,
+    header_id character varying(66) NOT NULL,
     leaf_cid text NOT NULL,
     leaf_mh_key text NOT NULL,
     rct_id character varying(66) NOT NULL,
@@ -441,6 +517,7 @@ CREATE TABLE eth.log_cids (
 
 CREATE TABLE eth.receipt_cids (
     block_number bigint NOT NULL,
+    header_id character varying(66) NOT NULL,
     tx_id character varying(66) NOT NULL,
     leaf_cid text NOT NULL,
     contract character varying(66),
@@ -675,7 +752,7 @@ ALTER TABLE ONLY eth.header_cids
 --
 
 ALTER TABLE ONLY eth.log_cids
-    ADD CONSTRAINT log_cids_pkey PRIMARY KEY (rct_id, index, block_number);
+    ADD CONSTRAINT log_cids_pkey PRIMARY KEY (rct_id, index, header_id, block_number);
 
 
 --
@@ -683,7 +760,7 @@ ALTER TABLE ONLY eth.log_cids
 --
 
 ALTER TABLE ONLY eth.receipt_cids
-    ADD CONSTRAINT receipt_cids_pkey PRIMARY KEY (tx_id, block_number);
+    ADD CONSTRAINT receipt_cids_pkey PRIMARY KEY (tx_id, header_id, block_number);
 
 
 --
@@ -715,7 +792,7 @@ ALTER TABLE ONLY eth.storage_cids
 --
 
 ALTER TABLE ONLY eth.transaction_cids
-    ADD CONSTRAINT transaction_cids_pkey PRIMARY KEY (tx_hash, block_number);
+    ADD CONSTRAINT transaction_cids_pkey PRIMARY KEY (tx_hash, header_id, block_number);
 
 
 --
@@ -859,6 +936,13 @@ CREATE INDEX log_cid_index ON eth.log_cids USING btree (leaf_cid);
 
 
 --
+-- Name: log_header_id_index; Type: INDEX; Schema: eth; Owner: -
+--
+
+CREATE INDEX log_header_id_index ON eth.log_cids USING btree (header_id);
+
+
+--
 -- Name: log_leaf_mh_block_number_index; Type: INDEX; Schema: eth; Owner: -
 --
 
@@ -912,6 +996,13 @@ CREATE INDEX rct_contract_hash_index ON eth.receipt_cids USING btree (contract_h
 --
 
 CREATE INDEX rct_contract_index ON eth.receipt_cids USING btree (contract);
+
+
+--
+-- Name: rct_header_id_index; Type: INDEX; Schema: eth; Owner: -
+--
+
+CREATE INDEX rct_header_id_index ON eth.receipt_cids USING btree (header_id);
 
 
 --
@@ -1044,7 +1135,7 @@ CREATE INDEX tx_block_number_index ON eth.transaction_cids USING brin (block_num
 -- Name: tx_cid_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE UNIQUE INDEX tx_cid_index ON eth.transaction_cids USING btree (cid, block_number);
+CREATE INDEX tx_cid_index ON eth.transaction_cids USING btree (cid, block_number);
 
 
 --
@@ -1065,7 +1156,7 @@ CREATE INDEX tx_header_id_index ON eth.transaction_cids USING btree (header_id);
 -- Name: tx_mh_block_number_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE UNIQUE INDEX tx_mh_block_number_index ON eth.transaction_cids USING btree (mh_key, block_number);
+CREATE INDEX tx_mh_block_number_index ON eth.transaction_cids USING btree (mh_key, block_number);
 
 
 --
