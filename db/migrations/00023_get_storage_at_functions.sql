@@ -1,6 +1,6 @@
 -- +goose Up
 -- +goose StatementBegin
-CREATE OR REPLACE FUNCTION was_state_leaf_removed_by_number(key character varying, blockNo bigint)
+CREATE OR REPLACE FUNCTION public.was_state_leaf_removed_by_number(key character varying, blockNo bigint)
     RETURNS boolean AS $$
 SELECT state_cids.node_type = 3
 FROM eth.state_cids
@@ -11,7 +11,7 @@ ORDER BY state_cids.block_number DESC LIMIT 1;
 $$
 language sql;
 
-CREATE OR REPLACE FUNCTION get_storage_at_by_number(stateLeafKey text, storageLeafKey text, blockNo bigint)
+CREATE OR REPLACE FUNCTION public.get_storage_at_by_number(stateLeafKey text, storageLeafKey text, blockNo bigint)
     RETURNS TABLE(cid text, mh_key text, block_number bigint, node_type integer, state_leaf_removed bool) LANGUAGE plpgsql
 AS $$
 BEGIN
@@ -46,7 +46,7 @@ BEGIN
 END
 $$;
 
-CREATE OR REPLACE FUNCTION get_storage_at_by_hash(stateLeafKey text, storageLeafKey text, blockHash text)
+CREATE OR REPLACE FUNCTION public.get_storage_at_by_hash(stateLeafKey text, storageLeafKey text, blockHash text)
     RETURNS TABLE(cid text, mh_key text, block_number bigint, node_type integer, state_leaf_removed bool) LANGUAGE plpgsql
 AS $$
 DECLARE
@@ -63,7 +63,7 @@ $$;
 
 -- +goose Down
 -- +goose StatementBegin
-DROP FUNCTION was_state_leaf_removed_by_number;
-DROP FUNCTION get_storage_at_by_number;
-DROP FUNCTION get_storage_at_by_hash;
+DROP FUNCTION public.was_state_leaf_removed_by_number;
+DROP FUNCTION public.get_storage_at_by_number;
+DROP FUNCTION public.get_storage_at_by_hash;
 -- +goose StatementEnd
