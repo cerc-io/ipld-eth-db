@@ -73,12 +73,12 @@ BEGIN
     into temp_header, temp_canonical_header, blockNo
     from tmp_tt_stg2;
     IF temp_header IS NOT NULL AND temp_header != temp_canonical_header THEN
-        raise notice 'get_storage_at_by_number (% is NULL OR % != %), falling back to full check.', temp_header, temp_header, temp_canonical_header;
+        raise notice 'get_storage_at_by_number: chosen header % != canonical header % for block number %, trying again.', temp_header, temp_canonical_header, blockNo;
         TRUNCATE tmp_tt_stg2;
-        -- There is a slim chance of a false negative, if there is a common state_path at a lower height than we picked above,
-        -- or a different one at the same height.  The disadvantage is that this is very uncommon, and the join on
-        -- STORAGE_CIDS.STATE_PATH = STATE_CIDS.STATE_PATH is quite expensive when there are a lot of candidate rows,
-        -- so we wish to avoid this more expensive check when possible.
+        -- If we chose a non-canonical block, we need to go back and get the right one.  While we could do this in one
+        -- query if we wanted, the disadvantage would be that it is very uncommon, while the join on
+        -- STORAGE_CIDS.STATE_PATH = STATE_CIDS.STATE_PATH is quite expensive whenever there are a lot of candidate rows,
+        -- so we wish to avoid that more expensive check when possible.
         INSERT INTO tmp_tt_stg2
         SELECT STORAGE_CIDS.HEADER_ID,
                STORAGE_CIDS.CID,
