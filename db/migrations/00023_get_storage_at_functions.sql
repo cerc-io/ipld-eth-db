@@ -11,7 +11,7 @@ ORDER BY state_cids.block_number DESC LIMIT 1;
 $$
 language sql;
 
-CREATE OR REPLACE FUNCTION public.get_storage_at_by_number(stateLeafKey text, storageLeafKey text, blockNo bigint)
+CREATE OR REPLACE FUNCTION public.test_get_storage_at_by_number(stateLeafKey text, storageLeafKey text, blockNo bigint)
     RETURNS TABLE
             (
                 cid                text,
@@ -69,10 +69,10 @@ BEGIN
     ORDER BY state_cids.block_number DESC
     LIMIT 1;
 
-    SELECT header_id, canonical_header_hash(tmp_tt_stg2.block_number)
-    into temp_header, temp_canonical_header
+    SELECT header_id, canonical_header_hash(tmp_tt_stg2.block_number), tmp_tt_stg2.block_number
+    into temp_header, temp_canonical_header, blockNo
     from tmp_tt_stg2;
-    IF temp_header IS NULL OR temp_header != temp_canonical_header THEN
+    IF temp_header IS NOT NULL AND temp_header != temp_canonical_header THEN
         raise notice 'get_storage_at_by_number (% is NULL OR % != %), falling back to full check.', temp_header, temp_header, temp_canonical_header;
         TRUNCATE tmp_tt_stg2;
         -- There is a slim chance of a false negative, if there is a common state_path at a lower height than we picked above,
@@ -100,15 +100,14 @@ BEGIN
                 AND STATE_CIDS.BLOCK_NUMBER = HEADER_CIDS.BLOCK_NUMBER
             )
         WHERE STATE_LEAF_KEY = stateLeafKey
-          AND STATE_CIDS.BLOCK_NUMBER <= blockNo
+          AND STATE_CIDS.BLOCK_NUMBER = blockNo
           AND STORAGE_LEAF_KEY = storageLeafKey
-          AND STORAGE_CIDS.BLOCK_NUMBER <= blockNo
-          AND HEADER_CIDS.BLOCK_NUMBER <= blockNo
-          AND HEADER_CIDS.BLOCK_HASH = (SELECT CANONICAL_HEADER_HASH(HEADER_CIDS.BLOCK_NUMBER))
+          AND STORAGE_CIDS.BLOCK_NUMBER = blockNo
+          AND HEADER_CIDS.BLOCK_NUMBER = blockNo
+          AND HEADER_CIDS.BLOCK_HASH = temp_canonical_header
         ORDER BY HEADER_CIDS.BLOCK_NUMBER DESC
         LIMIT 1;
     END IF;
-
 
     RETURN QUERY SELECT t.cid, t.mh_key, t.block_number, t.node_type, t.state_leaf_removed from tmp_tt_stg2 as t;
 END
