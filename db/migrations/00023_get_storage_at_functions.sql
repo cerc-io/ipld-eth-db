@@ -11,7 +11,7 @@ ORDER BY state_cids.block_number DESC LIMIT 1;
 $$
 language sql;
 
-CREATE OR REPLACE FUNCTION public.test_get_storage_at_by_number(stateLeafKey text, storageLeafKey text, blockNo bigint)
+CREATE OR REPLACE FUNCTION public.get_storage_at_by_number(stateLeafKey text, storageLeafKey text, blockNo bigint)
     RETURNS TABLE
             (
                 cid                text,
