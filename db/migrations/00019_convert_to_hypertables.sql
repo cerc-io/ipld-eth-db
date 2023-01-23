@@ -6,7 +6,6 @@ SELECT create_hypertable('eth.transaction_cids', 'block_number', migrate_data =>
 SELECT create_hypertable('eth.receipt_cids', 'block_number', migrate_data => true, chunk_time_interval => 32768);
 SELECT create_hypertable('eth.state_cids', 'block_number', migrate_data => true, chunk_time_interval => 32768);
 SELECT create_hypertable('eth.storage_cids', 'block_number', migrate_data => true, chunk_time_interval => 32768);
-SELECT create_hypertable('eth.state_accounts', 'block_number', migrate_data => true, chunk_time_interval => 32768);
 SELECT create_hypertable('eth.access_list_elements', 'block_number', migrate_data => true, chunk_time_interval => 32768);
 SELECT create_hypertable('eth.log_cids', 'block_number', migrate_data => true, chunk_time_interval => 32768);
 
@@ -22,7 +21,6 @@ INSERT INTO public.db_version (singleton, version) VALUES (true, 'v4.0.0')
 -- create new regular tables
 CREATE TABLE eth.log_cids_i (LIKE eth.log_cids INCLUDING ALL);
 CREATE TABLE eth.access_list_elements_i (LIKE eth.access_list_elements INCLUDING ALL);
-CREATE TABLE eth.state_accounts_i (LIKE eth.state_accounts INCLUDING ALL);
 CREATE TABLE eth.storage_cids_i (LIKE eth.storage_cids INCLUDING ALL);
 CREATE TABLE eth.state_cids_i (LIKE eth.state_cids INCLUDING ALL);
 CREATE TABLE eth.receipt_cids_i (LIKE eth.receipt_cids INCLUDING ALL);
@@ -34,7 +32,6 @@ CREATE TABLE public.blocks_i (LIKE public.blocks INCLUDING ALL);
 -- migrate data
 INSERT INTO eth.log_cids_i (SELECT * FROM eth.log_cids);
 INSERT INTO eth.access_list_elements_i (SELECT * FROM eth.access_list_elements);
-INSERT INTO eth.state_accounts_i (SELECT * FROM eth.state_accounts);
 INSERT INTO eth.storage_cids_i (SELECT * FROM eth.storage_cids);
 INSERT INTO eth.state_cids_i (SELECT * FROM eth.state_cids);
 INSERT INTO eth.receipt_cids_i (SELECT * FROM eth.receipt_cids);
@@ -46,7 +43,6 @@ INSERT INTO public.blocks_i (SELECT * FROM public.blocks);
 -- drop hypertables
 DROP TABLE eth.log_cids;
 DROP TABLE eth.access_list_elements;
-DROP TABLE eth.state_accounts;
 DROP TABLE eth.storage_cids;
 DROP TABLE eth.state_cids;
 DROP TABLE eth.receipt_cids;
@@ -58,7 +54,6 @@ DROP TABLE public.blocks;
 -- rename new tables
 ALTER TABLE eth.log_cids_i RENAME TO log_cids;
 ALTER TABLE eth.access_list_elements_i RENAME TO access_list_elements;
-ALTER TABLE eth.state_accounts_i RENAME TO state_accounts;
 ALTER TABLE eth.storage_cids_i RENAME TO storage_cids;
 ALTER TABLE eth.state_cids_i RENAME TO state_cids;
 ALTER TABLE eth.receipt_cids_i RENAME TO receipt_cids;

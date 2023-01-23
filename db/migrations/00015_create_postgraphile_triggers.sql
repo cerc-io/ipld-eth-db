@@ -6,7 +6,7 @@ CREATE FUNCTION eth.graphql_subscription() RETURNS TRIGGER AS $$
 DECLARE
 obj jsonb;
 BEGIN
-    IF (TG_TABLE_NAME = 'state_cids') OR (TG_TABLE_NAME = 'state_accounts') THEN
+    IF (TG_TABLE_NAME = 'state_cids') THEN
              obj := json_build_array(
                         TG_TABLE_NAME,
                         NEW.header_id,

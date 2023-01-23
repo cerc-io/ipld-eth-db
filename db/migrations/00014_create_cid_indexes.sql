@@ -30,25 +30,18 @@ CREATE INDEX rct_contract_hash_index ON eth.receipt_cids USING btree (contract_h
 
 -- state node indexes
 CREATE INDEX state_block_number_index ON eth.state_cids USING brin (block_number);
-CREATE INDEX state_leaf_key_index ON eth.state_cids USING btree (state_leaf_key);
 CREATE INDEX state_cid_index ON eth.state_cids USING btree (cid);
 CREATE INDEX state_mh_block_number_index ON eth.state_cids USING btree (mh_key, block_number);
 CREATE INDEX state_header_id_index ON eth.state_cids USING btree (header_id);
-CREATE INDEX state_node_type_index ON eth.state_cids USING btree (node_type);
+CREATE INDEX state_path_index ON eth.state_cids USING btree (state_path);
 
 -- storage node indexes
 CREATE INDEX storage_block_number_index ON eth.storage_cids USING brin (block_number);
-CREATE INDEX storage_state_path_index ON eth.storage_cids USING btree (state_path);
-CREATE INDEX storage_leaf_key_index ON eth.storage_cids USING btree (storage_leaf_key);
+CREATE INDEX storage_state_leaf_key_index ON eth.storage_cids USING btree (state_leaf_key);
 CREATE INDEX storage_cid_index ON eth.storage_cids USING btree (cid);
 CREATE INDEX storage_mh_block_number_index ON eth.storage_cids USING btree (mh_key, block_number);
 CREATE INDEX storage_header_id_index ON eth.storage_cids USING btree (header_id);
-CREATE INDEX storage_node_type_index ON eth.storage_cids USING btree (node_type);
-
--- state accounts indexes
-CREATE INDEX account_block_number_index ON eth.state_accounts USING brin (block_number);
-CREATE INDEX account_header_id_index ON eth.state_accounts USING btree (header_id);
-CREATE INDEX account_storage_root_index ON eth.state_accounts USING btree (storage_root);
+CREATE INDEX storage_path_index ON eth.storage_cids USING btree (state_path);
 
 -- access list indexes
 CREATE INDEX access_list_block_number_index ON eth.access_list_elements USING brin (block_number);
@@ -85,26 +78,20 @@ DROP INDEX eth.access_list_storage_keys_index;
 DROP INDEX eth.access_list_element_address_index;
 DROP INDEX eth.access_list_block_number_index;
 
--- state account indexes
-DROP INDEX eth.account_storage_root_index;
-DROP index eth.account_header_id_index;
-DROP INDEX eth.account_block_number_index;
-
 -- storage node indexes
-DROP INDEX eth.storage_node_type_index;
+DROP INDEX eth.storage_path_index;
 DROP INDEX eth.storage_header_id_index;
 DROP INDEX eth.storage_mh_block_number_index;
 DROP INDEX eth.storage_cid_index;
 DROP INDEX eth.storage_leaf_key_index;
-DROP INDEX eth.storage_state_path_index;
+DROP INDEX eth.storage_state_leaf_key_index;
 DROP INDEX eth.storage_block_number_index;
 
 -- state node indexes
-DROP INDEX eth.state_node_type_index;
+DROP INDEX eth.state_path_index;
 DROP INDEX eth.state_header_id_index;
 DROP INDEX eth.state_mh_block_number_index;
 DROP INDEX eth.state_cid_index;
-DROP INDEX eth.state_leaf_key_index;
 DROP INDEX eth.state_block_number_index;
 
 -- receipt indexes
