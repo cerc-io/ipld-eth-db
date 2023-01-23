@@ -34,6 +34,8 @@ CREATE INDEX state_cid_index ON eth.state_cids USING btree (cid);
 CREATE INDEX state_mh_block_number_index ON eth.state_cids USING btree (mh_key, block_number);
 CREATE INDEX state_header_id_index ON eth.state_cids USING btree (header_id);
 CREATE INDEX state_path_index ON eth.state_cids USING btree (state_path);
+CREATE INDEX state_removed_index ON eth.state_cids USING btree (removed);
+CREATE INDEX state_code_hash_index ON eth.state_cids USING btree (code_hash); -- could be useful for e.g. selecting all the state accounts with the same contract bytecode deployed
 
 -- storage node indexes
 CREATE INDEX storage_block_number_index ON eth.storage_cids USING brin (block_number);
@@ -42,6 +44,7 @@ CREATE INDEX storage_cid_index ON eth.storage_cids USING btree (cid);
 CREATE INDEX storage_mh_block_number_index ON eth.storage_cids USING btree (mh_key, block_number);
 CREATE INDEX storage_header_id_index ON eth.storage_cids USING btree (header_id);
 CREATE INDEX storage_path_index ON eth.storage_cids USING btree (state_path);
+CREATE INDEX storage_removed_index ON eth.storage_cids USING btree (removed);
 
 -- access list indexes
 CREATE INDEX access_list_block_number_index ON eth.access_list_elements USING brin (block_number);
@@ -79,6 +82,7 @@ DROP INDEX eth.access_list_element_address_index;
 DROP INDEX eth.access_list_block_number_index;
 
 -- storage node indexes
+DROP INDEX eth.storage_removed_index;
 DROP INDEX eth.storage_path_index;
 DROP INDEX eth.storage_header_id_index;
 DROP INDEX eth.storage_mh_block_number_index;
@@ -88,6 +92,8 @@ DROP INDEX eth.storage_state_leaf_key_index;
 DROP INDEX eth.storage_block_number_index;
 
 -- state node indexes
+DROP INDEX eth.state_code_hash_index;
+DROP INDEX eth.state_removed_index;
 DROP INDEX eth.state_path_index;
 DROP INDEX eth.state_header_id_index;
 DROP INDEX eth.state_mh_block_number_index;

@@ -7,10 +7,11 @@ CREATE TABLE IF NOT EXISTS eth.state_cids (
     state_path            BYTEA NOT NULL,
     diff                  BOOLEAN NOT NULL DEFAULT FALSE,
     mh_key                TEXT NOT NULL,
-    balance               NUMERIC NOT NULL,
-    nonce                 BIGINT NOT NULL,
-    code_hash             VARCHAR(66) NOT NULL,
-    storage_root          VARCHAR(66) NOT NULL,
+    balance               NUMERIC,      -- NULL if "removed"
+    nonce                 BIGINT,       -- NULL if "removed"
+    code_hash             VARCHAR(66),  -- NULL if "removed"
+    storage_root          VARCHAR(66),  -- NULL if "removed"
+    removed               BOOLEAN NOT NULL,
     PRIMARY KEY (state_leaf_key, header_id, block_number)
 );
 

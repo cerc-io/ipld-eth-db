@@ -8,6 +8,8 @@ CREATE TABLE IF NOT EXISTS eth.storage_cids (
     storage_path          BYTEA NOT NULL,
     diff                  BOOLEAN NOT NULL DEFAULT FALSE,
     mh_key                TEXT NOT NULL,
+    val                   BYTEA,  -- NULL if "removed"
+    removed               BOOLEAN NOT NULL,
     PRIMARY KEY (storage_leaf_key, state_leaf_key, header_id, block_number)
 );
 
