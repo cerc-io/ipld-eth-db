@@ -3,7 +3,7 @@
 -- returns if a state leaf node was removed within the provided block number
 CREATE OR REPLACE FUNCTION was_state_leaf_removed(key character varying, hash character varying)
     RETURNS boolean AS $$
-    SELECT state_cids.node_type = 3
+    SELECT state_cids.removed = true
     FROM eth.state_cids
              INNER JOIN eth.header_cids ON (state_cids.header_id = header_cids.block_hash)
     WHERE state_leaf_key = key
@@ -130,117 +130,7 @@ $BODY$
 LANGUAGE 'plpgsql';
 -- +goose StatementEnd
 
--- +goose StatementBegin
-CREATE TYPE state_node_result AS (
-    data                  BYTEA,
-    state_leaf_key        VARCHAR(66),
-    cid                   TEXT,
-    state_path            BYTEA,
-    node_type             INTEGER,
-    mh_key                TEXT
-);
--- +goose StatementEnd
-
--- +goose StatementBegin
-CREATE OR REPLACE FUNCTION state_snapshot(starting_height BIGINT, ending_height BIGINT) RETURNS void AS
-$BODY$
-DECLARE
-    canonical_hash VARCHAR(66);
-    results state_node_result[];
-BEGIN
-    -- get the canonical hash for the header at ending_height
-    canonical_hash = canonical_header_hash(ending_height);
-    IF canonical_hash IS NULL THEN
-        RAISE EXCEPTION 'cannot create state snapshot, no header can be found at height %', ending_height;
-    END IF;
-
-    -- select all of the state nodes for this snapshot: the latest state node record at every unique path
-    SELECT ARRAY (SELECT DISTINCT ON (state_path) ROW (blocks.data, state_cids.state_leaf_key, state_cids.cid, state_cids.state_path,
-        state_cids.node_type, state_cids.mh_key)
-    FROM eth.state_cids
-        INNER JOIN public.blocks
-            ON (state_cids.mh_key, state_cids.block_number) = (blocks.key, blocks.block_number)
-    WHERE state_cids.block_number BETWEEN starting_height AND ending_height
-    ORDER BY state_path, state_cids.block_number DESC)
-    INTO results;
-
-    -- from the set returned above, insert public.block records at the ending_height block number
-    INSERT INTO public.blocks (block_number, key, data)
-    SELECT ending_height, r.mh_key, r.data
-    FROM unnest(results) r;
-
-    -- from the set returned above, insert eth.state_cids records at the ending_height block number
-    -- anchoring all the records to the canonical header found at ending_height
-    INSERT INTO eth.state_cids (block_number, header_id, state_leaf_key, cid, state_path, node_type, diff, mh_key)
-    SELECT ending_height, canonical_hash, r.state_leaf_key, r.cid, r.state_path, r.node_type, false, r.mh_key
-    FROM unnest(results) r
-    ON CONFLICT (state_path, header_id, block_number) DO NOTHING;
-END
-$BODY$
-LANGUAGE 'plpgsql';
--- +goose StatementEnd
-
--- +goose StatementBegin
-CREATE TYPE storage_node_result AS (
-    data                  BYTEA,
-    state_path            BYTEA,
-    storage_leaf_key      VARCHAR(66),
-    cid                   TEXT,
-    storage_path          BYTEA,
-    node_type             INTEGER,
-    mh_key                TEXT
-);
--- +goose StatementEnd
-
--- +goose StatementBegin
--- this should only be ran after a state_snapshot has been completed
--- this should probably be rolled together with state_snapshot into a single procedure...
-CREATE OR REPLACE FUNCTION storage_snapshot(starting_height BIGINT, ending_height BIGINT) RETURNS void AS
-$BODY$
-DECLARE
-    canonical_hash VARCHAR(66);
-    results storage_node_result[];
-BEGIN
-    -- get the canonical hash for the header at ending_height
-    SELECT canonical_header_hash(ending_height) INTO canonical_hash;
-    IF canonical_hash IS NULL THEN
-        RAISE EXCEPTION 'cannot create state snapshot, no header can be found at height %', ending_height;
-    END IF;
-
-    -- select all of the storage nodes for this snapshot: the latest storage node record at every unique state leaf key
-    SELECT ARRAY (SELECT DISTINCT ON (state_leaf_key, storage_path) ROW (blocks.data, storage_cids.state_path, storage_cids.storage_leaf_key,
-     storage_cids.cid, storage_cids.storage_path, storage_cids.node_type, storage_cids.mh_key)
-    FROM eth.storage_cids
-        INNER JOIN public.blocks
-        ON (storage_cids.mh_key, storage_cids.block_number) = (blocks.key, blocks.block_number)
-        INNER JOIN eth.state_cids
-        ON (storage_cids.state_path, storage_cids.header_id) = (state_cids.state_path, state_cids.header_id)
-    WHERE storage_cids.block_number BETWEEN starting_height AND ending_height
-    ORDER BY state_leaf_key, storage_path, storage_cids.state_path, storage_cids.block_number DESC)
-    INTO results;
-
-    -- from the set returned above, insert public.block records at the ending_height block number
-    INSERT INTO public.blocks (block_number, key, data)
-    SELECT ending_height, r.mh_key, r.data
-    FROM unnest(results) r;
-
-    -- from the set returned above, insert eth.state_cids records at the ending_height block number
-    -- anchoring all the records to the canonical header found at ending_height
-    INSERT INTO eth.storage_cids (block_number, header_id, state_path, storage_leaf_key, cid, storage_path,
-                              node_type, diff, mh_key)
-    SELECT ending_height, canonical_hash, r.state_path, r.storage_leaf_key, r.cid, r.storage_path, r.node_type, false, r.mh_key
-    FROM unnest(results) r
-    ON CONFLICT (storage_path, state_path, header_id, block_number) DO NOTHING;
-END
-$BODY$
-LANGUAGE 'plpgsql';
--- +goose StatementEnd
-
 -- +goose Down
-DROP FUNCTION storage_snapshot;
-DROP TYPE storage_node_result;
-DROP FUNCTION state_snapshot;
-DROP TYPE state_node_result;
 DROP FUNCTION was_state_leaf_removed;
 DROP FUNCTION canonical_header_hash;
 DROP FUNCTION canonical_header_from_array;
