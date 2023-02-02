@@ -43,7 +43,7 @@ CREATE INDEX storage_state_leaf_key_index ON eth.storage_cids USING btree (state
 CREATE INDEX storage_cid_index ON eth.storage_cids USING btree (cid);
 CREATE INDEX storage_mh_block_number_index ON eth.storage_cids USING btree (mh_key, block_number);
 CREATE INDEX storage_header_id_index ON eth.storage_cids USING btree (header_id);
-CREATE INDEX storage_path_index ON eth.storage_cids USING btree (state_path);
+CREATE INDEX storage_path_index ON eth.storage_cids USING btree (storage_path);
 CREATE INDEX storage_removed_index ON eth.storage_cids USING btree (removed);
 
 -- access list indexes
