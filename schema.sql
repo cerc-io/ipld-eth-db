@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 14.2
--- Dumped by pg_dump version 14.2
+-- Dumped from database version 14.6
+-- Dumped by pg_dump version 14.6
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -58,7 +58,7 @@ CREATE TABLE eth.header_cids (
     parent_hash character varying(66) NOT NULL,
     cid text NOT NULL,
     td numeric NOT NULL,
-    node_id character varying(128) NOT NULL,
+    node_ids character varying(128)[] NOT NULL,
     reward numeric NOT NULL,
     state_root character varying(66) NOT NULL,
     tx_root character varying(66) NOT NULL,
@@ -80,10 +80,10 @@ COMMENT ON TABLE eth.header_cids IS '@name EthHeaderCids';
 
 
 --
--- Name: COLUMN header_cids.node_id; Type: COMMENT; Schema: eth; Owner: -
+-- Name: COLUMN header_cids.node_ids; Type: COMMENT; Schema: eth; Owner: -
 --
 
-COMMENT ON COLUMN eth.header_cids.node_id IS '@name EthNodeID';
+COMMENT ON COLUMN eth.header_cids.node_ids IS '@name EthNodeIDs';
 
 
 --
@@ -97,35 +97,6 @@ CREATE TYPE public.child_result AS (
 
 
 --
--- Name: state_node_result; Type: TYPE; Schema: public; Owner: -
---
-
-CREATE TYPE public.state_node_result AS (
-	data bytea,
-	state_leaf_key character varying(66),
-	cid text,
-	state_path bytea,
-	node_type integer,
-	mh_key text
-);
-
-
---
--- Name: storage_node_result; Type: TYPE; Schema: public; Owner: -
---
-
-CREATE TYPE public.storage_node_result AS (
-	data bytea,
-	state_path bytea,
-	storage_leaf_key character varying(66),
-	cid text,
-	storage_path bytea,
-	node_type integer,
-	mh_key text
-);
-
-
---
 -- Name: graphql_subscription(); Type: FUNCTION; Schema: eth; Owner: -
 --
 
@@ -135,7 +106,7 @@ CREATE FUNCTION eth.graphql_subscription() RETURNS trigger
 DECLARE
 obj jsonb;
 BEGIN
-    IF (TG_TABLE_NAME = 'state_cids') OR (TG_TABLE_NAME = 'state_accounts') THEN
+    IF (TG_TABLE_NAME = 'state_cids') THEN
              obj := json_build_array(
                         TG_TABLE_NAME,
                         NEW.header_id,
@@ -308,94 +279,13 @@ $$;
 
 
 --
--- Name: state_snapshot(bigint, bigint); Type: FUNCTION; Schema: public; Owner: -
---
-
-CREATE FUNCTION public.state_snapshot(starting_height bigint, ending_height bigint) RETURNS void
-    LANGUAGE plpgsql
-    AS $$
-DECLARE
-    canonical_hash VARCHAR(66);
-    results state_node_result[];
-BEGIN
-    -- get the canonical hash for the header at ending_height
-    canonical_hash = canonical_header_hash(ending_height);
-    IF canonical_hash IS NULL THEN
-        RAISE EXCEPTION 'cannot create state snapshot, no header can be found at height %', ending_height;
-    END IF;
-    -- select all of the state nodes for this snapshot: the latest state node record at every unique path
-    SELECT ARRAY (SELECT DISTINCT ON (state_path) ROW (blocks.data, state_cids.state_leaf_key, state_cids.cid, state_cids.state_path,
-        state_cids.node_type, state_cids.mh_key)
-    FROM eth.state_cids
-        INNER JOIN public.blocks
-            ON (state_cids.mh_key, state_cids.block_number) = (blocks.key, blocks.block_number)
-    WHERE state_cids.block_number BETWEEN starting_height AND ending_height
-    ORDER BY state_path, state_cids.block_number DESC)
-    INTO results;
-    -- from the set returned above, insert public.block records at the ending_height block number
-    INSERT INTO public.blocks (block_number, key, data)
-    SELECT ending_height, r.mh_key, r.data
-    FROM unnest(results) r;
-    -- from the set returned above, insert eth.state_cids records at the ending_height block number
-    -- anchoring all the records to the canonical header found at ending_height
-    INSERT INTO eth.state_cids (block_number, header_id, state_leaf_key, cid, state_path, node_type, diff, mh_key)
-    SELECT ending_height, canonical_hash, r.state_leaf_key, r.cid, r.state_path, r.node_type, false, r.mh_key
-    FROM unnest(results) r
-    ON CONFLICT (state_path, header_id, block_number) DO NOTHING;
-END
-$$;
-
-
---
--- Name: storage_snapshot(bigint, bigint); Type: FUNCTION; Schema: public; Owner: -
---
-
-CREATE FUNCTION public.storage_snapshot(starting_height bigint, ending_height bigint) RETURNS void
-    LANGUAGE plpgsql
-    AS $$
-DECLARE
-    canonical_hash VARCHAR(66);
-    results storage_node_result[];
-BEGIN
-    -- get the canonical hash for the header at ending_height
-    SELECT canonical_header_hash(ending_height) INTO canonical_hash;
-    IF canonical_hash IS NULL THEN
-        RAISE EXCEPTION 'cannot create state snapshot, no header can be found at height %', ending_height;
-    END IF;
-    -- select all of the storage nodes for this snapshot: the latest storage node record at every unique state leaf key
-    SELECT ARRAY (SELECT DISTINCT ON (state_leaf_key, storage_path) ROW (blocks.data, storage_cids.state_path, storage_cids.storage_leaf_key,
-     storage_cids.cid, storage_cids.storage_path, storage_cids.node_type, storage_cids.mh_key)
-    FROM eth.storage_cids
-        INNER JOIN public.blocks
-        ON (storage_cids.mh_key, storage_cids.block_number) = (blocks.key, blocks.block_number)
-        INNER JOIN eth.state_cids
-        ON (storage_cids.state_path, storage_cids.header_id) = (state_cids.state_path, state_cids.header_id)
-    WHERE storage_cids.block_number BETWEEN starting_height AND ending_height
-    ORDER BY state_leaf_key, storage_path, storage_cids.state_path, storage_cids.block_number DESC)
-    INTO results;
-    -- from the set returned above, insert public.block records at the ending_height block number
-    INSERT INTO public.blocks (block_number, key, data)
-    SELECT ending_height, r.mh_key, r.data
-    FROM unnest(results) r;
-    -- from the set returned above, insert eth.state_cids records at the ending_height block number
-    -- anchoring all the records to the canonical header found at ending_height
-    INSERT INTO eth.storage_cids (block_number, header_id, state_path, storage_leaf_key, cid, storage_path,
-                              node_type, diff, mh_key)
-    SELECT ending_height, canonical_hash, r.state_path, r.storage_leaf_key, r.cid, r.storage_path, r.node_type, false, r.mh_key
-    FROM unnest(results) r
-    ON CONFLICT (storage_path, state_path, header_id, block_number) DO NOTHING;
-END
-$$;
-
-
---
 -- Name: was_state_leaf_removed(character varying, character varying); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.was_state_leaf_removed(key character varying, hash character varying) RETURNS boolean
     LANGUAGE sql
     AS $$
-    SELECT state_cids.node_type = 3
+    SELECT state_cids.removed = true
     FROM eth.state_cids
              INNER JOIN eth.header_cids ON (state_cids.header_id = header_cids.block_hash)
     WHERE state_leaf_key = key
@@ -468,33 +358,22 @@ CREATE TABLE eth.receipt_cids (
 
 
 --
--- Name: state_accounts; Type: TABLE; Schema: eth; Owner: -
---
-
-CREATE TABLE eth.state_accounts (
-    block_number bigint NOT NULL,
-    header_id character varying(66) NOT NULL,
-    state_path bytea NOT NULL,
-    balance numeric NOT NULL,
-    nonce bigint NOT NULL,
-    code_hash character varying(66) NOT NULL,
-    storage_root character varying(66) NOT NULL
-);
-
-
---
 -- Name: state_cids; Type: TABLE; Schema: eth; Owner: -
 --
 
 CREATE TABLE eth.state_cids (
     block_number bigint NOT NULL,
     header_id character varying(66) NOT NULL,
-    state_leaf_key character varying(66),
+    state_leaf_key character varying(66) NOT NULL,
     cid text NOT NULL,
     state_path bytea NOT NULL,
-    node_type integer NOT NULL,
     diff boolean DEFAULT false NOT NULL,
-    mh_key text NOT NULL
+    mh_key text NOT NULL,
+    balance numeric,
+    nonce bigint,
+    code_hash character varying(66),
+    storage_root character varying(66),
+    removed boolean NOT NULL
 );
 
 
@@ -505,13 +384,14 @@ CREATE TABLE eth.state_cids (
 CREATE TABLE eth.storage_cids (
     block_number bigint NOT NULL,
     header_id character varying(66) NOT NULL,
-    state_path bytea NOT NULL,
-    storage_leaf_key character varying(66),
+    state_leaf_key character varying(66) NOT NULL,
+    storage_leaf_key character varying(66) NOT NULL,
     cid text NOT NULL,
     storage_path bytea NOT NULL,
-    node_type integer NOT NULL,
     diff boolean DEFAULT false NOT NULL,
-    mh_key text NOT NULL
+    mh_key text NOT NULL,
+    val bytea,
+    removed boolean NOT NULL
 );
 
 
@@ -827,19 +707,11 @@ ALTER TABLE ONLY eth.receipt_cids
 
 
 --
--- Name: state_accounts state_accounts_pkey; Type: CONSTRAINT; Schema: eth; Owner: -
---
-
-ALTER TABLE ONLY eth.state_accounts
-    ADD CONSTRAINT state_accounts_pkey PRIMARY KEY (state_path, header_id, block_number);
-
-
---
 -- Name: state_cids state_cids_pkey; Type: CONSTRAINT; Schema: eth; Owner: -
 --
 
 ALTER TABLE ONLY eth.state_cids
-    ADD CONSTRAINT state_cids_pkey PRIMARY KEY (state_path, header_id, block_number);
+    ADD CONSTRAINT state_cids_pkey PRIMARY KEY (state_leaf_key, header_id, block_number);
 
 
 --
@@ -847,7 +719,7 @@ ALTER TABLE ONLY eth.state_cids
 --
 
 ALTER TABLE ONLY eth.storage_cids
-    ADD CONSTRAINT storage_cids_pkey PRIMARY KEY (storage_path, state_path, header_id, block_number);
+    ADD CONSTRAINT storage_cids_pkey PRIMARY KEY (storage_leaf_key, state_leaf_key, header_id, block_number);
 
 
 --
@@ -925,27 +797,6 @@ CREATE INDEX access_list_element_address_index ON eth.access_list_elements USING
 --
 
 CREATE INDEX access_list_storage_keys_index ON eth.access_list_elements USING gin (storage_keys);
-
-
---
--- Name: account_block_number_index; Type: INDEX; Schema: eth; Owner: -
---
-
-CREATE INDEX account_block_number_index ON eth.state_accounts USING brin (block_number);
-
-
---
--- Name: account_header_id_index; Type: INDEX; Schema: eth; Owner: -
---
-
-CREATE INDEX account_header_id_index ON eth.state_accounts USING btree (header_id);
-
-
---
--- Name: account_storage_root_index; Type: INDEX; Schema: eth; Owner: -
---
-
-CREATE INDEX account_storage_root_index ON eth.state_accounts USING btree (storage_root);
 
 
 --
@@ -1096,17 +947,17 @@ CREATE INDEX state_cid_index ON eth.state_cids USING btree (cid);
 
 
 --
+-- Name: state_code_hash_index; Type: INDEX; Schema: eth; Owner: -
+--
+
+CREATE INDEX state_code_hash_index ON eth.state_cids USING btree (code_hash);
+
+
+--
 -- Name: state_header_id_index; Type: INDEX; Schema: eth; Owner: -
 --
 
 CREATE INDEX state_header_id_index ON eth.state_cids USING btree (header_id);
-
-
---
--- Name: state_leaf_key_index; Type: INDEX; Schema: eth; Owner: -
---
-
-CREATE INDEX state_leaf_key_index ON eth.state_cids USING btree (state_leaf_key);
 
 
 --
@@ -1117,10 +968,17 @@ CREATE INDEX state_mh_block_number_index ON eth.state_cids USING btree (mh_key, 
 
 
 --
--- Name: state_node_type_index; Type: INDEX; Schema: eth; Owner: -
+-- Name: state_path_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE INDEX state_node_type_index ON eth.state_cids USING btree (node_type);
+CREATE INDEX state_path_index ON eth.state_cids USING btree (state_path);
+
+
+--
+-- Name: state_removed_index; Type: INDEX; Schema: eth; Owner: -
+--
+
+CREATE INDEX state_removed_index ON eth.state_cids USING btree (removed);
 
 
 --
@@ -1152,13 +1010,6 @@ CREATE INDEX storage_header_id_index ON eth.storage_cids USING btree (header_id)
 
 
 --
--- Name: storage_leaf_key_index; Type: INDEX; Schema: eth; Owner: -
---
-
-CREATE INDEX storage_leaf_key_index ON eth.storage_cids USING btree (storage_leaf_key);
-
-
---
 -- Name: storage_mh_block_number_index; Type: INDEX; Schema: eth; Owner: -
 --
 
@@ -1166,17 +1017,24 @@ CREATE INDEX storage_mh_block_number_index ON eth.storage_cids USING btree (mh_k
 
 
 --
--- Name: storage_node_type_index; Type: INDEX; Schema: eth; Owner: -
+-- Name: storage_path_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE INDEX storage_node_type_index ON eth.storage_cids USING btree (node_type);
+CREATE INDEX storage_path_index ON eth.storage_cids USING btree (storage_path);
 
 
 --
--- Name: storage_state_path_index; Type: INDEX; Schema: eth; Owner: -
+-- Name: storage_removed_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE INDEX storage_state_path_index ON eth.storage_cids USING btree (state_path);
+CREATE INDEX storage_removed_index ON eth.storage_cids USING btree (removed);
+
+
+--
+-- Name: storage_state_leaf_key_index; Type: INDEX; Schema: eth; Owner: -
+--
+
+CREATE INDEX storage_state_leaf_key_index ON eth.storage_cids USING btree (state_leaf_key);
 
 
 --
@@ -1292,13 +1150,6 @@ CREATE TRIGGER trg_eth_receipt_cids AFTER INSERT ON eth.receipt_cids FOR EACH RO
 
 
 --
--- Name: state_accounts trg_eth_state_accounts; Type: TRIGGER; Schema: eth; Owner: -
---
-
-CREATE TRIGGER trg_eth_state_accounts AFTER INSERT ON eth.state_accounts FOR EACH ROW EXECUTE FUNCTION eth.graphql_subscription();
-
-
---
 -- Name: state_cids trg_eth_state_cids; Type: TRIGGER; Schema: eth; Owner: -
 --
 
@@ -1352,13 +1203,6 @@ CREATE TRIGGER ts_insert_blocker BEFORE INSERT ON eth.log_cids FOR EACH ROW EXEC
 --
 
 CREATE TRIGGER ts_insert_blocker BEFORE INSERT ON eth.receipt_cids FOR EACH ROW EXECUTE FUNCTION _timescaledb_internal.insert_blocker();
-
-
---
--- Name: state_accounts ts_insert_blocker; Type: TRIGGER; Schema: eth; Owner: -
---
-
-CREATE TRIGGER ts_insert_blocker BEFORE INSERT ON eth.state_accounts FOR EACH ROW EXECUTE FUNCTION _timescaledb_internal.insert_blocker();
 
 
 --
