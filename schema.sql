@@ -67,7 +67,6 @@ CREATE TABLE eth.header_cids (
     bloom bytea NOT NULL,
     "timestamp" bigint NOT NULL,
     mh_key text NOT NULL,
-    times_validated integer DEFAULT 1 NOT NULL,
     coinbase character varying(66) NOT NULL
 );
 
@@ -961,6 +960,13 @@ CREATE INDEX state_header_id_index ON eth.state_cids USING btree (header_id);
 
 
 --
+-- Name: state_leaf_key_block_number_index; Type: INDEX; Schema: eth; Owner: -
+--
+
+CREATE INDEX state_leaf_key_block_number_index ON eth.state_cids USING btree (state_leaf_key, block_number DESC);
+
+
+--
 -- Name: state_mh_block_number_index; Type: INDEX; Schema: eth; Owner: -
 --
 
@@ -1007,6 +1013,13 @@ CREATE INDEX storage_cid_index ON eth.storage_cids USING btree (cid);
 --
 
 CREATE INDEX storage_header_id_index ON eth.storage_cids USING btree (header_id);
+
+
+--
+-- Name: storage_leaf_key_block_number_index; Type: INDEX; Schema: eth; Owner: -
+--
+
+CREATE INDEX storage_leaf_key_block_number_index ON eth.storage_cids USING btree (storage_leaf_key, block_number DESC);
 
 
 --
