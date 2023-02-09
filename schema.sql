@@ -44,6 +44,13 @@ CREATE SCHEMA eth;
 CREATE SCHEMA eth_meta;
 
 
+--
+-- Name: ipld; Type: SCHEMA; Schema: -; Owner: -
+--
+
+CREATE SCHEMA ipld;
+
+
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
@@ -66,7 +73,6 @@ CREATE TABLE eth.header_cids (
     uncles_hash character varying(66) NOT NULL,
     bloom bytea NOT NULL,
     "timestamp" bigint NOT NULL,
-    mh_key text NOT NULL,
     coinbase character varying(66) NOT NULL
 );
 
@@ -315,16 +321,14 @@ CREATE TABLE eth.access_list_elements (
 CREATE TABLE eth.log_cids (
     block_number bigint NOT NULL,
     header_id character varying(66) NOT NULL,
-    leaf_cid text NOT NULL,
-    leaf_mh_key text NOT NULL,
+    cid text NOT NULL,
     rct_id character varying(66) NOT NULL,
     address character varying(66) NOT NULL,
     index integer NOT NULL,
     topic0 character varying(66),
     topic1 character varying(66),
     topic2 character varying(66),
-    topic3 character varying(66),
-    log_data bytea
+    topic3 character varying(66)
 );
 
 
@@ -334,6 +338,7 @@ CREATE TABLE eth.log_cids (
 
 CREATE TABLE eth.pending_txs (
     tx_hash character varying(66) NOT NULL,
+    "timestamp" bigint NOT NULL,
     raw bytea NOT NULL
 );
 
@@ -346,13 +351,11 @@ CREATE TABLE eth.receipt_cids (
     block_number bigint NOT NULL,
     header_id character varying(66) NOT NULL,
     tx_id character varying(66) NOT NULL,
-    leaf_cid text NOT NULL,
+    cid text NOT NULL,
     contract character varying(66),
     contract_hash character varying(66),
-    leaf_mh_key text NOT NULL,
     post_state character varying(66),
-    post_status smallint,
-    log_root character varying(66)
+    post_status smallint
 );
 
 
@@ -365,9 +368,8 @@ CREATE TABLE eth.state_cids (
     header_id character varying(66) NOT NULL,
     state_leaf_key character varying(66) NOT NULL,
     cid text NOT NULL,
-    state_path bytea NOT NULL,
+    partial_path bytea NOT NULL,
     diff boolean DEFAULT false NOT NULL,
-    mh_key text NOT NULL,
     balance numeric,
     nonce bigint,
     code_hash character varying(66),
@@ -386,9 +388,8 @@ CREATE TABLE eth.storage_cids (
     state_leaf_key character varying(66) NOT NULL,
     storage_leaf_key character varying(66) NOT NULL,
     cid text NOT NULL,
-    storage_path bytea NOT NULL,
+    partial_path bytea NOT NULL,
     diff boolean DEFAULT false NOT NULL,
-    mh_key text NOT NULL,
     val bytea,
     removed boolean NOT NULL
 );
@@ -406,8 +407,6 @@ CREATE TABLE eth.transaction_cids (
     dst character varying(66),
     src character varying(66) NOT NULL,
     index integer NOT NULL,
-    mh_key text NOT NULL,
-    tx_data bytea,
     tx_type integer,
     value numeric
 );
@@ -430,8 +429,7 @@ CREATE TABLE eth.uncle_cids (
     header_id character varying(66) NOT NULL,
     parent_hash character varying(66) NOT NULL,
     cid text NOT NULL,
-    reward numeric NOT NULL,
-    mh_key text NOT NULL
+    reward numeric NOT NULL
 );
 
 
@@ -577,10 +575,10 @@ CREATE TABLE eth_meta.watched_addresses (
 
 
 --
--- Name: blocks; Type: TABLE; Schema: public; Owner: -
+-- Name: blocks; Type: TABLE; Schema: ipld; Owner: -
 --
 
-CREATE TABLE public.blocks (
+CREATE TABLE ipld.blocks (
     block_number bigint NOT NULL,
     key text NOT NULL,
     data bytea NOT NULL
@@ -746,10 +744,10 @@ ALTER TABLE ONLY eth_meta.watched_addresses
 
 
 --
--- Name: blocks blocks_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: blocks blocks_pkey; Type: CONSTRAINT; Schema: ipld; Owner: -
 --
 
-ALTER TABLE ONLY public.blocks
+ALTER TABLE ONLY ipld.blocks
     ADD CONSTRAINT blocks_pkey PRIMARY KEY (key, block_number);
 
 
@@ -806,17 +804,10 @@ CREATE INDEX header_block_number_index ON eth.header_cids USING brin (block_numb
 
 
 --
--- Name: header_cid_index; Type: INDEX; Schema: eth; Owner: -
+-- Name: header_cid_block_number_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE UNIQUE INDEX header_cid_index ON eth.header_cids USING btree (cid, block_number);
-
-
---
--- Name: header_mh_block_number_index; Type: INDEX; Schema: eth; Owner: -
---
-
-CREATE UNIQUE INDEX header_mh_block_number_index ON eth.header_cids USING btree (mh_key, block_number);
+CREATE UNIQUE INDEX header_cid_block_number_index ON eth.header_cids USING btree (cid, block_number);
 
 
 --
@@ -834,17 +825,10 @@ CREATE INDEX log_block_number_index ON eth.log_cids USING brin (block_number);
 
 
 --
--- Name: log_cid_index; Type: INDEX; Schema: eth; Owner: -
+-- Name: log_cid_block_number_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE INDEX log_cid_index ON eth.log_cids USING btree (leaf_cid);
-
-
---
--- Name: log_data_index; Type: INDEX; Schema: eth; Owner: -
---
-
-CREATE INDEX log_data_index ON eth.log_cids USING btree (log_data);
+CREATE INDEX log_cid_block_number_index ON eth.log_cids USING btree (cid, block_number);
 
 
 --
@@ -852,13 +836,6 @@ CREATE INDEX log_data_index ON eth.log_cids USING btree (log_data);
 --
 
 CREATE INDEX log_header_id_index ON eth.log_cids USING btree (header_id);
-
-
---
--- Name: log_leaf_mh_block_number_index; Type: INDEX; Schema: eth; Owner: -
---
-
-CREATE INDEX log_leaf_mh_block_number_index ON eth.log_cids USING btree (leaf_mh_key, block_number);
 
 
 --
@@ -897,6 +874,13 @@ CREATE INDEX rct_block_number_index ON eth.receipt_cids USING brin (block_number
 
 
 --
+-- Name: rct_cid_block_number_index; Type: INDEX; Schema: eth; Owner: -
+--
+
+CREATE INDEX rct_cid_block_number_index ON eth.receipt_cids USING btree (cid, block_number);
+
+
+--
 -- Name: rct_contract_hash_index; Type: INDEX; Schema: eth; Owner: -
 --
 
@@ -918,20 +902,6 @@ CREATE INDEX rct_header_id_index ON eth.receipt_cids USING btree (header_id);
 
 
 --
--- Name: rct_leaf_cid_index; Type: INDEX; Schema: eth; Owner: -
---
-
-CREATE INDEX rct_leaf_cid_index ON eth.receipt_cids USING btree (leaf_cid);
-
-
---
--- Name: rct_leaf_mh_block_number_index; Type: INDEX; Schema: eth; Owner: -
---
-
-CREATE INDEX rct_leaf_mh_block_number_index ON eth.receipt_cids USING btree (leaf_mh_key, block_number);
-
-
---
 -- Name: state_block_number_index; Type: INDEX; Schema: eth; Owner: -
 --
 
@@ -939,10 +909,10 @@ CREATE INDEX state_block_number_index ON eth.state_cids USING brin (block_number
 
 
 --
--- Name: state_cid_index; Type: INDEX; Schema: eth; Owner: -
+-- Name: state_cid_block_number_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE INDEX state_cid_index ON eth.state_cids USING btree (cid);
+CREATE INDEX state_cid_block_number_index ON eth.state_cids USING btree (cid, block_number);
 
 
 --
@@ -967,17 +937,10 @@ CREATE INDEX state_leaf_key_block_number_index ON eth.state_cids USING btree (st
 
 
 --
--- Name: state_mh_block_number_index; Type: INDEX; Schema: eth; Owner: -
+-- Name: state_partial_path_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE INDEX state_mh_block_number_index ON eth.state_cids USING btree (mh_key, block_number);
-
-
---
--- Name: state_path_index; Type: INDEX; Schema: eth; Owner: -
---
-
-CREATE INDEX state_path_index ON eth.state_cids USING btree (state_path);
+CREATE INDEX state_partial_path_index ON eth.state_cids USING btree (partial_path);
 
 
 --
@@ -1002,10 +965,10 @@ CREATE INDEX storage_block_number_index ON eth.storage_cids USING brin (block_nu
 
 
 --
--- Name: storage_cid_index; Type: INDEX; Schema: eth; Owner: -
+-- Name: storage_cid_block_number_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE INDEX storage_cid_index ON eth.storage_cids USING btree (cid);
+CREATE INDEX storage_cid_block_number_index ON eth.storage_cids USING btree (cid, block_number);
 
 
 --
@@ -1023,17 +986,10 @@ CREATE INDEX storage_leaf_key_block_number_index ON eth.storage_cids USING btree
 
 
 --
--- Name: storage_mh_block_number_index; Type: INDEX; Schema: eth; Owner: -
+-- Name: storage_partial_path_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE INDEX storage_mh_block_number_index ON eth.storage_cids USING btree (mh_key, block_number);
-
-
---
--- Name: storage_path_index; Type: INDEX; Schema: eth; Owner: -
---
-
-CREATE INDEX storage_path_index ON eth.storage_cids USING btree (storage_path);
+CREATE INDEX storage_partial_path_index ON eth.storage_cids USING btree (partial_path);
 
 
 --
@@ -1065,17 +1021,10 @@ CREATE INDEX tx_block_number_index ON eth.transaction_cids USING brin (block_num
 
 
 --
--- Name: tx_cid_index; Type: INDEX; Schema: eth; Owner: -
+-- Name: tx_cid_block_number_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE INDEX tx_cid_index ON eth.transaction_cids USING btree (cid, block_number);
-
-
---
--- Name: tx_data_index; Type: INDEX; Schema: eth; Owner: -
---
-
-CREATE INDEX tx_data_index ON eth.transaction_cids USING btree (tx_data);
+CREATE INDEX tx_cid_block_number_index ON eth.transaction_cids USING btree (cid, block_number);
 
 
 --
@@ -1093,13 +1042,6 @@ CREATE INDEX tx_header_id_index ON eth.transaction_cids USING btree (header_id);
 
 
 --
--- Name: tx_mh_block_number_index; Type: INDEX; Schema: eth; Owner: -
---
-
-CREATE INDEX tx_mh_block_number_index ON eth.transaction_cids USING btree (mh_key, block_number);
-
-
---
 -- Name: tx_src_index; Type: INDEX; Schema: eth; Owner: -
 --
 
@@ -1114,6 +1056,13 @@ CREATE INDEX uncle_block_number_index ON eth.uncle_cids USING brin (block_number
 
 
 --
+-- Name: uncle_cid_block_number_index; Type: INDEX; Schema: eth; Owner: -
+--
+
+CREATE UNIQUE INDEX uncle_cid_block_number_index ON eth.uncle_cids USING btree (cid, block_number);
+
+
+--
 -- Name: uncle_header_id_index; Type: INDEX; Schema: eth; Owner: -
 --
 
@@ -1121,17 +1070,10 @@ CREATE INDEX uncle_header_id_index ON eth.uncle_cids USING btree (header_id);
 
 
 --
--- Name: uncle_mh_block_number_index; Type: INDEX; Schema: eth; Owner: -
+-- Name: blocks_block_number_idx; Type: INDEX; Schema: ipld; Owner: -
 --
 
-CREATE UNIQUE INDEX uncle_mh_block_number_index ON eth.uncle_cids USING btree (mh_key, block_number);
-
-
---
--- Name: blocks_block_number_idx; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX blocks_block_number_idx ON public.blocks USING btree (block_number DESC);
+CREATE INDEX blocks_block_number_idx ON ipld.blocks USING btree (block_number DESC);
 
 
 --
@@ -1247,10 +1189,10 @@ CREATE TRIGGER ts_insert_blocker BEFORE INSERT ON eth.uncle_cids FOR EACH ROW EX
 
 
 --
--- Name: blocks ts_insert_blocker; Type: TRIGGER; Schema: public; Owner: -
+-- Name: blocks ts_insert_blocker; Type: TRIGGER; Schema: ipld; Owner: -
 --
 
-CREATE TRIGGER ts_insert_blocker BEFORE INSERT ON public.blocks FOR EACH ROW EXECUTE FUNCTION _timescaledb_internal.insert_blocker();
+CREATE TRIGGER ts_insert_blocker BEFORE INSERT ON ipld.blocks FOR EACH ROW EXECUTE FUNCTION _timescaledb_internal.insert_blocker();
 
 
 --
