@@ -7,7 +7,6 @@ CREATE TABLE IF NOT EXISTS eth.transaction_cids (
     dst                   VARCHAR(66),
     src                   VARCHAR(66) NOT NULL,
     index                 INTEGER NOT NULL,
-    mh_key                TEXT NOT NULL,
     tx_type               INTEGER,
     value                 NUMERIC,
     PRIMARY KEY (tx_hash, header_id, block_number)

@@ -6,7 +6,6 @@ CREATE TABLE IF NOT EXISTS eth.state_cids (
     cid                   TEXT NOT NULL,
     partial_path          BYTEA NOT NULL,
     diff                  BOOLEAN NOT NULL DEFAULT FALSE,
-    mh_key                TEXT NOT NULL,
     balance               NUMERIC,      -- NULL if "removed"
     nonce                 BIGINT,       -- NULL if "removed"
     code_hash             VARCHAR(66),  -- NULL if "removed"

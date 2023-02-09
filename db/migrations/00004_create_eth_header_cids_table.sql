@@ -13,7 +13,6 @@ CREATE TABLE IF NOT EXISTS eth.header_cids (
     uncles_hash           VARCHAR(66) NOT NULL,
     bloom                 BYTEA NOT NULL,
     timestamp             BIGINT NOT NULL,
-    mh_key                TEXT NOT NULL,
     coinbase              VARCHAR(66) NOT NULL,
     PRIMARY KEY (block_hash, block_number)
 );

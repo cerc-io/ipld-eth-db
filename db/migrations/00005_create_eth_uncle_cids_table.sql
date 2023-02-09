@@ -6,7 +6,6 @@ CREATE TABLE IF NOT EXISTS eth.uncle_cids (
     parent_hash           VARCHAR(66) NOT NULL,
     cid                   TEXT NOT NULL,
     reward                NUMERIC NOT NULL,
-    mh_key                TEXT NOT NULL,
     PRIMARY KEY (block_hash, block_number)
 );
 
