@@ -11,7 +11,6 @@ CREATE TABLE IF NOT EXISTS eth.log_cids (
     topic1              VARCHAR(66),
     topic2              VARCHAR(66),
     topic3              VARCHAR(66),
-    log_data            BYTEA,
     PRIMARY KEY (rct_id, index, header_id, block_number)
 );
 
