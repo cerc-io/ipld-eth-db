@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS eth.storage_cids (
     state_leaf_key        VARCHAR(66) NOT NULL,
     storage_leaf_key      VARCHAR(66) NOT NULL,
     cid                   TEXT NOT NULL,
-    storage_path          BYTEA NOT NULL,
+    partial_path          BYTEA NOT NULL,
     diff                  BOOLEAN NOT NULL DEFAULT FALSE,
     mh_key                TEXT NOT NULL,
     val                   BYTEA,  -- NULL if "removed"

@@ -5,6 +5,7 @@
 -- instead, what we are doing for the time being is embedding the RLP here
 CREATE TABLE IF NOT EXISTS eth.pending_txs (
     tx_hash               VARCHAR(66) NOT NULL PRIMARY KEY,
+    timestamp             BIGINT NOT NULL,
     raw                   BYTEA NOT NULL
 );
 
