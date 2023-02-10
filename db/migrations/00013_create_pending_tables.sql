@@ -5,9 +5,17 @@
 -- instead, what we are doing for the time being is embedding the RLP here
 CREATE TABLE IF NOT EXISTS eth.pending_txs (
     tx_hash               VARCHAR(66) NOT NULL PRIMARY KEY,
+    block_hash            VARCHAR(66) NOT NULL, -- references block_hash in pending_blocks for the pending block this tx belongs to
     timestamp             BIGINT NOT NULL,
     raw                   BYTEA NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS eth.pending_blocks (
+    block_hash VARCHAR(66) NOT NULL PRIMARY KEY,
+    block_number BIGINT NOT NULL,
+    raw_header BYTEA NOT NULL
+)
+
 -- +goose Down
+DROP TABLE eth.pending_blocks;
 DROP TABLE eth.pending_txs;

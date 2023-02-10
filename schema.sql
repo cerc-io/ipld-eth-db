@@ -338,6 +338,7 @@ CREATE TABLE eth.log_cids (
 
 CREATE TABLE eth.pending_txs (
     tx_hash character varying(66) NOT NULL,
+    block_hash character varying(66) NOT NULL,
     "timestamp" bigint NOT NULL,
     raw bytea NOT NULL
 );
@@ -429,7 +430,8 @@ CREATE TABLE eth.uncle_cids (
     header_id character varying(66) NOT NULL,
     parent_hash character varying(66) NOT NULL,
     cid text NOT NULL,
-    reward numeric NOT NULL
+    reward numeric NOT NULL,
+    index integer NOT NULL
 );
 
 
