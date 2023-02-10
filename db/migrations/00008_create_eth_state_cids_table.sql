@@ -4,9 +4,8 @@ CREATE TABLE IF NOT EXISTS eth.state_cids (
     header_id             VARCHAR(66) NOT NULL,
     state_leaf_key        VARCHAR(66) NOT NULL,
     cid                   TEXT NOT NULL,
-    state_path            BYTEA NOT NULL,
+    partial_path          BYTEA NOT NULL,
     diff                  BOOLEAN NOT NULL DEFAULT FALSE,
-    mh_key                TEXT NOT NULL,
     balance               NUMERIC,      -- NULL if "removed"
     nonce                 BIGINT,       -- NULL if "removed"
     code_hash             VARCHAR(66),  -- NULL if "removed"
