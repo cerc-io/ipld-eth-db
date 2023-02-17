@@ -10,12 +10,12 @@ SELECT create_hypertable('eth.access_list_elements', 'block_number', migrate_dat
 SELECT create_hypertable('eth.log_cids', 'block_number', migrate_data => true, chunk_time_interval => 32768);
 
 -- update version
-INSERT INTO public.db_version (singleton, version) VALUES (true, 'v4.0.0-h')
-    ON CONFLICT (singleton) DO UPDATE SET (version, tstamp) = ('v4.0.0-h', NOW());
+INSERT INTO public.db_version (singleton, version) VALUES (true, 'v5.0.0-h')
+    ON CONFLICT (singleton) DO UPDATE SET (version, tstamp) = ('v5.0.0-h', NOW());
 
 -- +goose Down
-INSERT INTO public.db_version (singleton, version) VALUES (true, 'v4.0.0')
-    ON CONFLICT (singleton) DO UPDATE SET (version, tstamp) = ('v4.0.0', NOW());
+INSERT INTO public.db_version (singleton, version) VALUES (true, 'v5.0.0')
+    ON CONFLICT (singleton) DO UPDATE SET (version, tstamp) = ('v5.0.0', NOW());
 
 -- reversing conversion to hypertable requires migrating all data from every chunk back to a single table
 -- create new regular tables
