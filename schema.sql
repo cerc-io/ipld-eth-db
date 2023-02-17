@@ -102,69 +102,6 @@ CREATE TYPE public.child_result AS (
 
 
 --
--- Name: graphql_subscription(); Type: FUNCTION; Schema: eth; Owner: -
---
-
-CREATE FUNCTION eth.graphql_subscription() RETURNS trigger
-    LANGUAGE plpgsql
-    AS $$
-DECLARE
-obj jsonb;
-BEGIN
-    IF (TG_TABLE_NAME = 'state_cids') THEN
-             obj := json_build_array(
-                        TG_TABLE_NAME,
-                        NEW.header_id,
-                        NEW.state_path
-                    );
-    ELSIF (TG_TABLE_NAME = 'storage_cids') THEN
-         obj := json_build_array(
-                    TG_TABLE_NAME,
-                    NEW.header_id,
-                    NEW.state_path,
-                    NEW.storage_path
-                );
-    ELSIF (TG_TABLE_NAME = 'log_cids') THEN
-         obj := json_build_array(
-                    TG_TABLE_NAME,
-                    NEW.header_id,
-                    NEW.rct_id,
-                    NEW.index
-                );
-    ELSIF (TG_TABLE_NAME = 'receipt_cids') THEN
-         obj := json_build_array(
-                    TG_TABLE_NAME,
-                    NEW.header_id,
-                    NEW.tx_id
-                );
-    ELSIF (TG_TABLE_NAME = 'transaction_cids') THEN
-         obj := json_build_array(
-                    TG_TABLE_NAME,
-                    NEW.header_id,
-                    NEW.tx_hash
-                );
-    ELSIF (TG_TABLE_NAME = 'access_list_elements') THEN
-         obj := json_build_array(
-                    TG_TABLE_NAME,
-                    NEW.tx_id,
-                    NEW.index
-                );
-    ELSIF (TG_TABLE_NAME = 'uncle_cids') OR (TG_TABLE_NAME = 'header_cids') THEN
-         obj := json_build_array(
-                    TG_TABLE_NAME,
-                    NEW.block_hash
-                );
-END IF;
-    perform pg_notify('postgraphile:' || TG_RELNAME , json_build_object(
-            '__node__', obj
-            )::text
-        );
-RETURN NEW;
-END;
-$$;
-
-
---
 -- Name: canonical_header_from_array(eth.header_cids[]); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -333,18 +270,6 @@ CREATE TABLE eth.log_cids (
 
 
 --
--- Name: pending_txs; Type: TABLE; Schema: eth; Owner: -
---
-
-CREATE TABLE eth.pending_txs (
-    tx_hash character varying(66) NOT NULL,
-    block_hash character varying(66) NOT NULL,
-    "timestamp" bigint NOT NULL,
-    raw bytea NOT NULL
-);
-
-
---
 -- Name: receipt_cids; Type: TABLE; Schema: eth; Owner: -
 --
 
@@ -354,7 +279,6 @@ CREATE TABLE eth.receipt_cids (
     tx_id character varying(66) NOT NULL,
     cid text NOT NULL,
     contract character varying(66),
-    contract_hash character varying(66),
     post_state character varying(66),
     post_status smallint
 );
@@ -369,7 +293,6 @@ CREATE TABLE eth.state_cids (
     header_id character varying(66) NOT NULL,
     state_leaf_key character varying(66) NOT NULL,
     cid text NOT NULL,
-    partial_path bytea NOT NULL,
     diff boolean DEFAULT false NOT NULL,
     balance numeric,
     nonce bigint,
@@ -389,7 +312,6 @@ CREATE TABLE eth.storage_cids (
     state_leaf_key character varying(66) NOT NULL,
     storage_leaf_key character varying(66) NOT NULL,
     cid text NOT NULL,
-    partial_path bytea NOT NULL,
     diff boolean DEFAULT false NOT NULL,
     val bytea,
     removed boolean NOT NULL
@@ -432,135 +354,6 @@ CREATE TABLE eth.uncle_cids (
     cid text NOT NULL,
     reward numeric NOT NULL,
     index integer NOT NULL
-);
-
-
---
--- Name: asn; Type: TABLE; Schema: eth_meta; Owner: -
---
-
-CREATE TABLE eth_meta.asn (
-    id bigint NOT NULL,
-    asn integer NOT NULL,
-    registry text NOT NULL,
-    country_code text NOT NULL,
-    name text NOT NULL
-);
-
-
---
--- Name: peer; Type: TABLE; Schema: eth_meta; Owner: -
---
-
-CREATE TABLE eth_meta.peer (
-    asn_id bigint NOT NULL,
-    prefix cidr NOT NULL,
-    rdns text,
-    raw_dht_peer_id bigint,
-    city text,
-    country text,
-    coords jsonb
-);
-
-
---
--- Name: peer_dht; Type: TABLE; Schema: eth_meta; Owner: -
---
-
-CREATE TABLE eth_meta.peer_dht (
-    dht_peer_id bigint NOT NULL,
-    neighbor_id bigint NOT NULL,
-    seen timestamp with time zone NOT NULL,
-    seen_by_probe integer NOT NULL
-);
-
-
---
--- Name: peer_seen; Type: TABLE; Schema: eth_meta; Owner: -
---
-
-CREATE TABLE eth_meta.peer_seen (
-    raw_peer_id bytea NOT NULL,
-    first_seen timestamp with time zone NOT NULL,
-    probe_id integer NOT NULL
-);
-
-
---
--- Name: peer_tx; Type: TABLE; Schema: eth_meta; Owner: -
---
-
-CREATE TABLE eth_meta.peer_tx (
-    raw_peer_id bytea NOT NULL,
-    tx_hash character varying(66) NOT NULL,
-    received timestamp with time zone NOT NULL,
-    received_by_probe integer NOT NULL
-);
-
-
---
--- Name: probe; Type: TABLE; Schema: eth_meta; Owner: -
---
-
-CREATE TABLE eth_meta.probe (
-    id integer NOT NULL,
-    ip inet NOT NULL,
-    deployed timestamp with time zone NOT NULL
-);
-
-
---
--- Name: raw_dht_peer; Type: TABLE; Schema: eth_meta; Owner: -
---
-
-CREATE TABLE eth_meta.raw_dht_peer (
-    id bigint NOT NULL,
-    pubkey bytea NOT NULL,
-    ip inet NOT NULL,
-    port integer NOT NULL,
-    client_id text,
-    network_id bytea,
-    genesis_hash bytea,
-    forks jsonb,
-    created_at timestamp with time zone DEFAULT now() NOT NULL,
-    updated_at timestamp with time zone DEFAULT now() NOT NULL
-);
-
-
---
--- Name: raw_peer; Type: TABLE; Schema: eth_meta; Owner: -
---
-
-CREATE TABLE eth_meta.raw_peer (
-    id bytea NOT NULL,
-    ip inet NOT NULL,
-    port integer NOT NULL,
-    client_id text NOT NULL,
-    created_at timestamp with time zone DEFAULT now() NOT NULL
-);
-
-
---
--- Name: site; Type: TABLE; Schema: eth_meta; Owner: -
---
-
-CREATE TABLE eth_meta.site (
-    id integer NOT NULL,
-    provider text NOT NULL,
-    az text NOT NULL,
-    probe_id integer NOT NULL,
-    privkey bytea NOT NULL
-);
-
-
---
--- Name: tx_chain; Type: TABLE; Schema: eth_meta; Owner: -
---
-
-CREATE TABLE eth_meta.tx_chain (
-    id bytea NOT NULL,
-    height integer NOT NULL,
-    ts timestamp with time zone NOT NULL
 );
 
 
@@ -687,14 +480,6 @@ ALTER TABLE ONLY eth.header_cids
 
 ALTER TABLE ONLY eth.log_cids
     ADD CONSTRAINT log_cids_pkey PRIMARY KEY (rct_id, index, header_id, block_number);
-
-
---
--- Name: pending_txs pending_txs_pkey; Type: CONSTRAINT; Schema: eth; Owner: -
---
-
-ALTER TABLE ONLY eth.pending_txs
-    ADD CONSTRAINT pending_txs_pkey PRIMARY KEY (tx_hash);
 
 
 --
@@ -883,13 +668,6 @@ CREATE INDEX rct_cid_block_number_index ON eth.receipt_cids USING btree (cid, bl
 
 
 --
--- Name: rct_contract_hash_index; Type: INDEX; Schema: eth; Owner: -
---
-
-CREATE INDEX rct_contract_hash_index ON eth.receipt_cids USING btree (contract_hash);
-
-
---
 -- Name: rct_contract_index; Type: INDEX; Schema: eth; Owner: -
 --
 
@@ -939,13 +717,6 @@ CREATE INDEX state_leaf_key_block_number_index ON eth.state_cids USING btree (st
 
 
 --
--- Name: state_partial_path_index; Type: INDEX; Schema: eth; Owner: -
---
-
-CREATE INDEX state_partial_path_index ON eth.state_cids USING btree (partial_path);
-
-
---
 -- Name: state_removed_index; Type: INDEX; Schema: eth; Owner: -
 --
 
@@ -985,13 +756,6 @@ CREATE INDEX storage_header_id_index ON eth.storage_cids USING btree (header_id)
 --
 
 CREATE INDEX storage_leaf_key_block_number_index ON eth.storage_cids USING btree (storage_leaf_key, block_number DESC);
-
-
---
--- Name: storage_partial_path_index; Type: INDEX; Schema: eth; Owner: -
---
-
-CREATE INDEX storage_partial_path_index ON eth.storage_cids USING btree (partial_path);
 
 
 --
@@ -1076,62 +840,6 @@ CREATE INDEX uncle_header_id_index ON eth.uncle_cids USING btree (header_id);
 --
 
 CREATE INDEX blocks_block_number_idx ON ipld.blocks USING btree (block_number DESC);
-
-
---
--- Name: access_list_elements trg_eth_access_list_elements; Type: TRIGGER; Schema: eth; Owner: -
---
-
-CREATE TRIGGER trg_eth_access_list_elements AFTER INSERT ON eth.access_list_elements FOR EACH ROW EXECUTE FUNCTION eth.graphql_subscription();
-
-
---
--- Name: header_cids trg_eth_header_cids; Type: TRIGGER; Schema: eth; Owner: -
---
-
-CREATE TRIGGER trg_eth_header_cids AFTER INSERT ON eth.header_cids FOR EACH ROW EXECUTE FUNCTION eth.graphql_subscription();
-
-
---
--- Name: log_cids trg_eth_log_cids; Type: TRIGGER; Schema: eth; Owner: -
---
-
-CREATE TRIGGER trg_eth_log_cids AFTER INSERT ON eth.log_cids FOR EACH ROW EXECUTE FUNCTION eth.graphql_subscription();
-
-
---
--- Name: receipt_cids trg_eth_receipt_cids; Type: TRIGGER; Schema: eth; Owner: -
---
-
-CREATE TRIGGER trg_eth_receipt_cids AFTER INSERT ON eth.receipt_cids FOR EACH ROW EXECUTE FUNCTION eth.graphql_subscription();
-
-
---
--- Name: state_cids trg_eth_state_cids; Type: TRIGGER; Schema: eth; Owner: -
---
-
-CREATE TRIGGER trg_eth_state_cids AFTER INSERT ON eth.state_cids FOR EACH ROW EXECUTE FUNCTION eth.graphql_subscription();
-
-
---
--- Name: storage_cids trg_eth_storage_cids; Type: TRIGGER; Schema: eth; Owner: -
---
-
-CREATE TRIGGER trg_eth_storage_cids AFTER INSERT ON eth.storage_cids FOR EACH ROW EXECUTE FUNCTION eth.graphql_subscription();
-
-
---
--- Name: transaction_cids trg_eth_transaction_cids; Type: TRIGGER; Schema: eth; Owner: -
---
-
-CREATE TRIGGER trg_eth_transaction_cids AFTER INSERT ON eth.transaction_cids FOR EACH ROW EXECUTE FUNCTION eth.graphql_subscription();
-
-
---
--- Name: uncle_cids trg_eth_uncle_cids; Type: TRIGGER; Schema: eth; Owner: -
---
-
-CREATE TRIGGER trg_eth_uncle_cids AFTER INSERT ON eth.uncle_cids FOR EACH ROW EXECUTE FUNCTION eth.graphql_subscription();
 
 
 --
