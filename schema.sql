@@ -566,7 +566,7 @@ ALTER TABLE ONLY public.nodes
 -- Name: access_list_block_number_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE INDEX access_list_block_number_index ON eth.access_list_elements USING brin (block_number);
+CREATE INDEX access_list_block_number_index ON eth.access_list_elements USING btree (block_number);
 
 
 --
@@ -587,7 +587,7 @@ CREATE INDEX access_list_storage_keys_index ON eth.access_list_elements USING gi
 -- Name: header_block_number_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE INDEX header_block_number_index ON eth.header_cids USING brin (block_number);
+CREATE INDEX header_block_number_index ON eth.header_cids USING btree (block_number);
 
 
 --
@@ -608,7 +608,7 @@ CREATE INDEX log_address_index ON eth.log_cids USING btree (address);
 -- Name: log_block_number_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE INDEX log_block_number_index ON eth.log_cids USING brin (block_number);
+CREATE INDEX log_block_number_index ON eth.log_cids USING btree (block_number);
 
 
 --
@@ -657,7 +657,7 @@ CREATE INDEX log_topic3_index ON eth.log_cids USING btree (topic3);
 -- Name: rct_block_number_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE INDEX rct_block_number_index ON eth.receipt_cids USING brin (block_number);
+CREATE INDEX rct_block_number_index ON eth.receipt_cids USING btree (block_number);
 
 
 --
@@ -685,7 +685,7 @@ CREATE INDEX rct_header_id_index ON eth.receipt_cids USING btree (header_id);
 -- Name: state_block_number_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE INDEX state_block_number_index ON eth.state_cids USING brin (block_number);
+CREATE INDEX state_block_number_index ON eth.state_cids USING btree (block_number);
 
 
 --
@@ -734,7 +734,7 @@ CREATE INDEX state_root_index ON eth.header_cids USING btree (state_root);
 -- Name: storage_block_number_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE INDEX storage_block_number_index ON eth.storage_cids USING brin (block_number);
+CREATE INDEX storage_block_number_index ON eth.storage_cids USING btree (block_number);
 
 
 --
@@ -776,14 +776,14 @@ CREATE INDEX storage_state_leaf_key_index ON eth.storage_cids USING btree (state
 -- Name: timestamp_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE INDEX timestamp_index ON eth.header_cids USING brin ("timestamp");
+CREATE INDEX timestamp_index ON eth.header_cids USING btree ("timestamp");
 
 
 --
 -- Name: tx_block_number_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE INDEX tx_block_number_index ON eth.transaction_cids USING brin (block_number);
+CREATE INDEX tx_block_number_index ON eth.transaction_cids USING btree (block_number);
 
 
 --
@@ -818,7 +818,7 @@ CREATE INDEX tx_src_index ON eth.transaction_cids USING btree (src);
 -- Name: uncle_block_number_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE INDEX uncle_block_number_index ON eth.uncle_cids USING brin (block_number);
+CREATE INDEX uncle_block_number_index ON eth.uncle_cids USING btree (block_number);
 
 
 --
