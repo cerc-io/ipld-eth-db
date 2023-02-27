@@ -239,19 +239,6 @@ $$;
 
 
 --
--- Name: access_list_elements; Type: TABLE; Schema: eth; Owner: -
---
-
-CREATE TABLE eth.access_list_elements (
-    block_number bigint NOT NULL,
-    tx_id character varying(66) NOT NULL,
-    index integer NOT NULL,
-    address character varying(66),
-    storage_keys character varying(66)[]
-);
-
-
---
 -- Name: log_cids; Type: TABLE; Schema: eth; Owner: -
 --
 
@@ -459,14 +446,6 @@ ALTER TABLE ONLY public.goose_db_version ALTER COLUMN id SET DEFAULT nextval('pu
 
 
 --
--- Name: access_list_elements access_list_elements_pkey; Type: CONSTRAINT; Schema: eth; Owner: -
---
-
-ALTER TABLE ONLY eth.access_list_elements
-    ADD CONSTRAINT access_list_elements_pkey PRIMARY KEY (tx_id, index, block_number);
-
-
---
 -- Name: header_cids header_cids_pkey; Type: CONSTRAINT; Schema: eth; Owner: -
 --
 
@@ -560,27 +539,6 @@ ALTER TABLE ONLY public.goose_db_version
 
 ALTER TABLE ONLY public.nodes
     ADD CONSTRAINT nodes_pkey PRIMARY KEY (node_id);
-
-
---
--- Name: access_list_block_number_index; Type: INDEX; Schema: eth; Owner: -
---
-
-CREATE INDEX access_list_block_number_index ON eth.access_list_elements USING btree (block_number);
-
-
---
--- Name: access_list_element_address_index; Type: INDEX; Schema: eth; Owner: -
---
-
-CREATE INDEX access_list_element_address_index ON eth.access_list_elements USING btree (address);
-
-
---
--- Name: access_list_storage_keys_index; Type: INDEX; Schema: eth; Owner: -
---
-
-CREATE INDEX access_list_storage_keys_index ON eth.access_list_elements USING gin (storage_keys);
 
 
 --
@@ -840,13 +798,6 @@ CREATE INDEX uncle_header_id_index ON eth.uncle_cids USING btree (header_id);
 --
 
 CREATE INDEX blocks_block_number_idx ON ipld.blocks USING btree (block_number DESC);
-
-
---
--- Name: access_list_elements ts_insert_blocker; Type: TRIGGER; Schema: eth; Owner: -
---
-
-CREATE TRIGGER ts_insert_blocker BEFORE INSERT ON eth.access_list_elements FOR EACH ROW EXECUTE FUNCTION _timescaledb_internal.insert_blocker();
 
 
 --

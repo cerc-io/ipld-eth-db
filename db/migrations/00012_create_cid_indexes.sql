@@ -39,11 +39,6 @@ CREATE INDEX storage_header_id_index ON eth.storage_cids USING btree (header_id)
 CREATE INDEX storage_removed_index ON eth.storage_cids USING btree (removed);
 CREATE INDEX storage_leaf_key_block_number_index ON eth.storage_cids(storage_leaf_key, block_number DESC);
 
--- access list indexes
-CREATE INDEX access_list_block_number_index ON eth.access_list_elements USING btree (block_number);
-CREATE INDEX access_list_element_address_index ON eth.access_list_elements USING btree (address);
-CREATE INDEX access_list_storage_keys_index ON eth.access_list_elements USING gin (storage_keys);
-
 -- log indexes
 CREATE INDEX log_block_number_index ON eth.log_cids USING btree (block_number);
 CREATE INDEX log_header_id_index ON eth.log_cids USING btree (header_id);
@@ -64,11 +59,6 @@ DROP INDEX eth.log_address_index;
 DROP INDEX eth.log_cid_block_number_index;
 DROP INDEX eth.log_header_id_index;
 DROP INDEX eth.log_block_number_index;
-
--- access list indexes
-DROP INDEX eth.access_list_storage_keys_index;
-DROP INDEX eth.access_list_element_address_index;
-DROP INDEX eth.access_list_block_number_index;
 
 -- storage node indexes
 DROP INDEX eth.storage_removed_index;
