@@ -248,7 +248,7 @@ BEGIN
         RAISE NOTICE 'get_storage_at_by_number: chosen header NULL OR % != canonical header % for block number %, trying again.', v_header, v_canonical_header, v_block_no;
         TRUNCATE tmp_tt_stg2;
         -- If we hit on a non-canonical block, we need to go back and do a comprehensive check.
-        -- We try to avoid this to avoid joining between storage_cids, state_cids, and header_cids
+        -- We try to avoid this to avoid joining between storage_cids and header_cids
         INSERT INTO tmp_tt_stg2
         SELECT storage_cids.header_id,
                storage_cids.cid,
@@ -261,8 +261,8 @@ BEGIN
                    ) AS state_leaf_removed
         FROM eth.storage_cids
                  INNER JOIN eth.header_cids ON (
-                    state_cids.header_id = header_cids.block_hash
-                AND state_cids.block_number = header_cids.block_number
+                    storage_cids.header_id = header_cids.block_hash
+                AND storage_cids.block_number = header_cids.block_number
             )
         WHERE state_leaf_key = v_state_leaf_key
           AND storage_leaf_key = v_storage_leaf_key

@@ -1,6 +1,6 @@
 -- +goose Up
 -- +goose StatementBegin
--- returns if the state leaf key is vacated (previously existed but now is empty) at the provided block hash
+-- returns whether the state leaf key is vacated (previously existed but now is empty) at the provided block hash
 CREATE OR REPLACE FUNCTION was_state_leaf_removed(v_key VARCHAR(66), v_hash VARCHAR)
     RETURNS boolean AS $$
     SELECT state_cids.removed = true
@@ -16,7 +16,7 @@ language sql;
 -- +goose StatementEnd
 
 -- +goose StatementBegin
--- returns if the state leaf key is vacated (previously existed but now is empty) at the provided block height
+-- returns whether the state leaf key is vacated (previously existed but now is empty) at the provided block height
 CREATE OR REPLACE FUNCTION public.was_state_leaf_removed_by_number(v_key VARCHAR(66), v_block_no BIGINT)
     RETURNS BOOLEAN AS $$
     SELECT state_cids.removed = true
