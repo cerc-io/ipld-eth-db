@@ -191,7 +191,7 @@ $$;
 -- Name: get_storage_at_by_hash(text, text, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_storage_at_by_hash(v_state_leaf_key text, v_storage_leaf_key text, v_block_hash text) RETURNS TABLE(cid text, val bytea, block_number bigint, node_type integer, state_leaf_removed boolean)
+CREATE FUNCTION public.get_storage_at_by_hash(v_state_leaf_key text, v_storage_leaf_key text, v_block_hash text) RETURNS TABLE(cid text, val bytea, block_number bigint, removed boolean, state_leaf_removed boolean)
     LANGUAGE plpgsql
     AS $$
 DECLARE
@@ -272,8 +272,7 @@ BEGIN
         ORDER BY header_cids.block_number DESC LIMIT 1;
     END IF;
     RETURN QUERY SELECT t.cid, t.val, t.block_number, t.removed, t.state_leaf_removed
-                    FROM tmp_tt_stg2 AS t
-                    LIMIT 1;
+                    FROM tmp_tt_stg2 AS t LIMIT 1;
 END
 $$;
 

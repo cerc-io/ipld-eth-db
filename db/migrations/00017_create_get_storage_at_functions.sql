@@ -74,8 +74,7 @@ BEGIN
     END IF;
 
     RETURN QUERY SELECT t.cid, t.val, t.block_number, t.removed, t.state_leaf_removed
-                    FROM tmp_tt_stg2 AS t
-                    LIMIT 1;
+                    FROM tmp_tt_stg2 AS t LIMIT 1;
 END
 $BODY$
 language 'plpgsql';
@@ -88,7 +87,7 @@ CREATE OR REPLACE FUNCTION public.get_storage_at_by_hash(v_state_leaf_key TEXT, 
                 cid                TEXT,
                 val                BYTEA,
                 block_number       BIGINT,
-                node_type          INTEGER,
+                removed            BOOL,
                 state_leaf_removed BOOL
             )
 AS
