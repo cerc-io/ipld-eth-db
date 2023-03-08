@@ -191,7 +191,7 @@ $$;
 -- Name: get_storage_at_by_hash(text, text, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_storage_at_by_hash(v_state_leaf_key text, v_storage_leaf_key text, v_block_hash text) RETURNS TABLE(cid text, block_number bigint, node_type integer, state_leaf_removed boolean)
+CREATE FUNCTION public.get_storage_at_by_hash(v_state_leaf_key text, v_storage_leaf_key text, v_block_hash text) RETURNS TABLE(cid text, val bytea, block_number bigint, node_type integer, state_leaf_removed boolean)
     LANGUAGE plpgsql
     AS $$
 DECLARE
@@ -210,7 +210,7 @@ $$;
 -- Name: get_storage_at_by_number(text, text, bigint); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_storage_at_by_number(v_state_leaf_key text, v_storage_leaf_key text, v_block_no bigint) RETURNS TABLE(cid text, block_number bigint, removed boolean, state_leaf_removed boolean)
+CREATE FUNCTION public.get_storage_at_by_number(v_state_leaf_key text, v_storage_leaf_key text, v_block_no bigint) RETURNS TABLE(cid text, val bytea, block_number bigint, removed boolean, state_leaf_removed boolean)
     LANGUAGE plpgsql
     AS $$
 DECLARE
@@ -222,6 +222,7 @@ BEGIN
     (
         header_id          TEXT,
         cid                TEXT,
+        val                BYTEA,
         block_number       BIGINT,
         removed            BOOL,
         state_leaf_removed BOOL
@@ -230,6 +231,7 @@ BEGIN
     INSERT INTO tmp_tt_stg2
     SELECT storage_cids.header_id,
            storage_cids.cid,
+           storage_cids.val,
            storage_cids.block_number,
            storage_cids.removed,
            was_state_leaf_removed_by_number(v_state_leaf_key, v_block_no) AS state_leaf_removed
@@ -250,6 +252,7 @@ BEGIN
         INSERT INTO tmp_tt_stg2
         SELECT storage_cids.header_id,
                storage_cids.cid,
+               storage_cids.val,
                storage_cids.block_number,
                storage_cids.removed,
                was_state_leaf_removed_by_number(
@@ -274,7 +277,7 @@ BEGIN
           AND header_cids.block_hash = (SELECT canonical_header_hash(header_cids.block_number))
         ORDER BY header_cids.block_number DESC LIMIT 1;
     END IF;
-    RETURN QUERY SELECT t.cid, t.block_number, t.removed, t.state_leaf_removed
+    RETURN QUERY SELECT t.cid, t.val, t.block_number, t.removed, t.state_leaf_removed
                     FROM tmp_tt_stg2 AS t
                     LIMIT 1;
 END
