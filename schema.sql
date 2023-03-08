@@ -260,18 +260,12 @@ BEGIN
                        v_block_no
                    ) AS state_leaf_removed
         FROM eth.storage_cids
-                 INNER JOIN eth.state_cids ON (
-                    storage_cids.header_id = state_cids.header_id
-                AND storage_cids.block_number = state_cids.block_number
-                AND storage_cids.state_leaf_key = state_cids.state_leaf_key
-            )
                  INNER JOIN eth.header_cids ON (
                     state_cids.header_id = header_cids.block_hash
                 AND state_cids.block_number = header_cids.block_number
             )
         WHERE state_leaf_key = v_state_leaf_key
           AND storage_leaf_key = v_storage_leaf_key
-          AND state_cids.block_number <= v_block_no
           AND storage_cids.block_number <= v_block_no
           AND header_cids.block_number <= v_block_no
           AND header_cids.block_hash = (SELECT canonical_header_hash(header_cids.block_number))
