@@ -10,7 +10,7 @@ sleep 5s
 export HOST_NAME=localhost
 export PORT=8066
 export USER=vdbm
-export TEST_DB=vulcanize_testing
+export TEST_DB=cerc_testing
 export TEST_CONNECT_STRING=postgresql://$USER@$HOST_NAME:$PORT/$TEST_DB?sslmode=disable
 export PGPASSWORD=password
 
