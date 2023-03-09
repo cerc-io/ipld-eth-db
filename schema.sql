@@ -241,8 +241,8 @@ BEGIN
       AND storage_cids.block_number <= v_block_no
     ORDER BY storage_cids.block_number DESC LIMIT 1;
     -- check if result is from canonical state
-    SELECT header_id, canonical_header_hash(tmp_tt_stg2.block_number), tmp_tt_stg2.block_number
-    INTO v_header, v_canonical_header, v_block_no
+    SELECT header_id, canonical_header_hash(tmp_tt_stg2.block_number)
+    INTO v_header, v_canonical_header
     FROM tmp_tt_stg2 LIMIT 1;
     IF v_header IS NULL OR v_header != v_canonical_header THEN
         RAISE NOTICE 'get_storage_at_by_number: chosen header NULL OR % != canonical header % for block number %, trying again.', v_header, v_canonical_header, v_block_no;
