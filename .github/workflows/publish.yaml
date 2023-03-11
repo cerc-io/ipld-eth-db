@@ -16,7 +16,7 @@ jobs:
       - name: Run docker build
         run: make docker-build
       - name: Tag docker image
-        run: docker tag cerc-io/ipld-eth-db git.vdb.to/cerc-io/ipld-eth-db/ipld-eth-db:${{steps.vars.outputs.sha}}
+        run: docker tag cerc/ipld-eth-db git.vdb.to/cerc-io/ipld-eth-db/ipld-eth-db:${{steps.vars.outputs.sha}}
       - name: Tag docker image
         run: docker tag git.vdb.to/cerc-io/ipld-eth-db/ipld-eth-db:${{steps.vars.outputs.sha}} git.vdb.to/cerc-io/ipld-eth-db/ipld-eth-db:${{steps.vars.outputs.tag}}
       - name: Docker Login
