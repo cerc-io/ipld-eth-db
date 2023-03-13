@@ -120,7 +120,7 @@ docker-build:
 # ## Build docker image for migration
 # .PHONY: docker-concise-migration-build
 # docker-concise-migration-build:
-# 	docker build -t vulcanize/concise-migration-build -f ./db/Dockerfile .
+# 	docker build -t cerc/concise-migration-build -f ./db/Dockerfile .
 
 .PHONY: test-migrations
 test-migrations: $(GOOSE)
