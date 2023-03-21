@@ -13,7 +13,7 @@ FROM alpine
 
 WORKDIR /app
 
-COPY --from=builder /go/src/github.com/vulcanize/ipld-eth-db/scripts/startup_script.sh .
+COPY --from=builder /go/src/github.com/cerc-io/ipld-eth-db/scripts/startup_script.sh .
 
 COPY --from=builder /goose goose
 COPY --from=builder /go/src/github.com/cerc-io/ipld-eth-db/db/migrations migrations
