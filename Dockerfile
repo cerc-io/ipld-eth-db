@@ -1,24 +1,21 @@
 FROM golang:1.18-alpine as builder
 
-RUN apk --update --no-cache add make git g++ linux-headers
+ADD . /go/src/github.com/cerc-io/ipld-eth-db
 
-ADD . /go/src/github.com/vulcanize/ipld-eth-db
-
-# Build migration tool
-WORKDIR /go/src/github.com/pressly
+# Get migration tool
+WORKDIR /
 ARG GOOSE_VER="v3.6.1"
-RUN git clone --depth 1 --branch ${GOOSE_VER} https://github.com/pressly/goose.git
-WORKDIR /go/src/github.com/pressly/goose/cmd/goose
-RUN GCO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags '-extldflags "-static"' -tags='no_sqlite3' -o goose .
+ADD https://github.com/pressly/goose/releases/download/${GOOSE_VER}/goose_linux_x86_64 ./goose
+RUN chmod +x ./goose
 
 # app container
 FROM alpine
 
 WORKDIR /app
 
-COPY --from=builder /go/src/github.com/vulcanize/ipld-eth-db/scripts/startup_script.sh .
+COPY --from=builder /go/src/github.com/cerc-io/ipld-eth-db/scripts/startup_script.sh .
 
-COPY --from=builder /go/src/github.com/pressly/goose/cmd/goose/goose goose
-COPY --from=builder /go/src/github.com/vulcanize/ipld-eth-db/db/migrations migrations/vulcanizedb
+COPY --from=builder /goose goose
+COPY --from=builder /go/src/github.com/cerc-io/ipld-eth-db/db/migrations migrations
 
 ENTRYPOINT ["/app/startup_script.sh"]
