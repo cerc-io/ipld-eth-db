@@ -7,7 +7,7 @@ CREATE INDEX timestamp_index ON eth.header_cids USING btree (timestamp);
 
 -- uncle indexes
 CREATE INDEX uncle_block_number_index ON eth.uncle_cids USING btree (block_number);
-CREATE UNIQUE INDEX uncle_cid_block_number_index ON eth.uncle_cids USING btree (cid, block_number);
+CREATE UNIQUE INDEX uncle_cid_block_number_index ON eth.uncle_cids USING btree (cid, block_number, index);
 CREATE INDEX uncle_header_id_index ON eth.uncle_cids USING btree (header_id);
 
 -- transaction indexes
