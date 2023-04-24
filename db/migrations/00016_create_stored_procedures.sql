@@ -30,16 +30,35 @@ language sql;
 -- +goose StatementEnd
 
 -- +goose StatementBegin
-CREATE TYPE child_result AS (
-    has_child BOOLEAN,
-    children eth.header_cids[]
+-- duplicate of eth.header_cids as a separate type: if we use the table directly, dropping the hypertables
+-- on downgrade of step 00018 will fail due to the dependency on this type.
+CREATE TYPE header_result AS (
+    block_number bigint,
+    block_hash character varying(66),
+    parent_hash character varying(66),
+    cid text,
+    td numeric,
+    node_ids character varying(128)[],
+    reward numeric,
+    state_root character varying(66),
+    tx_root character varying(66),
+    receipt_root character varying(66),
+    uncles_hash character varying(66),
+    bloom bytea,
+    "timestamp" bigint,
+    coinbase character varying(66)
 );
 
-CREATE OR REPLACE FUNCTION has_child(hash VARCHAR(66), height BIGINT) RETURNS child_result AS
+CREATE TYPE child_result AS (
+    has_child BOOLEAN,
+    children header_result[]
+);
+
+CREATE OR REPLACE FUNCTION get_child(hash VARCHAR(66), height BIGINT) RETURNS child_result AS
 $BODY$
 DECLARE
   child_height INT;
-  temp_child eth.header_cids;
+  temp_child header_result;
   new_child_result child_result;
 BEGIN
   child_height = height + 1;
@@ -65,22 +84,22 @@ LANGUAGE 'plpgsql';
 -- +goose StatementEnd
 
 -- +goose StatementBegin
-CREATE OR REPLACE FUNCTION canonical_header_from_array(headers eth.header_cids[]) RETURNS eth.header_cids AS
+CREATE OR REPLACE FUNCTION canonical_header_from_array(headers header_result[]) RETURNS header_result AS
 $BODY$
 DECLARE
-  canonical_header eth.header_cids;
-  canonical_child eth.header_cids;
-  header eth.header_cids;
+  canonical_header header_result;
+  canonical_child header_result;
+  header header_result;
   current_child_result child_result;
-  child_headers eth.header_cids[];
-  current_header_with_child eth.header_cids;
+  child_headers header_result[];
+  current_header_with_child header_result;
   has_children_count INT DEFAULT 0;
 BEGIN
   -- for each header in the provided set
   FOREACH header IN ARRAY headers
   LOOP
     -- check if it has any children
-    current_child_result = has_child(header.block_hash, header.block_number);
+    current_child_result = get_child(header.block_hash, header.block_number);
     IF current_child_result.has_child THEN
       -- if it does, take note
       has_children_count = has_children_count + 1;
@@ -115,10 +134,10 @@ LANGUAGE 'plpgsql';
 CREATE OR REPLACE FUNCTION canonical_header_hash(height BIGINT) RETURNS character varying AS
 $BODY$
 DECLARE
-  canonical_header eth.header_cids;
-  headers eth.header_cids[];
+  canonical_header header_result;
+  headers header_result[];
   header_count INT;
-  temp_header eth.header_cids;
+  temp_header header_result;
 BEGIN
   -- collect all headers at this height
   FOR temp_header IN
@@ -149,5 +168,5 @@ DROP FUNCTION was_state_leaf_removed;
 DROP FUNCTION was_state_leaf_removed_by_number;
 DROP FUNCTION canonical_header_hash;
 DROP FUNCTION canonical_header_from_array;
-DROP FUNCTION has_child;
+DROP FUNCTION get_child;
 DROP TYPE child_result;
