@@ -3,7 +3,7 @@
 --
 
 -- Dumped from database version 14.6
--- Dumped by pg_dump version 14.6
+-- Dumped by pg_dump version 14.7 (Homebrew)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -51,44 +51,26 @@ CREATE SCHEMA eth_meta;
 CREATE SCHEMA ipld;
 
 
-SET default_tablespace = '';
-
-SET default_table_access_method = heap;
-
 --
--- Name: header_cids; Type: TABLE; Schema: eth; Owner: -
+-- Name: header_result; Type: TYPE; Schema: public; Owner: -
 --
 
-CREATE TABLE eth.header_cids (
-    block_number bigint NOT NULL,
-    block_hash character varying(66) NOT NULL,
-    parent_hash character varying(66) NOT NULL,
-    cid text NOT NULL,
-    td numeric NOT NULL,
-    node_ids character varying(128)[] NOT NULL,
-    reward numeric NOT NULL,
-    state_root character varying(66) NOT NULL,
-    tx_root character varying(66) NOT NULL,
-    receipt_root character varying(66) NOT NULL,
-    uncles_hash character varying(66) NOT NULL,
-    bloom bytea NOT NULL,
-    "timestamp" bigint NOT NULL,
-    coinbase character varying(66) NOT NULL
+CREATE TYPE public.header_result AS (
+	block_number bigint,
+	block_hash character varying(66),
+	parent_hash character varying(66),
+	cid text,
+	td numeric,
+	node_ids character varying(128)[],
+	reward numeric,
+	state_root character varying(66),
+	tx_root character varying(66),
+	receipt_root character varying(66),
+	uncles_hash character varying(66),
+	bloom bytea,
+	"timestamp" bigint,
+	coinbase character varying(66)
 );
-
-
---
--- Name: TABLE header_cids; Type: COMMENT; Schema: eth; Owner: -
---
-
-COMMENT ON TABLE eth.header_cids IS '@name EthHeaderCids';
-
-
---
--- Name: COLUMN header_cids.node_ids; Type: COMMENT; Schema: eth; Owner: -
---
-
-COMMENT ON COLUMN eth.header_cids.node_ids IS '@name EthNodeIDs';
 
 
 --
@@ -97,31 +79,31 @@ COMMENT ON COLUMN eth.header_cids.node_ids IS '@name EthNodeIDs';
 
 CREATE TYPE public.child_result AS (
 	has_child boolean,
-	children eth.header_cids[]
+	children public.header_result[]
 );
 
 
 --
--- Name: canonical_header_from_array(eth.header_cids[]); Type: FUNCTION; Schema: public; Owner: -
+-- Name: canonical_header_from_array(public.header_result[]); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.canonical_header_from_array(headers eth.header_cids[]) RETURNS eth.header_cids
+CREATE FUNCTION public.canonical_header_from_array(headers public.header_result[]) RETURNS public.header_result
     LANGUAGE plpgsql
     AS $$
 DECLARE
-  canonical_header eth.header_cids;
-  canonical_child eth.header_cids;
-  header eth.header_cids;
+  canonical_header header_result;
+  canonical_child header_result;
+  header header_result;
   current_child_result child_result;
-  child_headers eth.header_cids[];
-  current_header_with_child eth.header_cids;
+  child_headers header_result[];
+  current_header_with_child header_result;
   has_children_count INT DEFAULT 0;
 BEGIN
   -- for each header in the provided set
   FOREACH header IN ARRAY headers
   LOOP
     -- check if it has any children
-    current_child_result = has_child(header.block_hash, header.block_number);
+    current_child_result = get_child(header.block_hash, header.block_number);
     IF current_child_result.has_child THEN
       -- if it does, take note
       has_children_count = has_children_count + 1;
@@ -159,10 +141,10 @@ CREATE FUNCTION public.canonical_header_hash(height bigint) RETURNS character va
     LANGUAGE plpgsql
     AS $$
 DECLARE
-  canonical_header eth.header_cids;
-  headers eth.header_cids[];
+  canonical_header header_result;
+  headers header_result[];
   header_count INT;
-  temp_header eth.header_cids;
+  temp_header header_result;
 BEGIN
   -- collect all headers at this height
   FOR temp_header IN
@@ -183,6 +165,39 @@ BEGIN
     canonical_header = canonical_header_from_array(headers);
     RETURN canonical_header.block_hash;
   END IF;
+END
+$$;
+
+
+--
+-- Name: get_child(character varying, bigint); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.get_child(hash character varying, height bigint) RETURNS public.child_result
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+  child_height INT;
+  temp_child header_result;
+  new_child_result child_result;
+BEGIN
+  child_height = height + 1;
+  -- short circuit if there are no children
+  SELECT exists(SELECT 1
+              FROM eth.header_cids
+              WHERE parent_hash = hash
+                AND block_number = child_height
+              LIMIT 1)
+  INTO new_child_result.has_child;
+  -- collect all the children for this header
+  IF new_child_result.has_child THEN
+    FOR temp_child IN
+    SELECT * FROM eth.header_cids WHERE parent_hash = hash AND block_number = child_height
+    LOOP
+      new_child_result.children = array_append(new_child_result.children, temp_child);
+    END LOOP;
+  END IF;
+  RETURN new_child_result;
 END
 $$;
 
@@ -278,39 +293,6 @@ $$;
 
 
 --
--- Name: has_child(character varying, bigint); Type: FUNCTION; Schema: public; Owner: -
---
-
-CREATE FUNCTION public.has_child(hash character varying, height bigint) RETURNS public.child_result
-    LANGUAGE plpgsql
-    AS $$
-DECLARE
-  child_height INT;
-  temp_child eth.header_cids;
-  new_child_result child_result;
-BEGIN
-  child_height = height + 1;
-  -- short circuit if there are no children
-  SELECT exists(SELECT 1
-              FROM eth.header_cids
-              WHERE parent_hash = hash
-                AND block_number = child_height
-              LIMIT 1)
-  INTO new_child_result.has_child;
-  -- collect all the children for this header
-  IF new_child_result.has_child THEN
-    FOR temp_child IN
-    SELECT * FROM eth.header_cids WHERE parent_hash = hash AND block_number = child_height
-    LOOP
-      new_child_result.children = array_append(new_child_result.children, temp_child);
-    END LOOP;
-  END IF;
-  RETURN new_child_result;
-END
-$$;
-
-
---
 -- Name: was_state_leaf_removed(character varying, character varying); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -342,6 +324,46 @@ CREATE FUNCTION public.was_state_leaf_removed_by_number(v_key character varying,
       AND state_cids.block_number <= v_block_no
     ORDER BY state_cids.block_number DESC LIMIT 1;
 $$;
+
+
+SET default_tablespace = '';
+
+SET default_table_access_method = heap;
+
+--
+-- Name: header_cids; Type: TABLE; Schema: eth; Owner: -
+--
+
+CREATE TABLE eth.header_cids (
+    block_number bigint NOT NULL,
+    block_hash character varying(66) NOT NULL,
+    parent_hash character varying(66) NOT NULL,
+    cid text NOT NULL,
+    td numeric NOT NULL,
+    node_ids character varying(128)[] NOT NULL,
+    reward numeric NOT NULL,
+    state_root character varying(66) NOT NULL,
+    tx_root character varying(66) NOT NULL,
+    receipt_root character varying(66) NOT NULL,
+    uncles_hash character varying(66) NOT NULL,
+    bloom bytea NOT NULL,
+    "timestamp" bigint NOT NULL,
+    coinbase character varying(66) NOT NULL
+);
+
+
+--
+-- Name: TABLE header_cids; Type: COMMENT; Schema: eth; Owner: -
+--
+
+COMMENT ON TABLE eth.header_cids IS '@name EthHeaderCids';
+
+
+--
+-- Name: COLUMN header_cids.node_ids; Type: COMMENT; Schema: eth; Owner: -
+--
+
+COMMENT ON COLUMN eth.header_cids.node_ids IS '@name EthNodeIDs';
 
 
 --
@@ -889,7 +911,7 @@ CREATE INDEX uncle_block_number_index ON eth.uncle_cids USING btree (block_numbe
 -- Name: uncle_cid_block_number_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE UNIQUE INDEX uncle_cid_block_number_index ON eth.uncle_cids USING btree (cid, block_number);
+CREATE UNIQUE INDEX uncle_cid_block_number_index ON eth.uncle_cids USING btree (cid, block_number, index);
 
 
 --
