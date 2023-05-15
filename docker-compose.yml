@@ -10,7 +10,7 @@ services:
       #context: .
       #dockerfile: Dockerfile
     # Use an existing image
-    image: cerc/ipld-eth-db:v5.0.0-alpha
+    image: cerc/ipld-eth-db
     environment:
       DATABASE_USER: "vdbm"
       DATABASE_NAME: "cerc_testing"
