@@ -4,24 +4,23 @@ on:
     types: [published, edited]
 jobs:
   build:
-    name: Run docker build
+    name: Build and publish image
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Get the version
-        id: vars
+      - id: vars
+        name: Output SHA and version tag
         run: |
-          echo ::set-output name=sha::$(echo ${GITHUB_SHA:0:7})
-          echo ::set-output name=tag::$(echo ${GITHUB_REF#refs/tags/})
-      - name: Run docker build
-        run: make docker-build
-      - name: Tag docker image
-        run: docker tag cerc/ipld-eth-db git.vdb.to/cerc-io/ipld-eth-db/ipld-eth-db:${{steps.vars.outputs.sha}}
-      - name: Tag docker image
-        run: docker tag git.vdb.to/cerc-io/ipld-eth-db/ipld-eth-db:${{steps.vars.outputs.sha}} git.vdb.to/cerc-io/ipld-eth-db/ipld-eth-db:${{steps.vars.outputs.tag}}
-      - name: Docker Login
-        run: echo ${{ secrets.GITEA_PUBLISH_TOKEN }} | docker login https://git.vdb.to -u cerccicd --password-stdin
-      - name: Docker Push
-        run: docker push git.vdb.to/cerc-io/ipld-eth-db/ipld-eth-db:${{steps.vars.outputs.sha}}
-      - name: Docker Push with TAG to git.vdb.to
-        run: docker push git.vdb.to/cerc-io/ipld-eth-db/ipld-eth-db:${{steps.vars.outputs.tag}}
+          echo sha=$(echo ${GITHUB_SHA:0:7}) >> "$GITHUB_OUTPUT"
+          echo tag=$(echo ${GITHUB_REF#refs/tags/}) >> "$GITHUB_OUTPUT""
+      - name: Build and tag image
+        run: |
+          docker build . \
+          -t cerc-io/ipld-eth-db \
+          -t git.vdb.to/cerc-io/ipld-eth-db/ipld-eth-db:${{steps.vars.outputs.sha}} \
+          -t git.vdb.to/cerc-io/ipld-eth-db/ipld-eth-db:${{steps.vars.outputs.tag}}
+      - name: Push image tags
+        run: |
+          echo ${{ secrets.GITEA_PUBLISH_TOKEN }} | docker login https://git.vdb.to -u cerccicd --password-stdin
+          docker push git.vdb.to/cerc-io/ipld-eth-db/ipld-eth-db:${{steps.vars.outputs.sha}}
+          docker push git.vdb.to/cerc-io/ipld-eth-db/ipld-eth-db:${{steps.vars.outputs.tag}}
