@@ -1,13 +1,14 @@
-version: '3.2'
-
 services:
   migrations:
     restart: on-failure
     depends_on:
       - ipld-eth-db
+    # Use local build
+    build:
+      context: .
+      dockerfile: Dockerfile
+    # Use an existing image
     image: cerc/ipld-eth-db
-    # Build image using local context
-    build: .
     environment:
       DATABASE_USER: "vdbm"
       DATABASE_NAME: "cerc_testing"
