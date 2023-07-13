@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS eth.header_cids (
     bloom                 BYTEA NOT NULL,
     timestamp             BIGINT NOT NULL,
     coinbase              VARCHAR(66) NOT NULL,
+    canonical             BOOLEAN DEFAULT TRUE,
     PRIMARY KEY (block_hash, block_number)
 );
 

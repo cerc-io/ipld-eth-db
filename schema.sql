@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 14.6
--- Dumped by pg_dump version 14.7 (Homebrew)
+-- Dumped from database version 14.8
+-- Dumped by pg_dump version 14.8 (Ubuntu 14.8-0ubuntu0.22.04.1)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -27,7 +27,7 @@ CREATE EXTENSION IF NOT EXISTS timescaledb WITH SCHEMA public;
 -- Name: EXTENSION timescaledb; Type: COMMENT; Schema: -; Owner: -
 --
 
-COMMENT ON EXTENSION timescaledb IS 'Enables scalable inserts and complex queries for time-series data';
+COMMENT ON EXTENSION timescaledb IS 'Enables scalable inserts and complex queries for time-series data (Community Edition)';
 
 
 --
@@ -348,7 +348,8 @@ CREATE TABLE eth.header_cids (
     uncles_hash character varying(66) NOT NULL,
     bloom bytea NOT NULL,
     "timestamp" bigint NOT NULL,
-    coinbase character varying(66) NOT NULL
+    coinbase character varying(66) NOT NULL,
+    canonical boolean DEFAULT true
 );
 
 
