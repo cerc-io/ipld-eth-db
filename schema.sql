@@ -349,7 +349,7 @@ CREATE TABLE eth.header_cids (
     bloom bytea NOT NULL,
     "timestamp" bigint NOT NULL,
     coinbase character varying(66) NOT NULL,
-    canonical boolean DEFAULT true
+    canonical boolean DEFAULT true NOT NULL
 );
 
 
