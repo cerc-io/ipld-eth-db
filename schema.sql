@@ -120,7 +120,7 @@ BEGIN
   IF new_child_result.has_child THEN
     FOR temp_child IN
     SELECT * FROM eth.header_cids WHERE parent_hash = hash AND block_number = child_height AND canonical = true
-        LOOP
+    LOOP
       new_child_result.children = array_append(new_child_result.children, temp_child);
     END LOOP;
   END IF;
