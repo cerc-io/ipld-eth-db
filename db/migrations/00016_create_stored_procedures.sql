@@ -88,11 +88,9 @@ LANGUAGE 'plpgsql';
 -- +goose StatementBegin
 CREATE OR REPLACE FUNCTION canonical_header_hash(height BIGINT) RETURNS character varying AS
 $BODY$
-BEGIN
     SELECT block_hash from eth.header_cids WHERE block_number = height AND canonical = true LIMIT 1;
-END
 $BODY$
-LANGUAGE 'plpgsql';
+LANGUAGE sql;
 -- +goose StatementEnd
 
 -- +goose Down

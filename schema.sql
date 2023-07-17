@@ -89,11 +89,9 @@ CREATE TYPE public.child_result AS (
 --
 
 CREATE FUNCTION public.canonical_header_hash(height bigint) RETURNS character varying
-    LANGUAGE plpgsql
+    LANGUAGE sql
     AS $$
-BEGIN
     SELECT block_hash from eth.header_cids WHERE block_number = height AND canonical = true LIMIT 1;
-END
 $$;
 
 
@@ -122,7 +120,7 @@ BEGIN
   IF new_child_result.has_child THEN
     FOR temp_child IN
     SELECT * FROM eth.header_cids WHERE parent_hash = hash AND block_number = child_height AND canonical = true
-    LOOP
+        LOOP
       new_child_result.children = array_append(new_child_result.children, temp_child);
     END LOOP;
   END IF;
