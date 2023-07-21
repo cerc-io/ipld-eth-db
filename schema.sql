@@ -857,13 +857,6 @@ CREATE INDEX blocks_block_number_idx ON ipld.blocks USING btree (block_number DE
 
 
 --
--- Name: header_cids ts_insert_blocker; Type: TRIGGER; Schema: eth; Owner: -
---
-
-CREATE TRIGGER ts_insert_blocker BEFORE INSERT ON eth.header_cids FOR EACH ROW EXECUTE FUNCTION _timescaledb_internal.insert_blocker();
-
-
---
 -- Name: log_cids ts_insert_blocker; Type: TRIGGER; Schema: eth; Owner: -
 --
 
