@@ -52,39 +52,6 @@ CREATE SCHEMA ipld;
 
 
 --
--- Name: header_result; Type: TYPE; Schema: public; Owner: -
---
-
-CREATE TYPE public.header_result AS (
-	block_number bigint,
-	block_hash character varying(66),
-	parent_hash character varying(66),
-	cid text,
-	td numeric,
-	node_ids character varying(128)[],
-	reward numeric,
-	state_root character varying(66),
-	tx_root character varying(66),
-	receipt_root character varying(66),
-	uncles_hash character varying(66),
-	bloom bytea,
-	"timestamp" bigint,
-	coinbase character varying(66),
-	canonical boolean
-);
-
-
---
--- Name: child_result; Type: TYPE; Schema: public; Owner: -
---
-
-CREATE TYPE public.child_result AS (
-	has_child boolean,
-	children public.header_result[]
-);
-
-
---
 -- Name: canonical_header_hash(bigint); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -92,40 +59,6 @@ CREATE FUNCTION public.canonical_header_hash(height bigint) RETURNS character va
     LANGUAGE sql
     AS $$
     SELECT block_hash from eth.header_cids WHERE block_number = height AND canonical = true LIMIT 1;
-$$;
-
-
---
--- Name: get_child(character varying, bigint); Type: FUNCTION; Schema: public; Owner: -
---
-
-CREATE FUNCTION public.get_child(hash character varying, height bigint) RETURNS public.child_result
-    LANGUAGE plpgsql
-    AS $$
-DECLARE
-  child_height INT;
-  temp_child header_result;
-  new_child_result child_result;
-BEGIN
-  child_height = height + 1;
-  -- short circuit if there are no children
-  SELECT exists(SELECT 1
-              FROM eth.header_cids
-              WHERE parent_hash = hash
-                AND block_number = child_height
-                AND canonical = true
-              LIMIT 1)
-  INTO new_child_result.has_child;
-  -- collect all the children for this header
-  IF new_child_result.has_child THEN
-    FOR temp_child IN
-    SELECT * FROM eth.header_cids WHERE parent_hash = hash AND block_number = child_height AND canonical = true
-    LOOP
-      new_child_result.children = array_append(new_child_result.children, temp_child);
-    END LOOP;
-  END IF;
-  RETURN new_child_result;
-END
 $$;
 
 
