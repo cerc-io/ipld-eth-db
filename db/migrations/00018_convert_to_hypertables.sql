@@ -51,3 +51,48 @@ ALTER TABLE eth.receipt_cids_i RENAME TO receipt_cids;
 ALTER TABLE eth.transaction_cids_i RENAME TO transaction_cids;
 ALTER TABLE eth.uncle_cids_i RENAME TO uncle_cids;
 ALTER TABLE ipld.blocks_i RENAME TO blocks;
+
+-- rename indexes:
+-- log indexes
+ALTER INDEX eth.log_cids_i_topic3_idx RENAME TO log_topic3_index;
+ALTER INDEX eth.log_cids_i_topic2_idx RENAME TO log_topic2_index;
+ALTER INDEX eth.log_cids_i_topic1_idx RENAME TO log_topic1_index;
+ALTER INDEX eth.log_cids_i_topic0_idx RENAME TO log_topic0_index;
+ALTER INDEX eth.log_cids_i_address_idx RENAME TO log_address_index;
+ALTER INDEX eth.log_cids_i_cid_block_number_idx RENAME TO log_cid_block_number_index;
+ALTER INDEX eth.log_cids_i_header_id_idx RENAME TO log_header_id_index;
+ALTER INDEX eth.log_cids_i_block_number_idx RENAME TO log_block_number_index;
+
+-- storage node indexes                                            -- storage node indexes
+ALTER INDEX eth.storage_cids_i_removed_idx RENAME TO storage_removed_index;
+ALTER INDEX eth.storage_cids_i_header_id_idx RENAME TO storage_header_id_index;
+ALTER INDEX eth.storage_cids_i_cid_block_number_idx RENAME TO storage_cid_block_number_index;
+ALTER INDEX eth.storage_cids_i_state_leaf_key_idx RENAME TO storage_state_leaf_key_index;
+ALTER INDEX eth.storage_cids_i_block_number_idx RENAME TO storage_block_number_index;
+ALTER INDEX eth.storage_cids_i_storage_leaf_key_block_number_idx RENAME TO storage_leaf_key_block_number_index;
+
+-- state node indexes                                                 -- state node indexes
+ALTER INDEX eth.state_cids_i_code_hash_idx RENAME TO state_code_hash_index;
+ALTER INDEX eth.state_cids_i_removed_idx RENAME TO state_removed_index;
+ALTER INDEX eth.state_cids_i_header_id_idx RENAME TO state_header_id_index;
+ALTER INDEX eth.state_cids_i_cid_block_number_idx RENAME TO state_cid_block_number_index;
+ALTER INDEX eth.state_cids_i_block_number_idx RENAME TO state_block_number_index;
+ALTER INDEX eth.state_cids_i_state_leaf_key_block_number_idx RENAME TO state_leaf_key_block_number_index;
+
+-- receipt indexes                                                    -- receipt indexes
+ALTER INDEX eth.receipt_cids_i_contract_idx RENAME TO rct_contract_index;
+ALTER INDEX eth.receipt_cids_i_cid_block_number_idx RENAME TO rct_cid_block_number_index;
+ALTER INDEX eth.receipt_cids_i_header_id_idx RENAME TO rct_header_id_index;
+ALTER INDEX eth.receipt_cids_i_block_number_idx RENAME TO rct_block_number_index;
+
+-- transaction indexes                                                -- transaction indexes
+ALTER INDEX eth.transaction_cids_i_src_idx RENAME TO tx_src_index;
+ALTER INDEX eth.transaction_cids_i_dst_idx RENAME TO tx_dst_index;
+ALTER INDEX eth.transaction_cids_i_cid_block_number_idx RENAME TO tx_cid_block_number_index;
+ALTER INDEX eth.transaction_cids_i_header_id_idx RENAME TO tx_header_id_index;
+ALTER INDEX eth.transaction_cids_i_block_number_idx RENAME TO tx_block_number_index;
+
+-- uncle indexes                                                      -- uncle indexes
+ALTER INDEX eth.uncle_cids_i_block_number_idx RENAME TO uncle_block_number_index;
+ALTER INDEX eth.uncle_cids_i_cid_block_number_index_idx RENAME TO uncle_cid_block_number_index;
+ALTER INDEX eth.uncle_cids_i_header_id_idx RENAME TO uncle_header_id_index;

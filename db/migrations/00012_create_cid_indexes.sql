@@ -64,7 +64,6 @@ DROP INDEX eth.log_block_number_index;
 DROP INDEX eth.storage_removed_index;
 DROP INDEX eth.storage_header_id_index;
 DROP INDEX eth.storage_cid_block_number_index;
-DROP INDEX eth.storage_leaf_key_index;
 DROP INDEX eth.storage_state_leaf_key_index;
 DROP INDEX eth.storage_block_number_index;
 DROP INDEX eth.storage_leaf_key_block_number_index;
