@@ -9,7 +9,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Run docker build
-        run: make docker-build
+        run: docker compose build
   test:
     # Add a dummy job to avoid failing GitHub CI checks.
     # Other checks to be added later.
