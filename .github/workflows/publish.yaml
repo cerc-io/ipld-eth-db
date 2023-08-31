@@ -11,8 +11,8 @@ jobs:
       - id: vars
         name: Output SHA and version tag
         run: |
-          echo sha=$(echo ${GITHUB_SHA:0:7}) >> "$GITHUB_OUTPUT"
-          echo tag=$(echo ${GITHUB_REF#refs/tags/}) >> "$GITHUB_OUTPUT""
+          echo "sha=${GITHUB_SHA:0:7}" >> $GITHUB_OUTPUT
+          echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
       - name: Build and tag image
         run: |
           docker build . \
