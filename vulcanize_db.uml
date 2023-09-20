@@ -3,107 +3,111 @@
   <ID>DATABASE</ID>
   <OriginalElement>86a0461b-ec84-4911-9aa2-e562b5d7b24c</OriginalElement>
   <nodes>
-    <node x="555.4049647830311" y="152.0">86a0461b-ec84-4911-9aa2-e562b5d7b24c.TABLE:uml_diagram.eth.header_cids</node>
-    <node x="498.0" y="1175.0">86a0461b-ec84-4911-9aa2-e562b5d7b24c.TABLE:uml_diagram.public.goose_db_version</node>
-    <node x="0.0" y="1175.0">86a0461b-ec84-4911-9aa2-e562b5d7b24c.TABLE:uml_diagram.public.nodes</node>
-    <node x="821.7748627422149" y="876.0">86a0461b-ec84-4911-9aa2-e562b5d7b24c.TABLE:uml_diagram.eth.log_cids</node>
-    <node x="862.5299647830311" y="603.0">86a0461b-ec84-4911-9aa2-e562b5d7b24c.TABLE:uml_diagram.eth.uncle_cids</node>
-    <node x="568.4049647830313" y="0.0">86a0461b-ec84-4911-9aa2-e562b5d7b24c.TABLE:uml_diagram.ipld.blocks</node>
-    <node x="234.52996478303112" y="570.0">86a0461b-ec84-4911-9aa2-e562b5d7b24c.TABLE:uml_diagram.eth.state_cids</node>
-    <node x="251.0" y="1175.0">86a0461b-ec84-4911-9aa2-e562b5d7b24c.TABLE:uml_diagram.eth_meta.watched_addresses</node>
-    <node x="168.52996478303112" y="898.0">86a0461b-ec84-4911-9aa2-e562b5d7b24c.TABLE:uml_diagram.eth.storage_cids</node>
-    <node x="463.5299647830311" y="581.0">86a0461b-ec84-4911-9aa2-e562b5d7b24c.TABLE:uml_diagram.eth.transaction_cids</node>
-    <node x="731.0" y="1175.0">86a0461b-ec84-4911-9aa2-e562b5d7b24c.TABLE:uml_diagram.public.db_version</node>
-    <node x="660.5299647830311" y="603.0">86a0461b-ec84-4911-9aa2-e562b5d7b24c.TABLE:uml_diagram.eth.receipt_cids</node>
+    <node x="561.75" y="152.0">86a0461b-ec84-4911-9aa2-e562b5d7b24c.TABLE:uml_diagram.eth.header_cids</node>
+    <node x="0.0" y="1439.0">86a0461b-ec84-4911-9aa2-e562b5d7b24c.TABLE:uml_diagram.public.goose_db_version</node>
+    <node x="1133.0" y="0.0">86a0461b-ec84-4911-9aa2-e562b5d7b24c.TABLE:uml_diagram.public.nodes</node>
+    <node x="203.25" y="1140.0">86a0461b-ec84-4911-9aa2-e562b5d7b24c.TABLE:uml_diagram.eth.log_cids</node>
+    <node x="729.5" y="603.0">86a0461b-ec84-4911-9aa2-e562b5d7b24c.TABLE:uml_diagram.eth.uncle_cids</node>
+    <node x="467.25" y="0.0">86a0461b-ec84-4911-9aa2-e562b5d7b24c.TABLE:uml_diagram.ipld.blocks</node>
+    <node x="500.5" y="570.0">86a0461b-ec84-4911-9aa2-e562b5d7b24c.TABLE:uml_diagram.eth.state_cids</node>
+    <node x="1384.0" y="0.0">86a0461b-ec84-4911-9aa2-e562b5d7b24c.TABLE:uml_diagram.eth_meta.watched_addresses</node>
+    <node x="660.6941964285713" y="878.0">86a0461b-ec84-4911-9aa2-e562b5d7b24c.TABLE:uml_diagram.eth.storage_cids</node>
+    <node x="303.5" y="581.0">86a0461b-ec84-4911-9aa2-e562b5d7b24c.TABLE:uml_diagram.eth.transaction_cids</node>
+    <node x="233.0" y="1439.0">86a0461b-ec84-4911-9aa2-e562b5d7b24c.TABLE:uml_diagram.public.db_version</node>
+    <node x="251.5" y="889.0">86a0461b-ec84-4911-9aa2-e562b5d7b24c.TABLE:uml_diagram.eth.receipt_cids</node>
   </nodes>
   <notes />
   <edges>
     <edge source="86a0461b-ec84-4911-9aa2-e562b5d7b24c.TABLE:uml_diagram.eth.state_cids" target="86a0461b-ec84-4911-9aa2-e562b5d7b24c.TABLE:uml_diagram.ipld.blocks" relationship="REFERENCES">
       <point x="-52.25" y="-127.0" />
-      <point x="286.7799647830311" y="548.0" />
-      <point x="335.02486274221485" y="548.0" />
-      <point x="335.02486274221485" y="126.0" />
-      <point x="652.4049647830313" y="126.0" />
+      <point x="552.75" y="538.0" />
+      <point x="551.25" y="538.0" />
       <point x="0.0" y="50.0" />
     </edge>
     <edge source="86a0461b-ec84-4911-9aa2-e562b5d7b24c.TABLE:uml_diagram.eth.receipt_cids" target="86a0461b-ec84-4911-9aa2-e562b5d7b24c.TABLE:uml_diagram.ipld.blocks" relationship="REFERENCES">
-      <point x="45.5" y="-94.0" />
-      <point x="797.0299647830311" y="538.0" />
-      <point x="778.3207811095617" y="538.0" />
-      <point x="778.3207811095617" y="126.0" />
-      <point x="652.4049647830313" y="126.0" />
+      <point x="-45.5" y="-94.0" />
+      <point x="297.0" y="851.0" />
+      <point x="293.0" y="851.0" />
+      <point x="293.0" y="126.0" />
+      <point x="551.25" y="126.0" />
       <point x="0.0" y="50.0" />
     </edge>
     <edge source="86a0461b-ec84-4911-9aa2-e562b5d7b24c.TABLE:uml_diagram.eth.transaction_cids" target="86a0461b-ec84-4911-9aa2-e562b5d7b24c.TABLE:uml_diagram.eth.header_cids" relationship="REFERENCES">
       <point x="44.25" y="-116.0" />
-      <point x="596.2799647830311" y="548.0" />
-      <point x="652.4049647830311" y="548.0" />
+      <point x="436.25" y="548.0" />
+      <point x="658.75" y="548.0" />
       <point x="0.0" y="182.0" />
     </edge>
     <edge source="86a0461b-ec84-4911-9aa2-e562b5d7b24c.TABLE:uml_diagram.eth.log_cids" target="86a0461b-ec84-4911-9aa2-e562b5d7b24c.TABLE:uml_diagram.eth.receipt_cids" relationship="REFERENCES">
-      <point x="-44.25" y="-127.0" />
-      <point x="866.0248627422149" y="850.0" />
-      <point x="751.5299647830311" y="850.0" />
+      <point x="44.25" y="-127.0" />
+      <point x="336.0" y="1114.0" />
+      <point x="342.5" y="1114.0" />
       <point x="0.0" y="94.0" />
     </edge>
     <edge source="86a0461b-ec84-4911-9aa2-e562b5d7b24c.TABLE:uml_diagram.eth.uncle_cids" target="86a0461b-ec84-4911-9aa2-e562b5d7b24c.TABLE:uml_diagram.eth.header_cids" relationship="REFERENCES">
       <point x="-48.5" y="-94.0" />
-      <point x="911.0299647830311" y="548.0" />
-      <point x="652.4049647830311" y="548.0" />
+      <point x="778.0" y="548.0" />
+      <point x="658.75" y="548.0" />
       <point x="0.0" y="182.0" />
     </edge>
     <edge source="86a0461b-ec84-4911-9aa2-e562b5d7b24c.TABLE:uml_diagram.eth.log_cids" target="86a0461b-ec84-4911-9aa2-e562b5d7b24c.TABLE:uml_diagram.ipld.blocks" relationship="REFERENCES">
-      <point x="44.25" y="-127.0" />
-      <point x="954.5248627422149" y="850.0" />
-      <point x="1067.0299647830311" y="850.0" />
-      <point x="1067.0299647830311" y="126.0" />
-      <point x="652.4049647830313" y="126.0" />
+      <point x="-44.25" y="-127.0" />
+      <point x="247.5" y="1114.0" />
+      <point x="241.0" y="1114.0" />
+      <point x="241.0" y="126.0" />
+      <point x="551.25" y="126.0" />
       <point x="0.0" y="50.0" />
     </edge>
-    <edge source="86a0461b-ec84-4911-9aa2-e562b5d7b24c.TABLE:uml_diagram.eth.receipt_cids" target="86a0461b-ec84-4911-9aa2-e562b5d7b24c.TABLE:uml_diagram.eth.header_cids" relationship="REFERENCES">
-      <point x="-45.5" y="-94.0" />
-      <point x="706.0299647830311" y="548.0" />
-      <point x="652.4049647830311" y="548.0" />
-      <point x="0.0" y="182.0" />
+    <edge source="86a0461b-ec84-4911-9aa2-e562b5d7b24c.TABLE:uml_diagram.eth.receipt_cids" target="86a0461b-ec84-4911-9aa2-e562b5d7b24c.TABLE:uml_diagram.eth.transaction_cids" relationship="REFERENCES">
+      <point x="45.5" y="-94.0" />
+      <point x="388.0" y="851.0" />
+      <point x="392.0" y="851.0" />
+      <point x="0.0" y="116.0" />
     </edge>
     <edge source="86a0461b-ec84-4911-9aa2-e562b5d7b24c.TABLE:uml_diagram.eth.state_cids" target="86a0461b-ec84-4911-9aa2-e562b5d7b24c.TABLE:uml_diagram.eth.header_cids" relationship="REFERENCES">
       <point x="52.25" y="-127.0" />
-      <point x="391.2799647830311" y="548.0" />
-      <point x="652.4049647830311" y="548.0" />
+      <point x="657.25" y="548.0" />
+      <point x="658.75" y="548.0" />
       <point x="0.0" y="182.0" />
     </edge>
     <edge source="86a0461b-ec84-4911-9aa2-e562b5d7b24c.TABLE:uml_diagram.eth.storage_cids" target="86a0461b-ec84-4911-9aa2-e562b5d7b24c.TABLE:uml_diagram.eth.state_cids" relationship="REFERENCES">
-      <point x="56.5" y="-105.0" />
+      <point x="-56.5" y="-105.0" />
+      <point x="717.1941964285713" y="851.0" />
+      <point x="605.0" y="851.0" />
       <point x="0.0" y="127.0" />
     </edge>
     <edge source="86a0461b-ec84-4911-9aa2-e562b5d7b24c.TABLE:uml_diagram.eth.transaction_cids" target="86a0461b-ec84-4911-9aa2-e562b5d7b24c.TABLE:uml_diagram.ipld.blocks" relationship="REFERENCES">
       <point x="-44.25" y="-116.0" />
-      <point x="507.7799647830311" y="538.0" />
-      <point x="526.2340464156841" y="538.0" />
-      <point x="526.2340464156841" y="126.0" />
-      <point x="652.4049647830313" y="126.0" />
+      <point x="347.75" y="548.0" />
+      <point x="391.1941964285714" y="548.0" />
+      <point x="391.1941964285714" y="126.0" />
+      <point x="551.25" y="126.0" />
       <point x="0.0" y="50.0" />
     </edge>
     <edge source="86a0461b-ec84-4911-9aa2-e562b5d7b24c.TABLE:uml_diagram.eth.storage_cids" target="86a0461b-ec84-4911-9aa2-e562b5d7b24c.TABLE:uml_diagram.ipld.blocks" relationship="REFERENCES">
-      <point x="-56.5" y="-105.0" />
-      <point x="224.02996478303112" y="126.0" />
-      <point x="652.4049647830313" y="126.0" />
-      <point x="0.0" y="50.0" />
-    </edge>
-    <edge source="86a0461b-ec84-4911-9aa2-e562b5d7b24c.TABLE:uml_diagram.eth.header_cids" target="86a0461b-ec84-4911-9aa2-e562b5d7b24c.TABLE:uml_diagram.ipld.blocks" relationship="REFERENCES">
-      <point x="2.2737367544323206E-13" y="-182.0" />
+      <point x="56.5" y="-105.0" />
+      <point x="830.1941964285713" y="851.0" />
+      <point x="934.0" y="851.0" />
+      <point x="934.0" y="126.0" />
+      <point x="551.25" y="126.0" />
       <point x="0.0" y="50.0" />
     </edge>
     <edge source="86a0461b-ec84-4911-9aa2-e562b5d7b24c.TABLE:uml_diagram.eth.uncle_cids" target="86a0461b-ec84-4911-9aa2-e562b5d7b24c.TABLE:uml_diagram.ipld.blocks" relationship="REFERENCES">
       <point x="48.5" y="-94.0" />
-      <point x="1008.0299647830311" y="548.0" />
-      <point x="965.5248627422149" y="548.0" />
-      <point x="965.5248627422149" y="126.0" />
-      <point x="652.4049647830313" y="126.0" />
+      <point x="875.0" y="548.0" />
+      <point x="835.6941964285714" y="548.0" />
+      <point x="835.6941964285714" y="126.0" />
+      <point x="551.25" y="126.0" />
+      <point x="0.0" y="50.0" />
+    </edge>
+    <edge source="86a0461b-ec84-4911-9aa2-e562b5d7b24c.TABLE:uml_diagram.eth.header_cids" target="86a0461b-ec84-4911-9aa2-e562b5d7b24c.TABLE:uml_diagram.ipld.blocks" relationship="REFERENCES">
+      <point x="0.0" y="-182.0" />
+      <point x="658.75" y="126.0" />
+      <point x="551.25" y="126.0" />
       <point x="0.0" y="50.0" />
     </edge>
   </edges>
-  <settings layout="Hierarchic" zoom="0.47572815533980584" showDependencies="false" x="611.0" y="659.5" />
+  <settings layout="Hierarchic" zoom="0.40290955091714103" showDependencies="false" x="793.0" y="780.5" />
   <SelectedNodes />
   <Categories>
     <Category>Columns</Category>

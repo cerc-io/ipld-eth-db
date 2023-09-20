@@ -77,7 +77,7 @@ migrate: $(GOOSE) checkdbvars
 ## Apply all the migrations used to generate a UML diagram (containing FKs)
 .PHONY: migrate_for_uml
 migrate_for_uml: $(GOOSE) checkdbvars
-	$(GOOSE) -dir db/migrations/uml_support postgres "$(CONNECT_STRING)" up
+	$(GOOSE) -dir db/migrations postgres "$(CONNECT_STRING)" up-to 00018
 
 ## Apply migrations to be ran before a batch processing
 .PHONY: migrate_pre_batch_set
