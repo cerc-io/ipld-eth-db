@@ -5,7 +5,8 @@ ADD . /go/src/github.com/cerc-io/ipld-eth-db
 # Get migration tool
 WORKDIR /
 ARG GOOSE_VER="v3.6.1"
-ADD https://github.com/pressly/goose/releases/download/${GOOSE_VER}/goose_linux_x86_64 ./goose
+RUN arch=$(arch | sed s/aarch64/arm64/) && \
+  wget -O ./goose https://github.com/pressly/goose/releases/download/${GOOSE_VER}/goose_linux_${arch}
 RUN chmod +x ./goose
 
 # app container
