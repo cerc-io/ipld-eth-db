@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS eth.header_cids (
     timestamp             BIGINT NOT NULL,
     coinbase              VARCHAR(66) NOT NULL,
     canonical             BOOLEAN NOT NULL DEFAULT TRUE,
+    withdrawals_root      VARCHAR(66) NOT NULL,
     PRIMARY KEY (block_hash, block_number)
 );
 
