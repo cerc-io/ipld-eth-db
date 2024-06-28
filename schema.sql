@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 14.8
--- Dumped by pg_dump version 14.8 (Ubuntu 14.8-0ubuntu0.22.04.1)
+-- Dumped from database version 14.12
+-- Dumped by pg_dump version 14.12
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -209,7 +209,8 @@ CREATE TABLE eth.header_cids (
     bloom bytea NOT NULL,
     "timestamp" bigint NOT NULL,
     coinbase character varying(66) NOT NULL,
-    canonical boolean DEFAULT true NOT NULL
+    canonical boolean DEFAULT true NOT NULL,
+    withdrawals_root character varying(66) NOT NULL
 );
 
 
@@ -330,6 +331,21 @@ CREATE TABLE eth.uncle_cids (
     cid text NOT NULL,
     reward numeric NOT NULL,
     index integer NOT NULL
+);
+
+
+--
+-- Name: withdrawal_cids; Type: TABLE; Schema: eth; Owner: -
+--
+
+CREATE TABLE eth.withdrawal_cids (
+    block_number bigint NOT NULL,
+    header_id character varying(66) NOT NULL,
+    cid text NOT NULL,
+    index integer NOT NULL,
+    validator integer NOT NULL,
+    address character varying(66) NOT NULL,
+    amount numeric NOT NULL
 );
 
 
@@ -488,6 +504,14 @@ ALTER TABLE ONLY eth.transaction_cids
 
 ALTER TABLE ONLY eth.uncle_cids
     ADD CONSTRAINT uncle_cids_pkey PRIMARY KEY (block_hash, block_number);
+
+
+--
+-- Name: withdrawal_cids withdrawal_cids_pkey; Type: CONSTRAINT; Schema: eth; Owner: -
+--
+
+ALTER TABLE ONLY eth.withdrawal_cids
+    ADD CONSTRAINT withdrawal_cids_pkey PRIMARY KEY (index, header_id, block_number);
 
 
 --
@@ -783,6 +807,13 @@ CREATE INDEX uncle_header_id_index ON eth.uncle_cids USING btree (header_id);
 
 
 --
+-- Name: withdrawal_cids_block_number_idx; Type: INDEX; Schema: eth; Owner: -
+--
+
+CREATE INDEX withdrawal_cids_block_number_idx ON eth.withdrawal_cids USING btree (block_number DESC);
+
+
+--
 -- Name: blocks_block_number_idx; Type: INDEX; Schema: ipld; Owner: -
 --
 
@@ -793,49 +824,56 @@ CREATE INDEX blocks_block_number_idx ON ipld.blocks USING btree (block_number DE
 -- Name: log_cids ts_insert_blocker; Type: TRIGGER; Schema: eth; Owner: -
 --
 
-CREATE TRIGGER ts_insert_blocker BEFORE INSERT ON eth.log_cids FOR EACH ROW EXECUTE FUNCTION _timescaledb_internal.insert_blocker();
+CREATE TRIGGER ts_insert_blocker BEFORE INSERT ON eth.log_cids FOR EACH ROW EXECUTE FUNCTION _timescaledb_functions.insert_blocker();
 
 
 --
 -- Name: receipt_cids ts_insert_blocker; Type: TRIGGER; Schema: eth; Owner: -
 --
 
-CREATE TRIGGER ts_insert_blocker BEFORE INSERT ON eth.receipt_cids FOR EACH ROW EXECUTE FUNCTION _timescaledb_internal.insert_blocker();
+CREATE TRIGGER ts_insert_blocker BEFORE INSERT ON eth.receipt_cids FOR EACH ROW EXECUTE FUNCTION _timescaledb_functions.insert_blocker();
 
 
 --
 -- Name: state_cids ts_insert_blocker; Type: TRIGGER; Schema: eth; Owner: -
 --
 
-CREATE TRIGGER ts_insert_blocker BEFORE INSERT ON eth.state_cids FOR EACH ROW EXECUTE FUNCTION _timescaledb_internal.insert_blocker();
+CREATE TRIGGER ts_insert_blocker BEFORE INSERT ON eth.state_cids FOR EACH ROW EXECUTE FUNCTION _timescaledb_functions.insert_blocker();
 
 
 --
 -- Name: storage_cids ts_insert_blocker; Type: TRIGGER; Schema: eth; Owner: -
 --
 
-CREATE TRIGGER ts_insert_blocker BEFORE INSERT ON eth.storage_cids FOR EACH ROW EXECUTE FUNCTION _timescaledb_internal.insert_blocker();
+CREATE TRIGGER ts_insert_blocker BEFORE INSERT ON eth.storage_cids FOR EACH ROW EXECUTE FUNCTION _timescaledb_functions.insert_blocker();
 
 
 --
 -- Name: transaction_cids ts_insert_blocker; Type: TRIGGER; Schema: eth; Owner: -
 --
 
-CREATE TRIGGER ts_insert_blocker BEFORE INSERT ON eth.transaction_cids FOR EACH ROW EXECUTE FUNCTION _timescaledb_internal.insert_blocker();
+CREATE TRIGGER ts_insert_blocker BEFORE INSERT ON eth.transaction_cids FOR EACH ROW EXECUTE FUNCTION _timescaledb_functions.insert_blocker();
 
 
 --
 -- Name: uncle_cids ts_insert_blocker; Type: TRIGGER; Schema: eth; Owner: -
 --
 
-CREATE TRIGGER ts_insert_blocker BEFORE INSERT ON eth.uncle_cids FOR EACH ROW EXECUTE FUNCTION _timescaledb_internal.insert_blocker();
+CREATE TRIGGER ts_insert_blocker BEFORE INSERT ON eth.uncle_cids FOR EACH ROW EXECUTE FUNCTION _timescaledb_functions.insert_blocker();
+
+
+--
+-- Name: withdrawal_cids ts_insert_blocker; Type: TRIGGER; Schema: eth; Owner: -
+--
+
+CREATE TRIGGER ts_insert_blocker BEFORE INSERT ON eth.withdrawal_cids FOR EACH ROW EXECUTE FUNCTION _timescaledb_functions.insert_blocker();
 
 
 --
 -- Name: blocks ts_insert_blocker; Type: TRIGGER; Schema: ipld; Owner: -
 --
 
-CREATE TRIGGER ts_insert_blocker BEFORE INSERT ON ipld.blocks FOR EACH ROW EXECUTE FUNCTION _timescaledb_internal.insert_blocker();
+CREATE TRIGGER ts_insert_blocker BEFORE INSERT ON ipld.blocks FOR EACH ROW EXECUTE FUNCTION _timescaledb_functions.insert_blocker();
 
 
 --
