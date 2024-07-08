@@ -1,20 +1,22 @@
-name: Docker Build
-
+name: Basic test
 on: [pull_request]
 
 jobs:
-  build:
-    name: Run docker build
+  basic-test:
+    name: Build and sanity check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - name: Run docker build
+      - uses: actions/checkout@v4
+      - name: Build Docker images
         run: docker compose build
-  test:
-    # Add a dummy job to avoid failing GitHub CI checks.
-    # Other checks to be added later.
-    name: Dummy job
-    runs-on: ubuntu-latest
-    steps:
-      - name: Run dummy job
-        run: echo "Empty dummy job"
+      - name: Run Docker containers
+        run: docker compose up -d
+      - name: Check migration version
+        timeout-minutes: 1
+        run: |
+          while
+            version=$(docker compose run --rm migrations version 2>&1 | tail -1 | awk '{print $(NF)}')
+            [[ $version != 21 ]]; do
+            echo "Incorrect version: $version"
+            echo "Retrying..."
+          done
