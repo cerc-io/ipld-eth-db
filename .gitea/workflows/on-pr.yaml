@@ -14,9 +14,10 @@ jobs:
       - name: Check migration version
         timeout-minutes: 1
         run: |
+          MIGRATION_VERSION=$(ls db/migrations/*.sql | wc -l)
           while
             version=$(docker compose run --rm migrations version 2>&1 | tail -1 | awk '{print $(NF)}')
-            [[ $version != 21 ]]; do
+            [[ $version != $MIGRATION_VERSION ]]; do
             echo "Incorrect version: $version"
             echo "Retrying..."
           done

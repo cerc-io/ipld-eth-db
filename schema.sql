@@ -191,6 +191,17 @@ SET default_tablespace = '';
 SET default_table_access_method = heap;
 
 --
+-- Name: blob_hashes; Type: TABLE; Schema: eth; Owner: -
+--
+
+CREATE TABLE eth.blob_hashes (
+    tx_hash character varying(66) NOT NULL,
+    index integer NOT NULL,
+    blob_hash bytea NOT NULL
+);
+
+
+--
 -- Name: header_cids; Type: TABLE; Schema: eth; Owner: -
 --
 
@@ -552,6 +563,13 @@ ALTER TABLE ONLY public.goose_db_version
 
 ALTER TABLE ONLY public.nodes
     ADD CONSTRAINT nodes_pkey PRIMARY KEY (node_id);
+
+
+--
+-- Name: blob_hashes_tx_hash_index; Type: INDEX; Schema: eth; Owner: -
+--
+
+CREATE UNIQUE INDEX blob_hashes_tx_hash_index ON eth.blob_hashes USING btree (tx_hash, index);
 
 
 --
